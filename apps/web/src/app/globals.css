@@ -1,5 +1,47 @@
 @import "tailwindcss";
 
+/* Enable class-based dark mode for Tailwind v4 */
+@variant dark (&:where(.dark, .dark *));
+
+/* ── Liberty (light) palette ──────────────────────────────────── */
+:root {
+  --background: #f8f9fe;
+  --foreground: #1a1b2e;
+  --primary: #545aa7;
+  --primary-hover: #3d4189;
+  --primary-foreground: #ffffff;
+  --surface: #eef0f9;
+  --border: #d0d3e8;
+  --muted: #6b6f9e;
+  --card: #ffffff;
+  --card-foreground: #1a1b2e;
+  --input-bg: #ffffff;
+  --input-border: #c4c8e0;
+  --ring: #545aa7;
+}
+
+/* ── Fiord (dark) palette ─────────────────────────────────────── */
+.dark {
+  --background: #1b2733;
+  --foreground: #d8e6f0;
+  --primary: #4a8fa8;
+  --primary-hover: #3a7a91;
+  --primary-foreground: #1b2733;
+  --surface: #243141;
+  --border: #3a4f61;
+  --muted: #7a9db5;
+  --card: #1e2c3a;
+  --card-foreground: #d8e6f0;
+  --input-bg: #1e2c3a;
+  --input-border: #3a4f61;
+  --ring: #4a8fa8;
+}
+
 body {
-    overflow-x: hidden;
-}   
+  overflow-x: hidden;
+  background-color: var(--background);
+  color: var(--foreground);
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}

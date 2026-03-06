@@ -1,0 +1,170 @@
+"use client";
+
+import { useState } from "react";
+import { useUser } from "../contexts/UserContext";
+
+type Props = { onClose: () => void };
+
+export default function AccountModal({ onClose }: Props) {
+  const { user, login, updateName } = useUser();
+  const [name, setName] = useState(user?.name ?? "");
+  const [saved, setSaved] = useState(false);
+
+  const handleSave = () => {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    if (user) updateName(trimmed);
+    else login(trimmed);
+    setSaved(true);
+    setTimeout(() => {
+      setSaved(false);
+      onClose();
+    }, 900);
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-[60] flex items-center justify-center p-4"
+      style={{ background: "rgba(0,0,0,0.55)", backdropFilter: "blur(6px)" }}
+      onClick={onClose}
+    >
+      <div
+        className="w-full rounded-2xl overflow-hidden"
+        style={{
+          maxWidth: 380,
+          background: "var(--card)",
+          border: "1px solid var(--border)",
+          boxShadow: "0 24px 64px rgba(0,0,0,.38)",
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div
+          className="px-5 py-4 flex items-center justify-between"
+          style={{ borderBottom: "1px solid var(--border)" }}
+        >
+          <div className="flex items-center gap-3">
+            <div
+              className="flex items-center justify-center rounded-full shrink-0"
+              style={{
+                width: 38,
+                height: 38,
+                background: "var(--primary)",
+                color: "var(--primary-foreground)",
+              }}
+            >
+              {user ? (
+                <span className="text-base font-bold leading-none">
+                  {user.name.charAt(0).toUpperCase()}
+                </span>
+              ) : (
+                <svg
+                  viewBox="0 0 24 24"
+                  width="18"
+                  height="18"
+                  fill="currentColor"
+                >
+                  <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z" />
+                </svg>
+              )}
+            </div>
+            <div>
+              <p
+                className="text-sm font-semibold"
+                style={{ color: "var(--card-foreground)" }}
+              >
+                {user ? "My Account" : "Join Sonder"}
+              </p>
+              <p className="text-xs" style={{ color: "var(--muted)" }}>
+                {user
+                  ? "Edit your display name"
+                  : "Set a name to start posting"}
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex items-center justify-center rounded-full transition-colors"
+            style={{ width: 28, height: 28, color: "var(--muted)" }}
+            onMouseEnter={(e) =>
+              (e.currentTarget.style.background = "var(--surface)")
+            }
+            onMouseLeave={(e) =>
+              (e.currentTarget.style.background = "transparent")
+            }
+          >
+            <svg
+              viewBox="0 0 24 24"
+              width="14"
+              height="14"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+            >
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="p-5 space-y-4">
+          <div>
+            <label
+              className="text-xs font-semibold uppercase tracking-wide mb-1.5 block"
+              style={{ color: "var(--muted)" }}
+            >
+              Display Name
+            </label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSave()}
+              placeholder="e.g. Alex, Wanderer, Explorer…"
+              maxLength={32}
+              autoFocus
+              className="w-full text-sm rounded-xl px-3 py-2.5 focus:outline-none"
+              style={{
+                background: "var(--input-bg)",
+                border: "1px solid var(--input-border)",
+                color: "var(--foreground)",
+              }}
+              onFocus={(e) => (e.target.style.borderColor = "var(--ring)")}
+              onBlur={(e) =>
+                (e.target.style.borderColor = "var(--input-border)")
+              }
+            />
+          </div>
+          {!user && (
+            <p
+              className="text-xs leading-relaxed"
+              style={{ color: "var(--muted)" }}
+            >
+              Your name is stored on this device only. You can always post
+              anonymously even after signing in.
+            </p>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="px-5 pb-5">
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={!name.trim()}
+            className="w-full py-2.5 rounded-xl text-sm font-semibold transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+            style={{
+              background: saved ? "#22c55e" : "var(--primary)",
+              color: "#fff",
+            }}
+          >
+            {saved ? "✓ Saved!" : user ? "Save Changes" : "Get Started"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

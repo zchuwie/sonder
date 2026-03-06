@@ -1,25 +1,40 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Map, NavigationControl, GeoJSONSource } from "maplibre-gl";
+import {
+  Map,
+  Marker as MLMarker,
+  NavigationControl,
+  GeoJSONSource,
+} from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { type MarkerData } from "./CustomPopup";
+import { useTheme } from "next-themes";
+import { type MarkerData } from "./PostPopup";
 
 type Mode = "grab" | "mark";
 
-const PIN_COLOR = "#137818"; 
+const PIN_COLOR = "#137818";
+
+const MAP_STYLES = {
+  light: "https://tiles.openfreemap.org/styles/liberty",
+  dark: "https://tiles.openfreemap.org/styles/fiord",
+} as const;
+
+type FlyToTarget = { lat: number; lng: number; zoom?: number } | null;
 
 type Props = {
   markers: MarkerData[];
   selectedMarkerId: string | null;
   onMarkerAdd: (marker: MarkerData) => void;
   onMarkerSelect: (id: string | null) => void;
+  flyTo?: FlyToTarget;
 };
 
 export default function MapContainer({
   markers,
   onMarkerAdd,
   onMarkerSelect,
+  flyTo,
 }: Props) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<Map | null>(null);
@@ -27,6 +42,12 @@ export default function MapContainer({
   const onMarkerSelectRef = useRef(onMarkerSelect);
   const onMarkerAddRef = useRef(onMarkerAdd);
   const markersRef = useRef<MarkerData[]>(markers);
+  const searchMarkersRef = useRef<globalThis.Map<string, MLMarker>>(
+    new globalThis.Map(),
+  );
+  const { resolvedTheme } = useTheme();
+  const resolvedThemeRef = useRef(resolvedTheme);
+  resolvedThemeRef.current = resolvedTheme;
 
   const lng = 120.9842;
   const lat = 14.5995;
@@ -43,19 +64,24 @@ export default function MapContainer({
 
   const buildGeoJSON = (items: MarkerData[]): GeoJSON.FeatureCollection => ({
     type: "FeatureCollection",
-    features: items.map((m) => ({
-      type: "Feature",
-      geometry: { type: "Point", coordinates: [m.lng, m.lat] },
-      properties: { id: m.id },
-    })),
+    features: items
+      .filter((m) => m.source !== "search")
+      .map((m) => ({
+        type: "Feature",
+        geometry: { type: "Point", coordinates: [m.lng, m.lat] },
+        properties: { id: m.id },
+      })),
   });
 
   useEffect(() => {
     if (map.current || !mapContainer.current) return;
 
+    const styleUrl =
+      resolvedThemeRef.current === "dark" ? MAP_STYLES.dark : MAP_STYLES.light;
+
     map.current = new Map({
       container: mapContainer.current,
-      style: "https://tiles.openfreemap.org/styles/liberty",
+      style: styleUrl,
       center: [lng, lat],
       zoom: zoom,
     });
@@ -147,13 +173,13 @@ export default function MapContainer({
       };
       map.current.on("mouseenter", "clusters", () => setCursor("pointer"));
       map.current.on("mouseleave", "clusters", () =>
-        setCursor(modeRef.current === "mark" ? "crosshair" : "grab"),
+        setCursor(modeRef.current === "mark" ? "pointer" : "grab"),
       );
       map.current.on("mouseenter", "unclustered-point", () =>
         setCursor("pointer"),
       );
       map.current.on("mouseleave", "unclustered-point", () =>
-        setCursor(modeRef.current === "mark" ? "crosshair" : "grab"),
+        setCursor(modeRef.current === "mark" ? "pointer" : "grab"),
       );
     });
 
@@ -176,7 +202,42 @@ export default function MapContainer({
     };
   }, []);
 
-  // Sync React markers state → MapLibre GeoJSON source
+  // Swap map style when theme changes
+  useEffect(() => {
+    if (!map.current) return;
+    const styleUrl =
+      resolvedTheme === "dark" ? MAP_STYLES.dark : MAP_STYLES.light;
+
+    map.current.setStyle(styleUrl, {
+      transformStyle: (previousStyle, nextStyle) => {
+        const customSourceIds = ["pins"];
+        const customLayerIds = [
+          "clusters",
+          "cluster-count",
+          "unclustered-point",
+        ];
+
+        const preservedSources: typeof nextStyle.sources = {};
+        for (const id of customSourceIds) {
+          if (previousStyle?.sources?.[id]) {
+            preservedSources[id] = previousStyle.sources[id]!;
+          }
+        }
+
+        const preservedLayers =
+          previousStyle?.layers?.filter((l) => customLayerIds.includes(l.id)) ??
+          [];
+
+        return {
+          ...nextStyle,
+          sources: { ...nextStyle.sources, ...preservedSources },
+          layers: [...nextStyle.layers, ...preservedLayers],
+        };
+      },
+    });
+  }, [resolvedTheme]);
+
+  // Sync manual markers → GeoJSON circle layer
   useEffect(() => {
     if (!map.current) return;
     const source = map.current.getSource("pins") as GeoJSONSource | undefined;
@@ -184,11 +245,53 @@ export default function MapContainer({
     source.setData(buildGeoJSON(markers));
   }, [markers]);
 
+  // Sync search markers → MapLibre HTML Marker (default teardrop)
+  useEffect(() => {
+    if (!map.current) return;
+
+    const searchPins = markers.filter((m) => m.source === "search");
+    const currentIds = new Set(searchMarkersRef.current.keys());
+    const newIds = new Set(searchPins.map((m) => m.id));
+
+    // Remove stale
+    for (const id of currentIds) {
+      if (!newIds.has(id)) {
+        searchMarkersRef.current.get(id)?.remove();
+        searchMarkersRef.current.delete(id);
+      }
+    }
+
+    // Add new
+    for (const pin of searchPins) {
+      if (searchMarkersRef.current.has(pin.id)) continue;
+      const mlMarker = new MLMarker()
+        .setLngLat([pin.lng, pin.lat])
+        .addTo(map.current);
+      mlMarker.getElement().style.cursor = "pointer";
+      mlMarker.getElement().addEventListener("click", (e) => {
+        e.stopPropagation();
+        onMarkerSelectRef.current(pin.id);
+      });
+      searchMarkersRef.current.set(pin.id, mlMarker);
+    }
+  }, [markers]);
+
+  // Fly to a location when the flyTo prop changes
+  useEffect(() => {
+    if (!flyTo || !map.current) return;
+    map.current.flyTo({
+      center: [flyTo.lng, flyTo.lat],
+      zoom: flyTo.zoom ?? 15,
+      speed: 1.4,
+      curve: 1.5,
+    });
+  }, [flyTo]);
+
   useEffect(() => {
     if (!map.current) return;
 
     const canvas = map.current.getCanvas();
-    canvas.style.cursor = mode === "mark" ? "crosshair" : "grab";
+    canvas.style.cursor = mode === "mark" ? "pointer" : "grab";
   }, [mode]);
 
   useEffect(() => {
@@ -215,21 +318,37 @@ export default function MapContainer({
       <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
         <button
           onClick={() => setMode("grab")}
-          className={`px-4 py-2 rounded-full text-sm font-medium shadow transition-colors ${
+          style={
             mode === "grab"
-              ? "bg-blue-600 text-white"
-              : "bg-white text-gray-700 hover:bg-gray-100"
-          }`}
+              ? {
+                  background: "var(--primary)",
+                  color: "var(--primary-foreground)",
+                }
+              : {
+                  background: "var(--card)",
+                  color: "var(--foreground)",
+                  border: "1px solid var(--border)",
+                }
+          }
+          className="px-4 py-2 rounded-full text-sm font-medium shadow transition-all cursor-pointer"
         >
           ✋ Grab (G)
         </button>
         <button
           onClick={() => setMode("mark")}
-          className={`px-4 py-2 rounded-full text-sm font-medium shadow transition-colors ${
+          style={
             mode === "mark"
-              ? "bg-red-600 text-white"
-              : "bg-white text-gray-700 hover:bg-gray-100"
-          }`}
+              ? {
+                  background: "var(--primary)",
+                  color: "var(--primary-foreground)",
+                }
+              : {
+                  background: "var(--card)",
+                  color: "var(--foreground)",
+                  border: "1px solid var(--border)",
+                }
+          }
+          className="px-4 py-2 rounded-full text-sm font-medium shadow transition-all cursor-pointer"
         >
           📍 Mark (M)
         </button>
