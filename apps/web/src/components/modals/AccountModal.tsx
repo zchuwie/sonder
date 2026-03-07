@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useUser } from "../contexts/UserContext";
+import { useUser } from "../../contexts/UserContext";
 
 type Props = { onClose: () => void };
 
@@ -24,20 +24,30 @@ export default function AccountModal({ onClose }: Props) {
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-center justify-center p-4"
+      className="fixed inset-0 z-60 flex items-end sm:items-center justify-center p-0 sm:p-4"
       style={{ background: "rgba(0,0,0,0.55)", backdropFilter: "blur(6px)" }}
       onClick={onClose}
     >
       <div
-        className="w-full rounded-2xl overflow-hidden"
+        className="w-full sm:max-w-95 rounded-t-3xl sm:rounded-2xl overflow-hidden"
         style={{
-          maxWidth: 380,
           background: "var(--card)",
           border: "1px solid var(--border)",
           boxShadow: "0 24px 64px rgba(0,0,0,.38)",
         }}
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Drag handle — mobile only */}
+        <div className="flex justify-center pt-3 pb-1 sm:hidden">
+          <div
+            style={{
+              width: 36,
+              height: 4,
+              borderRadius: 2,
+              background: "var(--border)",
+            }}
+          />
+        </div>
         {/* Header */}
         <div
           className="px-5 py-4 flex items-center justify-between"

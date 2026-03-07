@@ -9,7 +9,7 @@ import {
 } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { useTheme } from "next-themes";
-import { type MarkerData } from "./PostPopup";
+import { type MarkerData } from "../posts/PostPopup";
 
 type Mode = "grab" | "mark";
 
@@ -53,6 +53,12 @@ export default function MapContainer({
   const lat = 14.5995;
   const zoom = 12;
   const [mode, setMode] = useState<Mode>("grab");
+  const [mapLoaded, setMapLoaded] = useState(false);
+  const [holdIndicator, setHoldIndicator] = useState<{
+    x: number;
+    y: number;
+    key: number;
+  } | null>(null);
 
   onMarkerSelectRef.current = onMarkerSelect;
   onMarkerAddRef.current = onMarkerAdd;
@@ -69,7 +75,7 @@ export default function MapContainer({
       .map((m) => ({
         type: "Feature",
         geometry: { type: "Point", coordinates: [m.lng, m.lat] },
-        properties: { id: m.id },
+        properties: { id: m.id, postCount: m.posts.length },
       })),
   });
 
@@ -93,6 +99,7 @@ export default function MapContainer({
     // GeoJSON
     map.current.on("load", () => {
       if (!map.current) return;
+      setMapLoaded(true);
 
       map.current.addSource("pins", {
         type: "geojson",
@@ -130,15 +137,20 @@ export default function MapContainer({
         paint: { "text-color": "#ffffff" },
       });
 
-      // Individual pin
+      // Individual pin — green + larger when it has posts, gray + smaller when empty
       map.current.addLayer({
         id: "unclustered-point",
         type: "circle",
         source: "pins",
         filter: ["!", ["has", "point_count"]],
         paint: {
-          "circle-color": PIN_COLOR,
-          "circle-radius": 7,
+          "circle-color": [
+            "case",
+            [">", ["get", "postCount"], 0],
+            PIN_COLOR,
+            "#9ca3af",
+          ],
+          "circle-radius": ["case", [">", ["get", "postCount"], 0], 9, 6],
           "circle-stroke-width": 2,
           "circle-stroke-color": "#ffffff",
         },
@@ -311,11 +323,145 @@ export default function MapContainer({
     };
   }, []);
 
+  // Mobile: 2-second long-press to drop a pin
+  useEffect(() => {
+    if (!mapLoaded || !map.current) return;
+    const canvas = map.current.getCanvas();
+
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    let startX = 0;
+    let startY = 0;
+    let holdKey = 0;
+
+    const cancel = () => {
+      if (timer) {
+        clearTimeout(timer);
+        timer = null;
+      }
+      setHoldIndicator(null);
+    };
+
+    const onTouchStart = (e: TouchEvent) => {
+      if (e.touches.length !== 1) return;
+      const t = e.touches[0]!;
+      const rect = canvas.getBoundingClientRect();
+      startX = t.clientX;
+      startY = t.clientY;
+      const relX = t.clientX - rect.left;
+      const relY = t.clientY - rect.top;
+
+      const hit = map.current!.queryRenderedFeatures([relX, relY], {
+        layers: ["unclustered-point", "clusters"],
+      });
+      if (hit.length > 0) return;
+
+      holdKey++;
+      setHoldIndicator({ x: relX, y: relY, key: holdKey });
+
+      timer = setTimeout(() => {
+        if (!map.current) return;
+        const lngLat = map.current.unproject([relX, relY]);
+        onMarkerAddRef.current({
+          id: crypto.randomUUID(),
+          lat: lngLat.lat,
+          lng: lngLat.lng,
+          posts: [],
+        });
+        setHoldIndicator(null);
+        timer = null;
+      }, 600);
+    };
+
+    const onTouchMove = (e: TouchEvent) => {
+      if (!timer) return;
+      const t = e.touches[0]!;
+      const dx = t.clientX - startX;
+      const dy = t.clientY - startY;
+      if (Math.sqrt(dx * dx + dy * dy) > 8) cancel();
+    };
+
+    canvas.addEventListener("touchstart", onTouchStart, { passive: true });
+    canvas.addEventListener("touchmove", onTouchMove, { passive: true });
+    canvas.addEventListener("touchend", cancel);
+    canvas.addEventListener("touchcancel", cancel);
+
+    return () => {
+      canvas.removeEventListener("touchstart", onTouchStart);
+      canvas.removeEventListener("touchmove", onTouchMove);
+      canvas.removeEventListener("touchend", cancel);
+      canvas.removeEventListener("touchcancel", cancel);
+      cancel();
+    };
+  }, [mapLoaded]);
+
   return (
     <div className="relative w-full h-full">
+      <style>{`
+        @keyframes sonder-ring-progress {
+          to { stroke-dashoffset: 0; }
+        }
+        @keyframes sonder-ring-pulse {
+          0%, 100% { opacity: 1; }
+          50%       { opacity: 0.6; }
+        }
+      `}</style>
+
       <div ref={mapContainer} className="w-full h-full" />
 
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+      {/* Long-press progress ring (mobile) */}
+      {holdIndicator && (
+        <div
+          key={holdIndicator.key}
+          style={{
+            position: "absolute",
+            left: holdIndicator.x,
+            top: holdIndicator.y,
+            transform: "translate(-50%, -50%)",
+            pointerEvents: "none",
+            zIndex: 50,
+          }}
+        >
+          <svg width="64" height="64" viewBox="0 0 64 64">
+            {/* Backdrop ring */}
+            <circle
+              cx="32"
+              cy="32"
+              r="24"
+              fill="none"
+              stroke="rgba(255,255,255,0.35)"
+              strokeWidth="3"
+            />
+            {/* Animated progress ring */}
+            <circle
+              cx="32"
+              cy="32"
+              r="24"
+              fill="none"
+              stroke="var(--primary)"
+              strokeWidth="3"
+              strokeLinecap="round"
+              style={{
+                strokeDasharray: 150.8,
+                strokeDashoffset: 150.8,
+                animation: "sonder-ring-progress 0.6s linear forwards",
+                transformOrigin: "32px 32px",
+                transform: "rotate(-90deg)",
+              }}
+            />
+            {/* Center dot */}
+            <circle
+              cx="32"
+              cy="32"
+              r="5"
+              fill="var(--primary)"
+              style={{ animation: "sonder-ring-pulse 1s ease-in-out infinite" }}
+            />
+          </svg>
+        </div>
+      )}
+
+      {/* Mode buttons — desktop only */}
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 hidden sm:flex gap-2">
         <button
           onClick={() => setMode("grab")}
           style={
@@ -352,6 +498,24 @@ export default function MapContainer({
         >
           📍 Mark (M)
         </button>
+      </div>
+
+      {/* Mobile hint */}
+      <div
+        className="absolute bottom-5 left-1/2 -translate-x-1/2 sm:hidden"
+        style={{ pointerEvents: "none" }}
+      >
+        <span
+          className="px-3 py-1.5 rounded-full text-xs font-medium"
+          style={{
+            background: "rgba(0,0,0,0.45)",
+            backdropFilter: "blur(8px)",
+            color: "#fff",
+            letterSpacing: "0.01em",
+          }}
+        >
+          Hold to drop a pin
+        </span>
       </div>
     </div>
   );

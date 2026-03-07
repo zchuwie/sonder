@@ -3,7 +3,7 @@
 import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import type { SpotifySong } from "../../components/PostPopup";
+import type { SpotifySong } from "../../components/posts/PostPopup";
 
 type SharedPost = {
   content: string;

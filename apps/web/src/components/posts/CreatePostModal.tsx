@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import type { MarkerData, PostDraft, SpotifySong } from "./PostPopup";
-import { useUser } from "../contexts/UserContext";
+import { useUser } from "../../contexts/UserContext";
 
 const MOCK_SONGS: SpotifySong[] = [
   {
@@ -121,23 +121,32 @@ export default function CreatePostModal({ marker, onClose, onSubmit }: Props) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-6"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-6"
       style={{ background: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)" }}
       onMouseDown={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
       <div
-        className="w-full flex flex-col overflow-hidden"
+        className="w-full sm:max-w-205 flex flex-col overflow-hidden rounded-t-3xl sm:rounded-2xl"
         style={{
-          maxWidth: 820,
-          height: "80vh",
+          height: "88vh",
           background: "var(--card)",
           border: "1px solid var(--border)",
-          borderRadius: 16,
           boxShadow: "0 24px 64px rgba(0,0,0,.3)",
         }}
       >
+        {/* Drag handle — mobile only */}
+        <div className="flex justify-center pt-3 pb-1 sm:hidden shrink-0">
+          <div
+            style={{
+              width: 36,
+              height: 4,
+              borderRadius: 2,
+              background: "var(--border)",
+            }}
+          />
+        </div>
         {/* ── Header ──────────────────────────────────────────── */}
         <div
           className="px-5 py-4 flex items-center justify-between shrink-0"
@@ -186,7 +195,7 @@ export default function CreatePostModal({ marker, onClose, onSubmit }: Props) {
         <div className="flex flex-1 overflow-hidden">
           {/* Left — map preview */}
           <div
-            className="relative shrink-0 overflow-hidden"
+            className="hidden sm:block relative shrink-0 overflow-hidden"
             style={{
               width: 280,
               borderRight: "1px solid var(--border)",

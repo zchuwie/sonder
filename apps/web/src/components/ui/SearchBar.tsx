@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { LocationPlaceDTO } from "../types/location.dto";
+import { LocationPlaceDTO } from "../../types/location.dto";
 
 /* ── Nominatim response shape (subset) ───────────────────────── */
 type NominatimResult = {
@@ -77,7 +77,7 @@ function fuzzyScore(query: string, target: string): number {
   if (!q) return 0;
 
   if (t === q) return 10000;
-  if (t.startsWith(q)) return 9000 - t.length; 
+  if (t.startsWith(q)) return 9000 - t.length;
   if (t.includes(q)) return 8000 - t.indexOf(q);
 
   const qWords = q.split(/\s+/);

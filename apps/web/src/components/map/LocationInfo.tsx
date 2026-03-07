@@ -1,6 +1,6 @@
 "use client";
 
-import { LocationPlaceDTO } from "../types/location.dto";
+import { LocationPlaceDTO } from "../../types/location.dto";
 
 type Props = {
   place: LocationPlaceDTO | null;
