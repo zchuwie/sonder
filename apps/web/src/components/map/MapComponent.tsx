@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { FiMapPin } from "react-icons/fi";
 import {
   Map,
   Marker as MLMarker,
@@ -9,9 +10,7 @@ import {
 } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { useTheme } from "next-themes";
-import { type MarkerData } from "../posts/PostPopup";
-
-type Mode = "grab" | "mark";
+import type { MarkerData } from "../posts/PostPopup";
 
 const PIN_COLOR = "#137818";
 
@@ -38,7 +37,6 @@ export default function MapContainer({
 }: Props) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<Map | null>(null);
-  const modeRef = useRef<Mode>("grab");
   const onMarkerSelectRef = useRef(onMarkerSelect);
   const onMarkerAddRef = useRef(onMarkerAdd);
   const markersRef = useRef<MarkerData[]>(markers);
@@ -52,7 +50,6 @@ export default function MapContainer({
   const lng = 120.9842;
   const lat = 14.5995;
   const zoom = 12;
-  const [mode, setMode] = useState<Mode>("grab");
   const [mapLoaded, setMapLoaded] = useState(false);
   const [holdIndicator, setHoldIndicator] = useState<{
     x: number;
@@ -63,10 +60,6 @@ export default function MapContainer({
   onMarkerSelectRef.current = onMarkerSelect;
   onMarkerAddRef.current = onMarkerAdd;
   markersRef.current = markers;
-
-  useEffect(() => {
-    modeRef.current = mode;
-  }, [mode]);
 
   const buildGeoJSON = (items: MarkerData[]): GeoJSON.FeatureCollection => ({
     type: "FeatureCollection",
@@ -92,7 +85,7 @@ export default function MapContainer({
       zoom: zoom,
     });
 
-    map.current.doubleClickZoom.disable();
+    map.current.getCanvas().style.cursor = "pointer";
 
     map.current.addControl(new NavigationControl());
 
@@ -184,20 +177,17 @@ export default function MapContainer({
         if (map.current) map.current.getCanvas().style.cursor = cur;
       };
       map.current.on("mouseenter", "clusters", () => setCursor("pointer"));
-      map.current.on("mouseleave", "clusters", () =>
-        setCursor(modeRef.current === "mark" ? "pointer" : "grab"),
-      );
+      map.current.on("mouseleave", "clusters", () => setCursor("pointer"));
       map.current.on("mouseenter", "unclustered-point", () =>
         setCursor("pointer"),
       );
       map.current.on("mouseleave", "unclustered-point", () =>
-        setCursor(modeRef.current === "mark" ? "pointer" : "grab"),
+        setCursor("pointer"),
       );
     });
 
-    // Double-click → add pin
-    map.current.on("dblclick", (e) => {
-      if (modeRef.current !== "mark") return;
+    // Right-click → add pin
+    map.current.on("contextmenu", (e) => {
       e.preventDefault();
 
       onMarkerAddRef.current({
@@ -299,30 +289,6 @@ export default function MapContainer({
     });
   }, [flyTo]);
 
-  useEffect(() => {
-    if (!map.current) return;
-
-    const canvas = map.current.getCanvas();
-    canvas.style.cursor = mode === "mark" ? "pointer" : "grab";
-  }, [mode]);
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (
-        e.target instanceof HTMLInputElement ||
-        e.target instanceof HTMLTextAreaElement
-      )
-        return;
-
-      if (e.key === "m" || e.key === "M") setMode("mark");
-      if (e.key === "g" || e.key === "G") setMode("grab");
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, []);
-
   // Mobile: 2-second long-press to drop a pin
   useEffect(() => {
     if (!mapLoaded || !map.current) return;
@@ -398,7 +364,8 @@ export default function MapContainer({
     <div className="relative w-full h-full">
       <style>{`
         @keyframes sonder-ring-progress {
-          to { stroke-dashoffset: 0; }
+          0% { transform: scale(0.72); opacity: 0.35; }
+          100% { transform: scale(1); opacity: 1; }
         }
         @keyframes sonder-ring-pulse {
           0%, 100% { opacity: 1; }
@@ -421,84 +388,41 @@ export default function MapContainer({
             zIndex: 50,
           }}
         >
-          <svg width="64" height="64" viewBox="0 0 64 64">
-            {/* Backdrop ring */}
-            <circle
-              cx="32"
-              cy="32"
-              r="24"
-              fill="none"
-              stroke="rgba(255,255,255,0.35)"
-              strokeWidth="3"
-            />
-            {/* Animated progress ring */}
-            <circle
-              cx="32"
-              cy="32"
-              r="24"
-              fill="none"
-              stroke="var(--primary)"
-              strokeWidth="3"
-              strokeLinecap="round"
+          <div
+            style={{
+              position: "relative",
+              width: 64,
+              height: 64,
+              display: "grid",
+              placeItems: "center",
+            }}
+          >
+            <div
               style={{
-                strokeDasharray: 150.8,
-                strokeDashoffset: 150.8,
-                animation: "sonder-ring-progress 0.6s linear forwards",
-                transformOrigin: "32px 32px",
-                transform: "rotate(-90deg)",
+                position: "absolute",
+                inset: 0,
+                borderRadius: "50%",
+                border: "3px solid rgba(255,255,255,0.35)",
+                animation: "sonder-ring-pulse 1s ease-in-out infinite",
               }}
             />
-            {/* Center dot */}
-            <circle
-              cx="32"
-              cy="32"
-              r="5"
-              fill="var(--primary)"
-              style={{ animation: "sonder-ring-pulse 1s ease-in-out infinite" }}
+            <div
+              style={{
+                position: "absolute",
+                inset: 10,
+                borderRadius: "50%",
+                border: "3px solid var(--primary)",
+                animation: "sonder-ring-progress 0.6s linear forwards",
+                boxSizing: "border-box",
+              }}
             />
-          </svg>
+            <FiMapPin
+              size={24}
+              style={{ color: "var(--primary)", position: "relative" }}
+            />
+          </div>
         </div>
       )}
-
-      {/* Mode buttons — desktop only */}
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 hidden sm:flex gap-2">
-        <button
-          onClick={() => setMode("grab")}
-          style={
-            mode === "grab"
-              ? {
-                  background: "var(--primary)",
-                  color: "var(--primary-foreground)",
-                }
-              : {
-                  background: "var(--card)",
-                  color: "var(--foreground)",
-                  border: "1px solid var(--border)",
-                }
-          }
-          className="px-4 py-2 rounded-full text-sm font-medium shadow transition-all cursor-pointer"
-        >
-          ✋ Grab (G)
-        </button>
-        <button
-          onClick={() => setMode("mark")}
-          style={
-            mode === "mark"
-              ? {
-                  background: "var(--primary)",
-                  color: "var(--primary-foreground)",
-                }
-              : {
-                  background: "var(--card)",
-                  color: "var(--foreground)",
-                  border: "1px solid var(--border)",
-                }
-          }
-          className="px-4 py-2 rounded-full text-sm font-medium shadow transition-all cursor-pointer"
-        >
-          📍 Mark (M)
-        </button>
-      </div>
 
       {/* Mobile hint */}
       <div

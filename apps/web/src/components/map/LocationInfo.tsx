@@ -1,5 +1,13 @@
 "use client";
 
+import {
+  FiChevronRight,
+  FiGlobe,
+  FiMapPin,
+  FiNavigation2,
+  FiSearch,
+  FiX,
+} from "react-icons/fi";
 import { LocationPlaceDTO } from "../../types/location.dto";
 
 type Props = {
@@ -54,18 +62,13 @@ export default function LocationInfo({
           zIndex: 1,
         }}
       >
-        <span
+        <FiChevronRight
+          size={14}
           style={{
-            display: "inline-block",
-            fontSize: "14px",
-            fontWeight: "bold",
-            lineHeight: 1,
             transform: isOpen ? "rotate(180deg)" : "rotate(0deg)",
             transition: "transform 0.3s ease",
           }}
-        >
-          ›
-        </span>
+        />
       </button>
 
       <aside
@@ -90,21 +93,7 @@ export default function LocationInfo({
                 border: "1px solid var(--border)",
               }}
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="28"
-                height="28"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                style={{ color: "var(--primary)" }}
-              >
-                <circle cx="11" cy="11" r="8" />
-                <line x1="21" y1="21" x2="16.65" y2="16.65" />
-              </svg>
+              <FiSearch size={28} style={{ color: "var(--primary)" }} />
             </div>
             <div>
               <p
@@ -162,20 +151,7 @@ export default function LocationInfo({
                 (e.currentTarget.style.background = "transparent")
               }
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
+              <FiX size={16} />
             </button>
           </div>
         )}
@@ -184,17 +160,11 @@ export default function LocationInfo({
           <div className="flex-1 overflow-y-auto px-5 py-4 flex flex-col gap-4">
             {place.address && (
               <div className="flex items-start gap-2.5">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
+                <FiMapPin
+                  size={14}
                   className="mt-0.5 shrink-0"
                   style={{ color: "var(--primary)" }}
-                >
-                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6a2.5 2.5 0 0 1 0 5.5z" />
-                </svg>
+                />
                 <p
                   className="text-xs leading-relaxed"
                   style={{ color: "var(--muted)" }}
@@ -212,22 +182,10 @@ export default function LocationInfo({
                 border: "1px solid var(--border)",
               }}
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="11"
-                height="11"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
+              <FiGlobe
+                size={11}
                 style={{ color: "var(--primary)", flexShrink: 0 }}
-              >
-                <circle cx="12" cy="12" r="10" />
-                <line x1="2" y1="12" x2="22" y2="12" />
-                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-              </svg>
+              />
               {place.lat.toFixed(5)},&nbsp;{place.lng.toFixed(5)}
             </div>
 
@@ -282,19 +240,7 @@ export default function LocationInfo({
                 (e.currentTarget.style.background = "var(--primary)")
               }
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <polygon points="3 11 22 2 13 21 11 13 3 11" />
-              </svg>
+              <FiNavigation2 size={14} />
               Fly to location
             </button>
           </div>

@@ -1,4 +1,16 @@
 import { useEffect, useRef, useState } from "react";
+import { FaSpotify } from "react-icons/fa";
+import {
+  FiChevronRight,
+  FiLogOut,
+  FiMapPin,
+  FiMessageSquare,
+  FiPlus,
+  FiSearch,
+  FiSettings,
+  FiUser,
+  FiX,
+} from "react-icons/fi";
 import PostDetailModal from "./PostDetailModal";
 import AccountModal from "../modals/AccountModal";
 import SettingsModal from "../modals/SettingsModal";
@@ -12,22 +24,14 @@ export type SpotifySong = {
   duration: string;
 };
 
-export type PostDraft = {
-  content: string;
-  imageUrl?: string;
-  song?: SpotifySong;
-  author: string;
-  isAnonymous: boolean;
-};
-
 export type Post = {
   id: string;
   content: string;
-  createdAt: string;
   imageUrl?: string;
   song?: SpotifySong;
   author: string;
   isAnonymous: boolean;
+  createdAt: string;
 };
 
 export type MarkerData = {
@@ -36,6 +40,14 @@ export type MarkerData = {
   lng: number;
   posts: Post[];
   source?: "search" | "manual";
+};
+
+export type PostDraft = {
+  content: string;
+  imageUrl?: string;
+  song?: SpotifySong;
+  author: string;
+  isAnonymous: boolean;
 };
 
 type Props = {
@@ -129,22 +141,13 @@ export default function MarkerSidebar({
         }}
         aria-label={open ? "Close sidebar" : "Open sidebar"}
       >
-        <svg
-          viewBox="0 0 24 24"
-          width="12"
-          height="12"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
+        <FiChevronRight
+          size={12}
           style={{
             transform: open ? "rotate(0deg)" : "rotate(180deg)",
             transition: "transform 0.25s",
           }}
-        >
-          <polyline points="9 18 15 12 9 6" />
-        </svg>
+        />
       </button>
 
       {/* Mobile backdrop */}
@@ -229,14 +232,7 @@ export default function MarkerSidebar({
                         color: "#fff",
                       }}
                     >
-                      <svg
-                        viewBox="0 0 24 24"
-                        width="8"
-                        height="8"
-                        fill="currentColor"
-                      >
-                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                      </svg>
+                      <FiMessageSquare size={8} />
                       {marker.posts.length}{" "}
                       {marker.posts.length === 1 ? "post" : "posts"}
                     </span>
@@ -259,18 +255,7 @@ export default function MarkerSidebar({
                       color: "var(--muted)",
                     }}
                   >
-                    <svg
-                      viewBox="0 0 24 24"
-                      width="14"
-                      height="14"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                    >
-                      <line x1="18" y1="6" x2="6" y2="18" />
-                      <line x1="6" y1="6" x2="18" y2="18" />
-                    </svg>
+                    <FiX size={14} />
                   </button>
                   <div className="relative">
                     <button
@@ -291,14 +276,7 @@ export default function MarkerSidebar({
                           {user.name.charAt(0).toUpperCase()}
                         </span>
                       ) : (
-                        <svg
-                          viewBox="0 0 24 24"
-                          width="16"
-                          height="16"
-                          fill="currentColor"
-                        >
-                          <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z" />
-                        </svg>
+                        <FiUser size={16} />
                       )}
                     </button>
 
@@ -320,16 +298,7 @@ export default function MarkerSidebar({
                           {[
                             {
                               label: "Account",
-                              icon: (
-                                <svg
-                                  viewBox="0 0 24 24"
-                                  width="14"
-                                  height="14"
-                                  fill="currentColor"
-                                >
-                                  <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z" />
-                                </svg>
-                              ),
+                              icon: <FiUser size={14} />,
                               onClick: () => {
                                 setUserMenuOpen(false);
                                 setAccountOpen(true);
@@ -337,16 +306,7 @@ export default function MarkerSidebar({
                             },
                             {
                               label: "My Settings",
-                              icon: (
-                                <svg
-                                  viewBox="0 0 24 24"
-                                  width="14"
-                                  height="14"
-                                  fill="currentColor"
-                                >
-                                  <path d="M19.14 12.94c.04-.3.06-.61.06-.94s-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.49.49 0 0 0-.59-.22l-2.39.96a6.97 6.97 0 0 0-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.49.49 0 0 0-.59.22L2.74 8.87a.48.48 0 0 0 .12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.37 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.57 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32a.49.49 0 0 0-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z" />
-                                </svg>
-                              ),
+                              icon: <FiSettings size={14} />,
                               onClick: () => {
                                 setUserMenuOpen(false);
                                 setSettingsOpen(true);
@@ -354,16 +314,7 @@ export default function MarkerSidebar({
                             },
                             {
                               label: "Logout",
-                              icon: (
-                                <svg
-                                  viewBox="0 0 24 24"
-                                  width="14"
-                                  height="14"
-                                  fill="currentColor"
-                                >
-                                  <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5-5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z" />
-                                </svg>
-                              ),
+                              icon: <FiLogOut size={14} />,
                               danger: true,
                               onClick: () => {
                                 logout();
@@ -414,20 +365,11 @@ export default function MarkerSidebar({
                   border: "1px solid var(--border)",
                 }}
               >
-                <svg
-                  viewBox="0 0 24 24"
-                  width="13"
-                  height="13"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
+                <FiSearch
+                  size={13}
                   className="shrink-0"
                   style={{ color: "var(--muted)" }}
-                >
-                  <circle cx="11" cy="11" r="8" />
-                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                </svg>
+                />
                 <input
                   type="text"
                   placeholder="Search posts…"
@@ -480,17 +422,10 @@ export default function MarkerSidebar({
                       border: "1px solid var(--border)",
                     }}
                   >
-                    <svg
-                      viewBox="0 0 24 24"
-                      width="24"
-                      height="24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
+                    <FiMapPin
+                      size={24}
                       style={{ color: "var(--muted)", opacity: 0.5 }}
-                    >
-                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                    </svg>
+                    />
                   </div>
                   <div>
                     <p
@@ -599,15 +534,11 @@ export default function MarkerSidebar({
                               >
                                 {post.song.title}
                               </span>
-                              <svg
-                                viewBox="0 0 24 24"
-                                width="10"
-                                height="10"
-                                fill="#1DB954"
+                              <FaSpotify
+                                size={10}
                                 className="shrink-0"
-                              >
-                                <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z" />
-                              </svg>
+                                color="#1DB954"
+                              />
                             </div>
                           )}
                         </div>
@@ -646,15 +577,11 @@ export default function MarkerSidebar({
                                 {post.song.artist}
                               </p>
                             </div>
-                            <svg
-                              viewBox="0 0 24 24"
-                              width="12"
-                              height="12"
-                              fill="#1DB954"
+                            <FaSpotify
+                              size={12}
                               className="shrink-0"
-                            >
-                              <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z" />
-                            </svg>
+                              color="#1DB954"
+                            />
                           </div>
                         )}
 
@@ -733,18 +660,7 @@ export default function MarkerSidebar({
                   boxShadow: user ? "0 2px 12px rgba(84,90,167,.35)" : "none",
                 }}
               >
-                <svg
-                  viewBox="0 0 24 24"
-                  width="15"
-                  height="15"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                >
-                  <line x1="12" y1="5" x2="12" y2="19" />
-                  <line x1="5" y1="12" x2="19" y2="12" />
-                </svg>
+                <FiPlus size={15} />
                 {!user ? "Sign in to post" : "New Post"}
               </button>
             </div>
@@ -759,18 +675,10 @@ export default function MarkerSidebar({
                 border: "1px solid var(--border)",
               }}
             >
-              <svg
-                viewBox="0 0 24 24"
-                width="28"
-                height="28"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.4"
+              <FiMapPin
+                size={28}
                 style={{ color: "var(--primary)", opacity: 0.7 }}
-              >
-                <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z" />
-                <circle cx="12" cy="10" r="3" />
-              </svg>
+              />
             </div>
             <div>
               <p

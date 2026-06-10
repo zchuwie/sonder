@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { FiImage, FiMapPin, FiMusic, FiX } from "react-icons/fi";
 import type { MarkerData, PostDraft, SpotifySong } from "./PostPopup";
 import { useUser } from "../../contexts/UserContext";
 
@@ -160,7 +161,10 @@ export default function CreatePostModal({ marker, onClose, onSubmit }: Props) {
               New Post
             </p>
             <p className="text-xs mt-0.5" style={{ color: "var(--muted)" }}>
-              📍 {marker.lat.toFixed(5)}, {marker.lng.toFixed(5)}
+              <span className="inline-flex items-center gap-1">
+                <FiMapPin size={11} /> {marker.lat.toFixed(5)},{" "}
+                {marker.lng.toFixed(5)}
+              </span>
             </p>
           </div>
           <button
@@ -176,18 +180,7 @@ export default function CreatePostModal({ marker, onClose, onSubmit }: Props) {
             }
             aria-label="Close"
           >
-            <svg
-              viewBox="0 0 24 24"
-              width="18"
-              height="18"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-            >
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
+            <FiX size={18} />
           </button>
         </div>
 
@@ -206,8 +199,18 @@ export default function CreatePostModal({ marker, onClose, onSubmit }: Props) {
               title="Location map"
               src={`https://www.openstreetmap.org/export/embed.html?bbox=${marker.lng - 0.005},${marker.lat - 0.005},${marker.lng + 0.005},${marker.lat + 0.005}&layer=mapnik&marker=${marker.lat},${marker.lng}`}
               className="w-full h-full"
-              style={{ border: "none", pointerEvents: "none" }}
+              style={{ border: "none" }}
             />
+            <div
+              className="absolute top-3 left-3 px-2 py-1 rounded-md text-[11px] font-medium"
+              style={{
+                background: "rgba(0,0,0,0.55)",
+                color: "#fff",
+                backdropFilter: "blur(6px)",
+              }}
+            >
+              Drag and scroll to inspect location
+            </div>
             {/* Coords overlay */}
             <div
               className="absolute bottom-0 left-0 right-0 px-4 py-3"
@@ -217,7 +220,9 @@ export default function CreatePostModal({ marker, onClose, onSubmit }: Props) {
               }}
             >
               <p className="text-white text-xs font-medium leading-snug">
-                📍 {marker.lat.toFixed(5)}
+                <span className="inline-flex items-center gap-1">
+                  <FiMapPin size={11} /> {marker.lat.toFixed(5)}
+                </span>
                 <br />
                 {marker.lng.toFixed(5)}
               </p>
@@ -344,18 +349,7 @@ export default function CreatePostModal({ marker, onClose, onSubmit }: Props) {
                     }}
                     aria-label="Remove photo"
                   >
-                    <svg
-                      viewBox="0 0 24 24"
-                      width="14"
-                      height="14"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                    >
-                      <line x1="18" y1="6" x2="6" y2="18" />
-                      <line x1="6" y1="6" x2="18" y2="18" />
-                    </svg>
+                    <FiX size={14} />
                   </button>
                 </div>
               ) : (
@@ -375,20 +369,7 @@ export default function CreatePostModal({ marker, onClose, onSubmit }: Props) {
                     (e.currentTarget.style.borderColor = "var(--border)")
                   }
                 >
-                  <svg
-                    viewBox="0 0 24 24"
-                    width="22"
-                    height="22"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <rect x="3" y="3" width="18" height="18" rx="2" />
-                    <circle cx="8.5" cy="8.5" r="1.5" />
-                    <polyline points="21 15 16 10 5 21" />
-                  </svg>
+                  <FiImage size={22} />
                   <span className="text-xs">Click to upload a photo</span>
                 </button>
               )}
@@ -407,7 +388,9 @@ export default function CreatePostModal({ marker, onClose, onSubmit }: Props) {
                 className="text-xs font-semibold uppercase tracking-wide mb-2"
                 style={{ color: "var(--muted)" }}
               >
-                🎵 Song
+                <span className="inline-flex items-center gap-1">
+                  <FiMusic size={12} /> Song
+                </span>
                 <span
                   className="ml-1 normal-case font-normal"
                   style={{ opacity: 0.6 }}
@@ -447,18 +430,7 @@ export default function CreatePostModal({ marker, onClose, onSubmit }: Props) {
                     style={{ opacity: 0.8 }}
                     aria-label="Remove song"
                   >
-                    <svg
-                      viewBox="0 0 24 24"
-                      width="16"
-                      height="16"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                    >
-                      <line x1="18" y1="6" x2="6" y2="18" />
-                      <line x1="6" y1="6" x2="18" y2="18" />
-                    </svg>
+                    <FiX size={16} />
                   </button>
                 </div>
               )}

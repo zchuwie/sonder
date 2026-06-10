@@ -1,6 +1,20 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import {
+  FaCity,
+  FaHistory,
+  FaHospital,
+  FaHotel,
+  FaMapMarkerAlt,
+  FaSchool,
+  FaSpinner,
+  FaStore,
+  FaTrain,
+  FaTree,
+  FaUtensils,
+} from "react-icons/fa";
+import { FiSearch, FiX } from "react-icons/fi";
 import { LocationPlaceDTO } from "../../types/location.dto";
 
 /* ── Nominatim response shape (subset) ───────────────────────── */
@@ -175,67 +189,31 @@ function CategoryIcon({ category }: { category: string }) {
   const cat = category.toLowerCase();
 
   if (/restaurant|food|cafe|bar|pub|fast_food|bakery|eat/.test(cat))
-    return (
-      <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
-        <path d="M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2v7zm5-3v8h2.5v8H21V2c-2.76 0-5 2.24-5 4z" />
-      </svg>
-    );
+    return <FaUtensils size={14} />;
 
   if (/hospital|clinic|doctor|medical|pharmacy|dentist|health/.test(cat))
-    return (
-      <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
-        <path d="M19 3H5c-1.1 0-1.99.9-1.99 2L3 19c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-1 11h-4v4h-4v-4H6v-4h4V6h4v4h4v4z" />
-      </svg>
-    );
+    return <FaHospital size={14} />;
 
   if (/school|university|college|education|library/.test(cat))
-    return (
-      <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
-        <path d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3z" />
-      </svg>
-    );
+    return <FaSchool size={14} />;
 
   if (/park|garden|nature|forest|beach|lake|river/.test(cat))
-    return (
-      <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
-        <path d="M6.76 4.84l-1.8-1.79-1.41 1.41 1.79 1.79 1.42-1.41zM4 10.5H1v2h3v-2zm9-9.95h-2V3.5h2V.55zm7.45 3.91l-1.41-1.41-1.79 1.79 1.41 1.41 1.79-1.79zm-3.21 13.7l1.79 1.8 1.41-1.41-1.8-1.79-1.4 1.4zM20 10.5v2h3v-2h-3zm-8-5c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm-1 16.95h2V19.5h-2v2.95zm-7.45-3.91l1.41 1.41 1.79-1.8-1.41-1.41-1.79 1.8z" />
-      </svg>
-    );
+    return <FaTree size={14} />;
 
   if (/shop|mall|store|market|supermarket|retail/.test(cat))
-    return (
-      <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
-        <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96C5 16.1 6.1 17 7 17h11v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63H18c.75 0 1.41-.41 1.75-1.03l3.58-6.49A1 1 0 0 0 22.46 4H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z" />
-      </svg>
-    );
+    return <FaStore size={14} />;
 
   if (/station|airport|bus|train|transit|subway|metro|ferry/.test(cat))
-    return (
-      <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
-        <path d="M12 2c-4 0-8 .5-8 4v9.5C4 17.43 5.57 19 7.5 19L6 20.5v.5h12v-.5L16.5 19c1.93 0 3.5-1.57 3.5-3.5V6c0-3.5-3.58-4-8-4zm0 2c3.51 0 5.5.32 6.21 1H5.79C6.5 4.32 8.49 4 12 4zm-4 9H6V9h2v4zm10 0h-2V9h2v4zm-6 0h-2V9h2v4z" />
-      </svg>
-    );
+    return <FaTrain size={14} />;
 
   if (/hotel|hostel|motel|accommodation|lodging/.test(cat))
-    return (
-      <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
-        <path d="M7 13c1.66 0 3-1.34 3-3S8.66 7 7 7s-3 1.34-3 3 1.34 3 3 3zm12-6h-8v7H3V5H1v15h2v-3h18v3h2v-9c0-2.21-1.79-4-4-4z" />
-      </svg>
-    );
+    return <FaHotel size={14} />;
 
   if (/city|town|village|administrative|county|state|country/.test(cat))
-    return (
-      <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
-        <path d="M15 11V5l-3-3-3 3v2H3v14h18V11h-6zm-8 8H5v-2h2v2zm0-4H5v-2h2v2zm0-4H5V9h2v2zm6 8h-2v-2h2v2zm0-4h-2v-2h2v2zm0-4h-2V9h2v2zm0-4h-2V5h2v2zm6 12h-2v-2h2v2zm0-4h-2v-2h2v2z" />
-      </svg>
-    );
+    return <FaCity size={14} />;
 
   /* default — location pin */
-  return (
-    <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
-      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6a2.5 2.5 0 0 1 0 5.5z" />
-    </svg>
-  );
+  return <FaMapMarkerAlt size={14} />;
 }
 
 function HighlightText({ text, query }: { text: string; query: string }) {
@@ -368,40 +346,13 @@ export function SearchBar({ onPlaceSelect }: Props) {
         <div className="relative flex-1">
           <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center">
             {loading ? (
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="15"
-                height="15"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                style={{
-                  color: "var(--primary)",
-                  animation: "spin 0.8s linear infinite",
-                }}
-              >
-                <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-                <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-              </svg>
+              <FaSpinner
+                size={15}
+                className="animate-spin"
+                style={{ color: "var(--primary)" }}
+              />
             ) : (
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="15"
-                height="15"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                style={{ color: "var(--muted)" }}
-              >
-                <circle cx="11" cy="11" r="8" />
-                <line x1="21" y1="21" x2="16.65" y2="16.65" />
-              </svg>
+              <FiSearch size={15} style={{ color: "var(--muted)" }} />
             )}
           </span>
 
@@ -455,20 +406,7 @@ export function SearchBar({ onPlaceSelect }: Props) {
               className="absolute inset-y-0 right-2 flex items-center px-0.5"
               style={{ color: "var(--muted)" }}
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="13"
-                height="13"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
+              <FiX size={13} />
             </button>
           )}
         </div>
@@ -493,29 +431,12 @@ export function SearchBar({ onPlaceSelect }: Props) {
             >
               {showRecent ? (
                 <>
-                  <svg
-                    viewBox="0 0 24 24"
-                    width="12"
-                    height="12"
-                    fill="currentColor"
-                  >
-                    <path d="M13 3a9 9 0 1 0 .001 18.001A9 9 0 0 0 13 3zm0 16c-3.86 0-7-3.14-7-7s3.14-7 7-7 7 3.14 7 7-3.14 7-7 7zm.5-11H12v6l5.25 3.15.75-1.23-4.5-2.67V8z" />
-                  </svg>
+                  <FaHistory size={12} />
                   Recent searches
                 </>
               ) : (
                 <>
-                  <svg
-                    viewBox="0 0 24 24"
-                    width="12"
-                    height="12"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  >
-                    <circle cx="11" cy="11" r="8" />
-                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                  </svg>
+                  <FiSearch size={12} />
                   {results.length} result{results.length !== 1 ? "s" : ""}
                 </>
               )}
@@ -527,19 +448,7 @@ export function SearchBar({ onPlaceSelect }: Props) {
               className="px-4 py-8 flex flex-col items-center gap-3"
               style={{ color: "var(--muted)" }}
             >
-              <svg
-                viewBox="0 0 24 24"
-                width="32"
-                height="32"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                style={{ opacity: 0.4 }}
-              >
-                <circle cx="11" cy="11" r="8" />
-                <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                <line x1="8" y1="11" x2="14" y2="11" />
-              </svg>
+              <FiSearch size={32} style={{ opacity: 0.4 }} />
               <div className="text-center">
                 <p
                   className="text-sm font-medium"

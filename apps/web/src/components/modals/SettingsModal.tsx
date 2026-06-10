@@ -1,5 +1,13 @@
 "use client";
 
+import {
+  FiLogOut,
+  FiMoon,
+  FiSettings,
+  FiSun,
+  FiUser,
+  FiX,
+} from "react-icons/fi";
 import { useEffect, useState } from "react";
 import { useTheme } from "next-themes";
 import { useUser } from "../../contexts/UserContext";
@@ -57,14 +65,7 @@ export default function SettingsModal({ onClose, onOpenAccount }: Props) {
                 border: "1px solid var(--border)",
               }}
             >
-              <svg
-                viewBox="0 0 24 24"
-                width="18"
-                height="18"
-                fill="currentColor"
-              >
-                <path d="M19.14 12.94c.04-.3.06-.61.06-.94s-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.49.49 0 0 0-.59-.22l-2.39.96a6.97 6.97 0 0 0-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.49.49 0 0 0-.59.22L2.74 8.87a.48.48 0 0 0 .12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.37 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.57 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32a.49.49 0 0 0-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z" />
-              </svg>
+              <FiSettings size={18} />
             </div>
             <p
               className="text-sm font-semibold"
@@ -85,18 +86,7 @@ export default function SettingsModal({ onClose, onOpenAccount }: Props) {
               (e.currentTarget.style.background = "transparent")
             }
           >
-            <svg
-              viewBox="0 0 24 24"
-              width="14"
-              height="14"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-            >
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
+            <FiX size={14} />
           </button>
         </div>
 
@@ -117,9 +107,14 @@ export default function SettingsModal({ onClose, onOpenAccount }: Props) {
                     value: "light",
                     label: "Liberty",
                     sub: "Light",
-                    icon: "☀️",
+                    icon: <FiSun size={20} />,
                   },
-                  { value: "dark", label: "Fiord", sub: "Dark", icon: "🌙" },
+                  {
+                    value: "dark",
+                    label: "Fiord",
+                    sub: "Dark",
+                    icon: <FiMoon size={20} />,
+                  },
                 ] as const
               ).map(({ value, label, sub, icon }) => {
                 const active = mounted && resolvedTheme === value;
@@ -177,14 +172,7 @@ export default function SettingsModal({ onClose, onOpenAccount }: Props) {
                   (e.currentTarget.style.background = "var(--surface)")
                 }
               >
-                <svg
-                  viewBox="0 0 24 24"
-                  width="15"
-                  height="15"
-                  fill="currentColor"
-                >
-                  <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z" />
-                </svg>
+                <FiUser size={15} />
                 Edit Profile
               </button>
               <button
@@ -206,14 +194,7 @@ export default function SettingsModal({ onClose, onOpenAccount }: Props) {
                   (e.currentTarget.style.background = "var(--surface)")
                 }
               >
-                <svg
-                  viewBox="0 0 24 24"
-                  width="15"
-                  height="15"
-                  fill="currentColor"
-                >
-                  <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5-5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z" />
-                </svg>
+                <FiLogOut size={15} />
                 Sign Out
               </button>
             </div>
