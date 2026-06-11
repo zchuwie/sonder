@@ -1,0 +1,10 @@
+import { notFound } from "next/navigation";
+import { PublicPostView } from "@/features/posts/components/PublicPostView";
+import { mockMarkers } from "@/features/posts/lib/mock-posts";
+
+export default async function PostPage({ params }: { params: Promise<{ postId: string }> }) {
+  const { postId } = await params;
+  const post = mockMarkers.flatMap((marker) => marker.posts).find((item) => item.id === postId);
+  if (!post) notFound();
+  return <PublicPostView post={post} />;
+}
