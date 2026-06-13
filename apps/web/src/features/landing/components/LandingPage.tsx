@@ -12,8 +12,8 @@ import {
   MessageCircleMore,
   Music2,
   ShieldCheck,
-  Sparkles,
   X,
+  Dot,
 } from "lucide-react";
 import { useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
@@ -345,7 +345,7 @@ export function LandingPage() {
 
       <section className="bg-[#a8ba63] px-5 py-28 text-[#101713] sm:px-8 sm:py-40">
         <ScrollReveal className="mx-auto max-w-6xl text-center">
-          <Sparkles className="mx-auto size-7" />
+          <Dot className="mx-auto size-40 -mb-20" />
           <blockquote className="mt-10 font-serif text-[clamp(3.4rem,8vw,8rem)] leading-[0.95] tracking-[-0.055em]">
             Every place has a version of someone that stayed behind.
           </blockquote>

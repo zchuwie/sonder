@@ -8,7 +8,7 @@ export function PostClusterList({ posts, onSelect, limit = 3 }: { posts: Anonymo
   return (
     <div className="space-y-2">
       {posts.filter((post) => post.moderationStatus !== "hidden").slice(0, limit).map((post, index) => (
-        <button key={post.id} type="button" onClick={() => onSelect(post)} className="flex w-full items-start gap-3 rounded-2xl bg-muted/55 p-3 text-left transition hover:bg-muted">
+        <button key={post.id} type="button" onClick={() => onSelect(post)} className="flex w-full items-start gap-3 rounded-2xl border border-black/5 bg-muted/80 p-3 text-left transition-[transform,background-color,box-shadow] duration-200 ease-out hover:-translate-y-0.5 hover:bg-muted hover:shadow-sm">
           <span className="grid size-7 shrink-0 place-items-center rounded-full bg-primary text-[11px] font-semibold text-primary-foreground">{index + 1}</span>
           <span className="min-w-0 flex-1">
             <span className="block truncate text-xs font-semibold">{post.title}</span>

@@ -25,7 +25,7 @@ export function AnonymousPostCard({
       onClick={onClick}
       onKeyDown={(event) => event.key === "Enter" && onClick?.()}
       className={cn(
-        "group flex h-full min-h-[390px] cursor-pointer flex-col gap-0 overflow-hidden rounded-3xl border-primary/10 bg-background/95 p-0 shadow-[0_12px_34px_rgba(18,70,35,.08)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_42px_rgba(18,70,35,.14)] focus-visible:ring-2 focus-visible:ring-primary",
+        "group flex h-full min-h-[390px] cursor-pointer flex-col gap-0 overflow-hidden rounded-3xl border-primary/10 bg-background/95 p-0 shadow-[0_12px_34px_rgba(18,70,35,.08)] transition-[transform,box-shadow,border-color] duration-200 ease-out hover:-translate-y-0.5 hover:shadow-[0_18px_42px_rgba(18,70,35,.14)] focus-visible:ring-2 focus-visible:ring-primary",
         selected && "ring-2 ring-primary",
       )}
     >

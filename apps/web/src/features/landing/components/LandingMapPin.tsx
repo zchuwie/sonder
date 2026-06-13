@@ -39,6 +39,7 @@ export function LandingMapPin() {
   useEffect(() => {
     if (!container.current || map.current) return;
 
+    const mapContainer = container.current;
     let storedPin = INITIAL_LOCATION;
     try {
       const stored = localStorage.getItem(PIN_STORAGE_KEY);
@@ -51,7 +52,7 @@ export function LandingMapPin() {
     setMapFailed(false);
 
     map.current = new Map({
-      container: container.current,
+      container: mapContainer,
       style: getOpenFreeMapStyle(initialTheme.current),
       center: [storedPin.lng, storedPin.lat],
       zoom: 13,
@@ -65,13 +66,20 @@ export function LandingMapPin() {
       .setLngLat([storedPin.lng, storedPin.lat])
       .addTo(map.current);
 
+    let loaded = false;
     const loadTimeout = window.setTimeout(() => setMapFailed(true), 15000);
+    const resizeFrame = window.requestAnimationFrame(() => map.current?.resize());
+    const resizeTimeout = window.setTimeout(() => map.current?.resize(), 500);
     map.current.once("load", () => {
+      loaded = true;
       window.clearTimeout(loadTimeout);
       appliedTheme.current = initialTheme.current;
       setMapFailed(false);
       setMapLoaded(true);
       map.current?.resize();
+    });
+    map.current.on("error", () => {
+      if (!loaded) setMapFailed(true);
     });
 
     map.current.on("click", ({ lngLat }) => {
@@ -86,10 +94,12 @@ export function LandingMapPin() {
     });
 
     const resizeObserver = new ResizeObserver(() => map.current?.resize());
-    resizeObserver.observe(container.current);
+    resizeObserver.observe(mapContainer);
 
     return () => {
       window.clearTimeout(loadTimeout);
+      window.clearTimeout(resizeTimeout);
+      window.cancelAnimationFrame(resizeFrame);
       resizeObserver.disconnect();
       marker.current?.remove();
       marker.current = null;
@@ -134,15 +144,17 @@ export function LandingMapPin() {
   };
 
   return (
-    <div className="relative min-h-[520px] overflow-hidden rounded-[2rem] border border-black/10 bg-[#dfe4d8] shadow-2xl shadow-black/20 dark:border-white/10 sm:min-h-[620px]">
+    <div className="relative h-[520px] w-full overflow-hidden rounded-[2rem] border border-black/10 bg-[#dfe4d8] shadow-2xl shadow-black/20 dark:border-white/10 sm:h-[620px]">
       <div
         ref={container}
-        className="absolute inset-0"
+        className="absolute inset-0 z-0 size-full"
         aria-label="Interactive OpenFreeMap preview. Click the map to move your locally stored pin."
       />
 
       {!mapLoaded && !mapFailed && (
-        <AppLoading contained label="Loading the map..." />
+        <div className="absolute inset-0 z-10">
+          <AppLoading contained label="Loading map preview..." />
+        </div>
       )}
       {mapFailed && (
         <div className="absolute inset-0 z-30 flex items-center justify-center bg-[#eef0e5] p-6 text-center text-[#101713] dark:bg-[#101713] dark:text-[#f5f1e8]">
@@ -163,17 +175,14 @@ export function LandingMapPin() {
         </div>
       )}
 
-      <div className="absolute inset-x-4 top-4 z-10 sm:left-5 sm:right-auto sm:w-[360px]">
+      <div className="absolute inset-x-4 top-4 z-20 sm:left-5 sm:right-auto sm:w-[360px]">
         <MapSearchBar onPlaceSelect={selectPlace} />
       </div>
 
-      <div className="pointer-events-none absolute inset-x-4 bottom-4 z-10 flex flex-col items-stretch gap-3 sm:inset-x-6 sm:bottom-6 sm:flex-row sm:items-end sm:justify-between">
+      <div className="pointer-events-none absolute inset-x-4 bottom-4 z-20 flex flex-col items-stretch gap-3 sm:inset-x-6 sm:bottom-6 sm:flex-row sm:items-end sm:justify-between">
         <div className="pointer-events-auto max-w-[390px] rounded-3xl border border-white/70 bg-[#f9f7f0]/95 p-5 text-[#101713] shadow-2xl backdrop-blur-xl">
-          <div className="mb-4 flex items-center justify-between gap-4 text-[10px] font-bold uppercase tracking-[0.15em] text-[#647067]">
+          <div className="mb-4 text-[10px] font-bold uppercase tracking-[0.15em] text-[#647067]">
             <span>Your local pin</span>
-            <span className="rounded-full bg-[#e5eadc] px-2.5 py-1">
-              Stored on this device
-            </span>
           </div>
           <p className="font-serif text-2xl leading-tight">{pin.name}</p>
           <div className="mt-4 flex items-center justify-between gap-4 text-xs text-[#687169]">
@@ -204,7 +213,7 @@ export function LandingMapPin() {
         </div>
       </div>
 
-      <div className="pointer-events-none absolute right-4 top-24 z-10 rounded-full bg-[#101713]/80 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-white backdrop-blur sm:right-5">
+      <div className="pointer-events-none absolute right-4 top-24 z-20 rounded-full bg-[#101713]/80 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-white backdrop-blur sm:right-5">
         Click anywhere to pin
       </div>
     </div>

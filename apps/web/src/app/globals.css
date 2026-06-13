@@ -152,9 +152,11 @@ body {
 
 .maplibregl-ctrl-group {
   overflow: hidden;
-  border: 1px solid rgb(255 255 255 / 70%);
+  border: 1px solid rgb(0 0 0 / 10%);
   border-radius: 14px !important;
+  background: rgb(255 255 255 / 95%) !important;
   box-shadow: 0 8px 24px rgb(15 23 42 / 14%) !important;
+  backdrop-filter: blur(12px);
 }
 
 .maplibregl-ctrl-attrib {
@@ -166,19 +168,20 @@ body {
   backdrop-filter: blur(12px);
 }
 
-.maplibregl-ctrl-top-right {
-  top: 80px;
-  right: 10px;
-}
-
 @media (min-width: 640px) {
-  .maplibregl-ctrl-top-right {
-    top: 88px;
-    right: 20px;
-  }
-
   .maplibregl-ctrl-bottom-right {
     right: 16px;
     bottom: 10px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

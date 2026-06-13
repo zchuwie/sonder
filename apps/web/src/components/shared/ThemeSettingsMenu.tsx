@@ -17,7 +17,7 @@ export function ThemeSettingsMenu() {
       <Button
         variant="secondary"
         size="icon"
-        className="size-11 rounded-2xl border border-white/70 bg-background/95 shadow-lg backdrop-blur-xl"
+        className="size-11 rounded-full border border-black/10 bg-background/95 shadow-lg backdrop-blur-md"
         aria-label="Theme settings"
         disabled
       >
@@ -29,7 +29,7 @@ export function ThemeSettingsMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="secondary" size="icon" className="size-11 rounded-2xl border border-white/70 bg-background/95 shadow-lg backdrop-blur-xl" aria-label="Theme settings"><Settings2 /></Button>
+        <Button variant="secondary" size="icon" className="size-11 rounded-full border border-black/10 bg-background/95 shadow-lg backdrop-blur-md transition-[transform,background-color,box-shadow] duration-200 hover:scale-[1.03] hover:bg-background hover:shadow-xl" aria-label="Theme settings"><Settings2 /></Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48 rounded-2xl p-2">
         <DropdownMenuLabel>Map appearance</DropdownMenuLabel>
