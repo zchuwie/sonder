@@ -22,8 +22,8 @@ export function buildShareUrl(post: AnonymousPost): string {
   if (post.moderationStatus !== "visible") {
     throw new Error("Only approved thoughts can be shared.");
   }
-  const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(post))));
-  return `${typeof window === "undefined" ? "" : window.location.origin}/share?d=${encoded}`;
+  const origin = typeof window === "undefined" ? "" : window.location.origin;
+  return `${origin}/p/${encodeURIComponent(post.id)}`;
 }
 
 export default function PostDetailModal({
@@ -40,10 +40,10 @@ export default function PostDetailModal({
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-h-[88vh] gap-0 overflow-hidden rounded-[30px] border-primary/15 bg-background/96 p-0 shadow-[0_30px_90px_rgba(18,70,35,.24)] backdrop-blur-xl sm:max-w-xl">
-        <ScrollArea className="max-h-[calc(88vh-72px)]">
-          <div className="p-3">
-            <div className="relative aspect-[16/9] overflow-hidden rounded-[24px] bg-gradient-to-br from-primary/20 via-muted to-background">
+      <DialogContent className="max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-none gap-0 overflow-hidden rounded-2xl border-primary/15 bg-background/96 p-0 shadow-[0_30px_90px_rgba(18,70,35,.24)] backdrop-blur-xl sm:max-h-[88dvh] sm:w-full sm:max-w-xl sm:rounded-[30px]">
+        <ScrollArea className="max-h-[calc(100dvh-5.5rem)] sm:max-h-[calc(88dvh-72px)]">
+          <div className="p-2.5 sm:p-3">
+            <div className="relative aspect-[16/9] overflow-hidden rounded-2xl bg-gradient-to-br from-primary/20 via-muted to-background sm:rounded-[24px]">
               {post.imageUrl && !flagged ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -73,7 +73,7 @@ export default function PostDetailModal({
               )}
             </div>
           </div>
-          <DialogHeader className="space-y-4 px-6 pb-4 pt-3 text-left">
+          <DialogHeader className="space-y-3 px-4 pb-3 pt-2 text-left sm:space-y-4 sm:px-6 sm:pb-4 sm:pt-3">
             <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
               <Badge variant="secondary" className="rounded-full px-3">
                 Anonymous
@@ -86,14 +86,14 @@ export default function PostDetailModal({
                 <Clock3 className="size-3.5" /> {relativeTime(post.createdAt)}
               </span>
             </div>
-            <DialogTitle className="text-left text-2xl leading-8">
+            <DialogTitle className="text-left text-xl leading-7 sm:text-2xl sm:leading-8">
               {post.title}
             </DialogTitle>
             <DialogDescription className="sr-only">
               Anonymous post preview
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-5 px-6 pb-6">
+          <div className="space-y-4 px-4 pb-4 sm:space-y-5 sm:px-6 sm:pb-6">
             <p className="whitespace-pre-wrap text-[15px] leading-7">
               {flagged ? "This post was flagged for review." : post.text}
             </p>
@@ -103,7 +103,7 @@ export default function PostDetailModal({
             </p>
           </div>
         </ScrollArea>
-        <DialogFooter className="flex-row border-t px-6 py-4">
+        <DialogFooter className="flex-row items-center border-t px-4 py-3 pb-[max(.75rem,env(safe-area-inset-bottom))] sm:px-6 sm:py-4">
           <Button
             variant="ghost"
             className="rounded-xl"

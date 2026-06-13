@@ -155,9 +155,9 @@ export function LandingPage() {
     <main className="overflow-hidden bg-[#f5f1e8] text-[#101713] transition-colors dark:bg-[#080b09] dark:text-[#f5f1e8]">
       <LandingNavbar />
 
-      <section className="relative min-h-screen overflow-hidden bg-[#eef0e5] px-5 pb-20 pt-36 text-[#101713] transition-colors dark:bg-[#050706] dark:text-[#f5f1e8] sm:px-8 lg:pt-40">
+      <section className="relative min-h-screen overflow-hidden bg-[#eef0e5] px-5 pb-14 pt-28 text-[#101713] transition-colors dark:bg-[#050706] dark:text-[#f5f1e8] sm:px-8 sm:pb-20 sm:pt-36 lg:pt-40">
         <div className="pointer-events-none absolute -right-36 top-20 size-[500px] rounded-full bg-[#a8ba63]/10 blur-3xl" />
-        <div className="mx-auto grid max-w-7xl items-center gap-16 lg:grid-cols-[1.05fr_.95fr]">
+        <div className="mx-auto grid max-w-7xl items-center gap-10 sm:gap-16 lg:grid-cols-[1.05fr_.95fr]">
           <motion.div
             initial={reduceMotion ? false : { opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
@@ -219,7 +219,7 @@ export function LandingPage() {
         </div>
       </section>
 
-      <section id="features" className="px-5 py-24 sm:px-8 sm:py-32">
+      <section id="features" className="px-5 py-16 sm:px-8 sm:py-24 lg:py-32">
         <div className="mx-auto max-w-7xl">
           <ScrollReveal className="grid gap-8 lg:grid-cols-2">
             <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#607064]">
@@ -232,14 +232,14 @@ export function LandingPage() {
           <ScrollReveal className="mt-16" delay={0.1}>
             <LandingMapPin />
           </ScrollReveal>
-          <div className="mt-20 grid gap-px overflow-hidden rounded-[2rem] border border-[#d7d4c9] bg-[#d7d4c9] md:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-12 grid gap-px overflow-hidden rounded-[2rem] border border-[#d7d4c9] bg-[#d7d4c9] sm:mt-16 md:grid-cols-2 lg:mt-20 lg:grid-cols-3">
             {features.map((feature, index) => (
               <ScrollReveal
                 key={feature.title}
                 delay={index * 0.06}
                 className="bg-[#f8f5ed]"
               >
-                <article className="group min-h-64 p-7 transition duration-300 hover:bg-[#eef0e5] sm:p-9">
+                <article className="group min-h-52 p-5 transition duration-300 hover:bg-[#eef0e5] sm:min-h-64 sm:p-7 lg:p-9">
                   <feature.icon className="size-6 text-[#2f4439] transition group-hover:scale-110" />
                   <h3 className="mt-12 font-serif text-3xl">{feature.title}</h3>
                   <p className="mt-4 max-w-xs text-sm leading-7 text-[#687168]">
@@ -254,7 +254,7 @@ export function LandingPage() {
 
       <section
         id="how-it-works"
-        className="bg-[#2f4439] px-5 py-24 text-[#f5f1e8] sm:px-8 sm:py-32"
+        className="bg-[#2f4439] px-5 py-16 text-[#f5f1e8] sm:px-8 sm:py-24 lg:py-32"
       >
         <div className="mx-auto max-w-7xl">
           <ScrollReveal className="max-w-3xl">
@@ -265,10 +265,10 @@ export function LandingPage() {
               Start with a place.
             </h2>
           </ScrollReveal>
-          <div className="mt-16 grid gap-4 lg:grid-cols-3">
+          <div className="mt-10 grid gap-4 sm:mt-16 lg:grid-cols-3">
             {steps.map(([number, title, copy], index) => (
               <ScrollReveal key={number} delay={index * 0.1}>
-                <article className="min-h-72 rounded-[2rem] border border-white/15 bg-white/[0.04] p-8">
+                <article className="min-h-56 rounded-[2rem] border border-white/15 bg-white/[0.04] p-5 sm:min-h-72 sm:p-8">
                   <span className="font-serif text-5xl text-[#a8ba63]">
                     {number}
                   </span>
@@ -283,7 +283,7 @@ export function LandingPage() {
         </div>
       </section>
 
-      <section className="px-5 py-24 sm:px-8 sm:py-32">
+      <section className="px-5 py-16 sm:px-8 sm:py-24 lg:py-32">
         <div className="mx-auto grid max-w-7xl gap-16 lg:grid-cols-2">
           <ScrollReveal
             direction="left"
@@ -343,7 +343,7 @@ export function LandingPage() {
         </div>
       </section>
 
-      <section className="bg-[#a8ba63] px-5 py-28 text-[#101713] sm:px-8 sm:py-40">
+      <section className="bg-[#a8ba63] px-5 py-20 text-[#101713] sm:px-8 sm:py-28 lg:py-40">
         <ScrollReveal className="mx-auto max-w-6xl text-center">
           <Dot className="mx-auto size-40 -mb-20" />
           <blockquote className="mt-10 font-serif text-[clamp(3.4rem,8vw,8rem)] leading-[0.95] tracking-[-0.055em]">
@@ -352,7 +352,7 @@ export function LandingPage() {
         </ScrollReveal>
       </section>
 
-      <section className="px-5 py-24 sm:px-8 sm:py-32">
+      <section className="px-5 py-16 sm:px-8 sm:py-24 lg:py-32">
         <div className="mx-auto max-w-7xl">
           <ScrollReveal>
             <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#607064] dark:text-[#a8ba63]">
@@ -411,7 +411,7 @@ export function LandingPage() {
         </div>
       </section>
 
-      <section className="bg-[#e6eadc] px-5 py-24 text-[#101713] transition-colors dark:bg-[#050706] dark:text-[#f5f1e8] sm:px-8 sm:py-32">
+      <section className="bg-[#e6eadc] px-5 py-16 text-[#101713] transition-colors dark:bg-[#050706] dark:text-[#f5f1e8] sm:px-8 sm:py-24 lg:py-32">
         <ScrollReveal className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-10 rounded-[2.5rem] border border-black/10 bg-[#f5f1e8] p-8 dark:border-white/10 dark:bg-[#101713] sm:p-14 lg:flex-row lg:items-end">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#a8ba63]">

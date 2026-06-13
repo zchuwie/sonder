@@ -25,7 +25,7 @@ export function AnonymousPostCard({
       onClick={onClick}
       onKeyDown={(event) => event.key === "Enter" && onClick?.()}
       className={cn(
-        "group flex h-full min-h-[390px] cursor-pointer flex-col gap-0 overflow-hidden rounded-3xl border-primary/10 bg-background/95 p-0 shadow-[0_12px_34px_rgba(18,70,35,.08)] transition-[transform,box-shadow,border-color] duration-200 ease-out hover:-translate-y-0.5 hover:shadow-[0_18px_42px_rgba(18,70,35,.14)] focus-visible:ring-2 focus-visible:ring-primary",
+        "group flex h-full min-h-[320px] cursor-pointer flex-col gap-0 overflow-hidden rounded-2xl border-primary/10 bg-background/95 p-0 shadow-[0_12px_34px_rgba(18,70,35,.08)] transition-[transform,box-shadow,border-color] duration-200 ease-out hover:-translate-y-0.5 hover:shadow-[0_18px_42px_rgba(18,70,35,.14)] focus-visible:ring-2 focus-visible:ring-primary sm:min-h-[390px] sm:rounded-3xl",
         selected && "ring-2 ring-primary",
       )}
     >
@@ -47,8 +47,8 @@ export function AnonymousPostCard({
           {post.imageUrl ? "Photo thought" : post.music ? "Song thought" : "Written thought"}
         </span>
       </div>
-      <div className="flex flex-1 flex-col space-y-4 p-5">
-        <div className="flex flex-wrap gap-2">
+      <div className="flex flex-1 flex-col space-y-3 p-4 sm:space-y-4 sm:p-5">
+        <div className="flex flex-wrap gap-1.5 sm:gap-2">
           <Badge variant="secondary" className="rounded-full">
             Anonymous
           </Badge>
@@ -69,7 +69,7 @@ export function AnonymousPostCard({
           {flagged ? "This post was flagged for review." : post.text || "An anonymous moment was left here."}
           </p>
         </div>
-        <div className="mt-auto flex items-center justify-between gap-3 border-t border-primary/10 pt-4 text-xs text-muted-foreground">
+        <div className="mt-auto flex items-center justify-between gap-3 border-t border-primary/10 pt-3 text-xs text-muted-foreground sm:pt-4">
           <span className="truncate">{post.placeName ?? "Pinned nearby"}</span>
           <span className="flex shrink-0 items-center gap-1">
             <Clock3 className="size-3" /> {relativeTime(post.createdAt)}

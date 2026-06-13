@@ -27,9 +27,9 @@ function ModerationCard({
   onReject?: () => void;
 }) {
   return (
-    <Card className="gap-0 overflow-hidden rounded-3xl p-0">
-      <div className="grid sm:grid-cols-[180px_1fr]">
-        <div className="aspect-[16/9] bg-gradient-to-br from-primary/20 via-muted to-background sm:aspect-auto">
+    <Card className="gap-0 overflow-hidden rounded-2xl p-0 sm:rounded-3xl">
+      <div className="grid md:grid-cols-[180px_1fr]">
+        <div className="aspect-[16/9] max-h-48 bg-gradient-to-br from-primary/20 via-muted to-background md:max-h-none md:aspect-auto">
           {post.imageUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -46,7 +46,7 @@ function ModerationCard({
             </div>
           ) : null}
         </div>
-        <div className="space-y-4 p-5">
+        <div className="space-y-3 p-4 sm:space-y-4 sm:p-5">
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant="secondary">Anonymous</Badge>
             <Badge variant="outline" className="capitalize">
@@ -71,15 +71,15 @@ function ModerationCard({
             </span>
           </div>
           {(onApprove || onReject) && (
-            <div className="flex justify-end gap-2 border-t pt-4">
+            <div className="grid grid-cols-2 gap-2 border-t pt-3 sm:flex sm:justify-end sm:pt-4">
               <Button
                 variant="destructive"
-                className="rounded-xl"
+                className="w-full rounded-xl sm:w-auto"
                 onClick={onReject}
               >
                 <Trash2 /> Reject
               </Button>
-              <Button className="rounded-xl" onClick={onApprove}>
+              <Button className="w-full rounded-xl sm:w-auto" onClick={onApprove}>
                 <Check /> Approve
               </Button>
             </div>
@@ -137,8 +137,8 @@ export function AdminDashboard({
 
   return (
     <div className="min-h-dvh bg-muted/40">
-      <header className="border-b bg-background/95 px-5 py-4 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between">
+      <header className="border-b bg-background/95 px-3 py-3 backdrop-blur sm:px-5 sm:py-4">
+        <div className="mx-auto flex max-w-6xl flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="flex items-center gap-2 text-lg font-semibold text-primary">
               <ShieldCheck className="size-5" /> Sonder Admin
@@ -147,7 +147,7 @@ export function AdminDashboard({
               Moderate anonymous public thoughts
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="grid grid-cols-2 gap-2 sm:flex">
             <Button asChild variant="outline" className="rounded-xl">
               <Link href="/map">
                 <Eye /> View public map
@@ -157,28 +157,28 @@ export function AdminDashboard({
           </div>
         </div>
       </header>
-      <main className="mx-auto max-w-6xl space-y-6 px-5 py-8">
-        <section className="grid gap-4 sm:grid-cols-3">
+      <main className="mx-auto max-w-6xl space-y-4 px-3 py-5 sm:space-y-6 sm:px-5 sm:py-8">
+        <section className="grid grid-cols-3 gap-2 sm:gap-4">
           {[
             { label: "Pending review", value: pending.length },
             { label: "Visible posts", value: visible.length },
             { label: "Rejected posts", value: rejected.length },
           ].map((item) => (
-            <Card key={item.label} className="rounded-3xl p-5">
-              <p className="text-sm text-muted-foreground">{item.label}</p>
-              <p className="mt-2 text-3xl font-semibold text-primary">
+            <Card key={item.label} className="rounded-2xl p-3 sm:rounded-3xl sm:p-5">
+              <p className="text-[10px] leading-4 text-muted-foreground sm:text-sm">{item.label}</p>
+              <p className="mt-1 text-2xl font-semibold text-primary sm:mt-2 sm:text-3xl">
                 {item.value}
               </p>
             </Card>
           ))}
         </section>
         <Tabs defaultValue="pending">
-          <TabsList className="rounded-xl">
+          <TabsList className="w-full rounded-xl">
             <TabsTrigger value="pending">Pending</TabsTrigger>
             <TabsTrigger value="visible">Approved</TabsTrigger>
             <TabsTrigger value="rejected">Rejected</TabsTrigger>
           </TabsList>
-          <TabsContent value="pending" className="mt-5 space-y-4">
+          <TabsContent value="pending" className="mt-4 space-y-3 sm:mt-5 sm:space-y-4">
             {pending.length ? (
               pending.map(({ marker, post }) => (
                 <ModerationCard
@@ -193,7 +193,7 @@ export function AdminDashboard({
               <EmptyState text="No posts are waiting for review." />
             )}
           </TabsContent>
-          <TabsContent value="visible" className="mt-5 space-y-4">
+          <TabsContent value="visible" className="mt-4 space-y-3 sm:mt-5 sm:space-y-4">
             {visible.length ? (
               visible.map(({ marker, post }) => (
                 <ModerationCard
@@ -206,7 +206,7 @@ export function AdminDashboard({
               <EmptyState text="No approved posts yet." />
             )}
           </TabsContent>
-          <TabsContent value="rejected" className="mt-5 space-y-4">
+          <TabsContent value="rejected" className="mt-4 space-y-3 sm:mt-5 sm:space-y-4">
             {rejected.length ? (
               rejected.map(({ marker, post }) => (
                 <ModerationCard

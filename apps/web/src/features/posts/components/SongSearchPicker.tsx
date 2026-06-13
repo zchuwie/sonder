@@ -99,7 +99,7 @@ export function SongSearchPicker({
         <p className="px-3 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
           {query.trim() ? "Search results" : "Suggested songs"}
         </p>
-        <div className="max-h-[304px] space-y-1 overflow-y-auto p-2 pt-1">
+        <div className="max-h-[280px] space-y-1 overflow-y-auto p-2 pt-1">
           {loading ? (
             <div className="grid place-items-center gap-2 py-8 text-xs text-muted-foreground">
               <LoaderCircle className="size-5 animate-spin text-primary" />
@@ -114,7 +114,7 @@ export function SongSearchPicker({
             results.map((song) => (
               <div
                 key={song.id}
-                className="flex h-14 w-full items-center gap-3 rounded-xl px-2 text-left transition-colors hover:bg-muted focus-within:bg-muted"
+                className="flex h-14 w-full items-center gap-2 rounded-xl px-2 text-left transition-colors hover:bg-muted focus-within:bg-muted sm:gap-3"
               >
                 <button
                   type="button"

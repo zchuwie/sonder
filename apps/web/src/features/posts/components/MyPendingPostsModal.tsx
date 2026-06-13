@@ -30,8 +30,8 @@ export function MyPendingPostsModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[88vh] gap-0 overflow-hidden rounded-3xl p-0 sm:max-w-2xl">
-        <DialogHeader className="border-b px-6 py-5 pr-14">
+      <DialogContent className="max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-none gap-0 overflow-hidden rounded-2xl p-0 sm:max-h-[88dvh] sm:w-full sm:max-w-2xl sm:rounded-3xl">
+        <DialogHeader className="border-b px-4 py-4 pr-12 sm:px-6 sm:py-5 sm:pr-14">
           <DialogTitle className="flex items-center gap-2 text-lg">
             <Clock3 className="size-5 text-primary" /> My thoughts
           </DialogTitle>
@@ -39,7 +39,7 @@ export function MyPendingPostsModal({
             These submissions are tied to this anonymous browser session.
           </DialogDescription>
         </DialogHeader>
-        <div className="grid max-h-[65vh] gap-4 overflow-y-auto p-5 sm:grid-cols-2">
+        <div className="grid max-h-[calc(100dvh-8rem)] gap-3 overflow-y-auto p-3 sm:max-h-[65vh] sm:grid-cols-2 sm:gap-4 sm:p-5">
           {pendingPosts.length ? (
             pendingPosts.map((post) => (
               <AnonymousPostCard

@@ -12,7 +12,12 @@ function SharedPost() {
   const raw = useSearchParams().get("d");
   let post: AnonymousPost | null = null;
   try {
-    if (raw) post = JSON.parse(decodeURIComponent(escape(atob(raw)))) as AnonymousPost;
+    if (raw) {
+      const legacyBase64 = raw.replace(/ /g, "+").replace(/-/g, "+").replace(/_/g, "/");
+      post = JSON.parse(
+        decodeURIComponent(escape(atob(legacyBase64))),
+      ) as AnonymousPost;
+    }
   } catch {
     post = null;
   }

@@ -13,7 +13,10 @@ export default async function PostPage({
     (await getVisiblePost(postId)) ??
     mockMarkers
       .flatMap((marker) => marker.posts)
-      .find((item) => item.id === postId);
+      .find(
+        (item) =>
+          item.id === postId && item.moderationStatus === "visible",
+      );
   if (!post) notFound();
   return <PublicPostView post={post} />;
 }

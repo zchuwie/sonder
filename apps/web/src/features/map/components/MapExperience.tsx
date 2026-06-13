@@ -152,14 +152,14 @@ export function MapExperience() {
         onViewportChange={setViewport}
         flyTo={flyTo}
       />
-      <div className="pointer-events-none absolute inset-x-0 top-0 z-40 p-3 sm:p-5">
-        <div className="pointer-events-auto flex min-w-0 items-center gap-2 pr-14 sm:max-w-xl sm:pr-0">
-          <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl border border-white/70 bg-background/95 text-primary shadow-lg backdrop-blur-xl">
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-40 p-2.5 sm:p-5">
+        <div className="pointer-events-auto flex min-w-0 items-center gap-2 pr-[3.25rem] sm:max-w-xl sm:pr-0">
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-white/70 bg-background/95 text-primary shadow-lg backdrop-blur-xl sm:size-11 sm:rounded-2xl">
             <Compass className="size-5" />
           </div>
           <MapSearchBar onPlaceSelect={selectPlace} center={viewport.center} />
         </div>
-        <div className="pointer-events-none absolute right-3 top-3 z-40 flex flex-col items-end gap-3 sm:right-5 sm:top-5">
+        <div className="pointer-events-none absolute right-2.5 top-2.5 z-40 flex flex-col items-end gap-2 sm:right-5 sm:top-5 sm:gap-3">
           <div className="pointer-events-auto">
             <ThemeSettingsMenu />
           </div>
@@ -198,9 +198,9 @@ export function MapExperience() {
           </span>
         </Button>
       </div>
-      <div className="absolute inset-x-3 bottom-3 z-30 sm:hidden">
+      <div className="absolute inset-x-2.5 bottom-0 z-30 pb-[max(.625rem,env(safe-area-inset-bottom))] sm:hidden">
         {selectedMarker ? (
-          <div className="rounded-3xl border border-black/10 bg-background/95 p-4 shadow-2xl backdrop-blur-xl">
+          <div className="rounded-2xl border border-black/10 bg-background/95 p-3 shadow-2xl backdrop-blur-xl">
             <div className="flex items-start gap-3">
               <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
                 <MapPin className="size-5" />

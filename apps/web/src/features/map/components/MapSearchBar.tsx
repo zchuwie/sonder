@@ -187,7 +187,7 @@ export function MapSearchBar({ onPlaceSelect, center }: Props) {
           placeholder="Search barangays, landmarks, or cities..."
           autoComplete="off"
           spellCheck={false}
-          className="w-full rounded-2xl border border-input bg-background/95 py-3 pl-9 pr-9 text-sm shadow-lg outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+          className="h-10 w-full rounded-xl border border-input bg-background/95 py-2.5 pl-9 pr-9 text-sm shadow-lg outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 sm:h-auto sm:rounded-2xl sm:py-3"
         />
         {query && (
           <button
@@ -212,7 +212,7 @@ export function MapSearchBar({ onPlaceSelect, center }: Props) {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 6, scale: 0.985 }}
             transition={{ duration: reduceMotion ? 0.01 : 0.2 }}
-            className="absolute left-0 right-0 top-full z-40 mt-2 overflow-hidden rounded-2xl border border-black/10 bg-background/95 shadow-xl backdrop-blur-md"
+            className="absolute left-0 right-0 top-full z-40 mt-2 max-h-[min(70dvh,28rem)] overflow-hidden rounded-xl border border-black/10 bg-background/95 shadow-xl backdrop-blur-md sm:rounded-2xl"
           >
             {(showRecent || results.length > 0) && (
               <div className="flex items-center gap-2 border-b px-4 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -230,7 +230,7 @@ export function MapSearchBar({ onPlaceSelect, center }: Props) {
                 </p>
               </div>
             )}
-            <ul role="listbox" className="max-h-72 overflow-y-auto">
+            <ul role="listbox" className="max-h-[min(56dvh,18rem)] overflow-y-auto">
               {visible.map((place, index) => (
                 <li key={place.id} role="option" aria-selected={index === activeIndex}>
                   <button
