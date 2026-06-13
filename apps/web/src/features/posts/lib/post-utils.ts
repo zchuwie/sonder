@@ -64,6 +64,64 @@ export function getVisiblePosts(markers: MarkerData[]): AnonymousPost[] {
     .filter((post) => post.moderationStatus === "visible");
 }
 
+type Coordinates = { lat: number; lng: number };
+type MapBounds = {
+  north: number;
+  south: number;
+  east: number;
+  west: number;
+};
+
+function distanceInKm(from: Coordinates, to: Coordinates): number {
+  const earthRadiusKm = 6371;
+  const toRadians = (value: number) => (value * Math.PI) / 180;
+  const latDistance = toRadians(to.lat - from.lat);
+  const lngDistance = toRadians(to.lng - from.lng);
+  const a =
+    Math.sin(latDistance / 2) ** 2 +
+    Math.cos(toRadians(from.lat)) *
+      Math.cos(toRadians(to.lat)) *
+      Math.sin(lngDistance / 2) ** 2;
+
+  return earthRadiusKm * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function isInsideBounds(post: AnonymousPost, bounds: MapBounds): boolean {
+  const insideLongitude =
+    bounds.west <= bounds.east
+      ? post.lng >= bounds.west && post.lng <= bounds.east
+      : post.lng >= bounds.west || post.lng <= bounds.east;
+
+  return (
+    post.lat >= bounds.south &&
+    post.lat <= bounds.north &&
+    insideLongitude
+  );
+}
+
+export function getNearbyVisiblePosts(
+  markers: MarkerData[],
+  center: Coordinates,
+  bounds: MapBounds,
+): AnonymousPost[] {
+  return getVisiblePosts(markers)
+    .filter((post) => isInsideBounds(post, bounds))
+    .map((post) => {
+      const distance = distanceInKm(center, post);
+      return {
+        ...post,
+        distanceLabel:
+          distance < 1
+            ? `${Math.max(1, Math.round(distance * 1000))} m away`
+            : `${distance.toFixed(1)} km away`,
+      };
+    })
+    .sort(
+      (a, b) =>
+        distanceInKm(center, a) - distanceInKm(center, b),
+    );
+}
+
 export function getPublicMarkers(markers: MarkerData[]): MarkerData[] {
   return markers
     .map((marker) => ({

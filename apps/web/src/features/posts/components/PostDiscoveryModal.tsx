@@ -36,9 +36,9 @@ export function PostDiscoveryModal({
       <DialogContent className="max-h-[88vh] gap-0 overflow-hidden rounded-3xl border-primary/15 bg-background/95 p-0 shadow-[0_30px_90px_rgba(18,70,35,.24)] backdrop-blur-xl sm:max-w-3xl">
         <DialogHeader className="border-b px-6 py-5 pr-14">
           <DialogTitle className="flex items-center gap-2 text-lg">
-            <Sparkles className="size-5 text-primary" /> Thoughts around Manila
+            <Sparkles className="size-5 text-primary" /> Thoughts in this map area
           </DialogTitle>
-          <DialogDescription>Anonymous memories, confessions, photos, and songs pinned nearby.</DialogDescription>
+          <DialogDescription>Approved thoughts visible in your current map preview, nearest first.</DialogDescription>
         </DialogHeader>
         <div className="space-y-4 border-b px-6 py-4">
           <div className="relative">
