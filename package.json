@@ -10,10 +10,21 @@
     "dev": "turbo run dev",
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "check-types": "turbo run check-types"
+    "check-types": "turbo run check-types",
+    "supabase": "supabase",
+    "supa:init": "supabase init",
+    "supa:login": "supabase login",
+    "supa:start": "supabase start",
+    "supa:stop": "supabase stop",
+    "supa:link": "supabase link",
+    "supa:db:push": "supabase db push",
+    "supa:db:reset": "supabase db reset",
+    "supa:functions:serve": "supabase functions serve",
+    "supa:types": "supabase gen types typescript --linked > apps/web/src/lib/supabase/database.types.ts"
   },
   "devDependencies": {
     "prettier": "^3.7.4",
+    "supabase": "^2.105.0",
     "turbo": "^2.8.11",
     "typescript": "5.9.2"
   },
