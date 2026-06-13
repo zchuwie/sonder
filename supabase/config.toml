@@ -1,0 +1,46 @@
+project_id = "sonder"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "storage", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+
+[db]
+port = 54322
+major_version = 17
+
+[studio]
+enabled = true
+port = 54323
+
+[auth]
+enabled = true
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["http://localhost:3000/**"]
+enable_anonymous_sign_ins = true
+
+[storage]
+enabled = true
+file_size_limit = "5MiB"
+
+[functions.create-post]
+verify_jwt = true
+
+[functions.report-post]
+verify_jwt = true
+
+[functions.deezer-search]
+verify_jwt = false
+
+[functions.admin-approve-post]
+verify_jwt = true
+
+[functions.admin-reject-post]
+verify_jwt = true
+
+[functions.admin-hide-post]
+verify_jwt = true
+
+[functions.signed-post-image]
+verify_jwt = false
