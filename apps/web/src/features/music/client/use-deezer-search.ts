@@ -1,61 +1,72 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { createClient } from "@/lib/supabase/browser";
 import type { MusicSearchResult } from "@/features/music/lib/music-types";
+import {
+  getMusicSearchKey,
+  useMusicSearchStore,
+} from "@/features/music/store/use-music-search-store";
+
+const pendingSearches = new Map<string, Promise<MusicSearchResult[]>>();
+
+async function requestMusic(query: string): Promise<MusicSearchResult[]> {
+  const params = new URLSearchParams(
+    query ? { q: query } : { mode: "suggestions" },
+  );
+  try {
+    const response = await fetch(`/api/music/search?${params}`);
+    if (!response.ok) throw new Error("Website music search unavailable");
+    const payload = (await response.json()) as {
+      results?: MusicSearchResult[];
+    };
+    return payload.results ?? [];
+  } catch {
+    const supabase = createClient();
+    if (!supabase) throw new Error("Music search unavailable");
+    const { data, error } = await supabase.functions.invoke("deezer-search", {
+      body: query ? { query } : { mode: "suggestions" },
+    });
+    if (error) throw error;
+    return (data?.results ?? []) as MusicSearchResult[];
+  }
+}
 
 export function useDeezerSearch(query: string) {
-  const [results, setResults] = useState<MusicSearchResult[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(false);
+  const trimmed = query.trim();
+  const key = getMusicSearchKey(trimmed);
+  const entry = useMusicSearchStore((state) => state.cache[key]);
 
   useEffect(() => {
-    const trimmed = query.trim();
     if (trimmed.length === 1) {
-      setResults([]);
-      setLoading(false);
-      setError(false);
       return;
     }
-    const timer = setTimeout(async () => {
-      setLoading(true);
-      setError(false);
-      try {
-        const params = new URLSearchParams(
-          trimmed ? { q: trimmed } : { mode: "suggestions" },
-        );
-        const response = await fetch(`/api/music/search?${params}`);
-        if (!response.ok) throw new Error("Website music search unavailable");
-        const payload = (await response.json()) as {
-          results?: MusicSearchResult[];
-        };
-        setResults(payload.results ?? []);
-      } catch {
-        const supabase = createClient();
-        if (!supabase) {
-          setResults([]);
-          setError(true);
-          return;
-        }
-        try {
-        const { data, error: requestError } = await supabase.functions.invoke(
-          "deezer-search",
-          {
-            body: trimmed ? { query: trimmed } : { mode: "suggestions" },
-          },
-        );
-        if (requestError) throw requestError;
-        setResults((data?.results ?? []) as MusicSearchResult[]);
-        } catch {
-          setResults([]);
-          setError(true);
-        }
-      } finally {
-        setLoading(false);
-      }
-    }, trimmed ? 300 : 0);
-    return () => clearTimeout(timer);
-  }, [query]);
 
-  return { results, loading, error };
+    const store = useMusicSearchStore.getState();
+    if (store.getFreshEntry(key)) return;
+
+    const timer = setTimeout(() => {
+      const current = useMusicSearchStore.getState();
+      if (current.getFreshEntry(key)) return;
+      current.beginSearch(key);
+
+      const pending =
+        pendingSearches.get(key) ??
+        requestMusic(trimmed).finally(() => pendingSearches.delete(key));
+      pendingSearches.set(key, pending);
+      void pending
+        .then((results) =>
+          useMusicSearchStore.getState().completeSearch(key, results),
+        )
+        .catch(() => useMusicSearchStore.getState().failSearch(key));
+    }, trimmed ? 300 : 0);
+
+    return () => clearTimeout(timer);
+  }, [key, trimmed]);
+
+  return {
+    results: trimmed.length === 1 ? [] : (entry?.results ?? []),
+    loading: trimmed.length === 1 ? false : (entry?.loading ?? true),
+    error: trimmed.length === 1 ? false : (entry?.error ?? false),
+  };
 }

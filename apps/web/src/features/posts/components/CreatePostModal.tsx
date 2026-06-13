@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect } from "react";
 import { MapPin, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,11 +15,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { MiniMapPreview } from "@/features/map/components/MiniMapPreview";
 import { PhotoAttachmentPicker } from "./PhotoAttachmentPicker";
 import { SongSearchPicker } from "./SongSearchPicker";
-import type {
-  MarkerData,
-  Music,
-  PostDraft,
-} from "@/features/posts/lib/post-types";
+import type { MarkerData, PostDraft } from "@/features/posts/lib/post-types";
+import { usePostDraftStore } from "@/features/posts/store/use-post-draft-store";
 
 export default function CreatePostModal({
   marker,
@@ -30,21 +27,30 @@ export default function CreatePostModal({
   onClose: () => void;
   onSubmit: (draft: PostDraft) => void;
 }) {
-  const [text, setText] = useState("");
-  const [title, setTitle] = useState("");
-  const [imageUrl, setImageUrl] = useState<string>();
-  const [imageFile, setImageFile] = useState<File>();
-  const [music, setMusic] = useState<Music>();
+  const title = usePostDraftStore((state) => state.title);
+  const text = usePostDraftStore((state) => state.text);
+  const imageUrl = usePostDraftStore((state) => state.imageUrl);
+  const music = usePostDraftStore((state) => state.music);
+  const setTitle = usePostDraftStore((state) => state.setTitle);
+  const setText = usePostDraftStore((state) => state.setText);
+  const setImageUrl = usePostDraftStore((state) => state.setImageUrl);
+  const setImageFile = usePostDraftStore((state) => state.setImageFile);
+  const setMusic = usePostDraftStore((state) => state.setMusic);
+  const prepareForLocation = usePostDraftStore(
+    (state) => state.prepareForLocation,
+  );
+  const getDraft = usePostDraftStore((state) => state.getDraft);
+  const resetDraft = usePostDraftStore((state) => state.reset);
+
+  useEffect(() => {
+    prepareForLocation(marker);
+  }, [marker, prepareForLocation]);
+
   const canSubmit = Boolean(title.trim() && text.trim());
   const submit = () => {
     if (!canSubmit) return;
-    onSubmit({
-      title: title.trim(),
-      text: text.trim(),
-      imageUrl,
-      imageFile,
-      music,
-    });
+    onSubmit(getDraft());
+    resetDraft();
     onClose();
   };
 
