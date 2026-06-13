@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { AnimatePresence } from "framer-motion";
 import { FiMapPin } from "react-icons/fi";
 import {
   Map,
@@ -18,6 +19,10 @@ import { AppLoading } from "@/components/shared/AppLoading";
 const PIN_COLOR = "#137818";
 
 type FlyToTarget = { lat: number; lng: number; zoom?: number } | null;
+export type MapViewport = {
+  center: { lat: number; lng: number };
+  bounds: { north: number; south: number; east: number; west: number };
+};
 
 type Props = {
   markers: MarkerData[];
@@ -26,6 +31,7 @@ type Props = {
   onMarkerSelect: (id: string | null) => void;
   onCreatePost: () => void;
   onViewGroup: () => void;
+  onViewportChange?: (viewport: MapViewport) => void;
   flyTo?: FlyToTarget;
 };
 
@@ -36,12 +42,14 @@ export default function MapCanvas({
   onMarkerSelect,
   onCreatePost,
   onViewGroup,
+  onViewportChange,
   flyTo,
 }: Props) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<Map | null>(null);
   const onMarkerSelectRef = useRef(onMarkerSelect);
   const onMarkerAddRef = useRef(onMarkerAdd);
+  const onViewportChangeRef = useRef(onViewportChange);
   const markersRef = useRef<MarkerData[]>(markers);
   const searchMarkersRef = useRef<globalThis.Map<string, MLMarker>>(
     new globalThis.Map(),
@@ -66,6 +74,7 @@ export default function MapCanvas({
 
   onMarkerSelectRef.current = onMarkerSelect;
   onMarkerAddRef.current = onMarkerAdd;
+  onViewportChangeRef.current = onViewportChange;
   markersRef.current = markers;
 
   const buildGeoJSON = (items: MarkerData[]): GeoJSON.FeatureCollection => ({
@@ -93,12 +102,29 @@ export default function MapCanvas({
 
     map.current.getCanvas().style.cursor = "pointer";
 
-    map.current.addControl(new NavigationControl());
+    map.current.addControl(new NavigationControl(), "bottom-left");
+
+    const reportViewport = () => {
+      if (!map.current) return;
+      const center = map.current.getCenter();
+      const bounds = map.current.getBounds();
+      onViewportChangeRef.current?.({
+        center: { lat: center.lat, lng: center.lng },
+        bounds: {
+          north: bounds.getNorth(),
+          south: bounds.getSouth(),
+          east: bounds.getEast(),
+          west: bounds.getWest(),
+        },
+      });
+    };
+    map.current.on("moveend", reportViewport);
 
     // GeoJSON
     map.current.on("load", () => {
       if (!map.current) return;
       setMapLoaded(true);
+      reportViewport();
 
       map.current.addSource("pins", {
         type: "geojson",
@@ -222,6 +248,7 @@ export default function MapCanvas({
     });
 
     return () => {
+      map.current?.off("moveend", reportViewport);
       map.current?.remove();
       map.current = null;
     };
@@ -420,10 +447,12 @@ export default function MapCanvas({
       <div ref={mapContainer} className="w-full h-full" />
       {!mapLoaded && <AppLoading contained label="Loading the map..." />}
 
-      {selectedMarkerId &&
-        previewPosition &&
-        markers.some((marker) => marker.id === selectedMarkerId) && (
+      <AnimatePresence>
+        {selectedMarkerId &&
+          previewPosition &&
+          markers.some((marker) => marker.id === selectedMarkerId) && (
           <MapPostPreview
+            key={selectedMarkerId}
             marker={markers.find((marker) => marker.id === selectedMarkerId)!}
             position={previewPosition}
             onClose={() => onMarkerSelect(null)}
@@ -431,6 +460,7 @@ export default function MapCanvas({
             onViewGroup={onViewGroup}
           />
         )}
+      </AnimatePresence>
 
       {/* Long-press progress ring (mobile) */}
       {holdIndicator && (

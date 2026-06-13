@@ -1,16 +1,25 @@
-export type ModerationStatus = "visible" | "pending" | "flagged" | "hidden";
+export type ModerationStatus =
+  | "visible"
+  | "pending"
+  | "rejected"
+  | "flagged"
+  | "hidden";
 
 export type PostType = "text" | "photo" | "song" | "mixed";
 
 export type Music = {
   id?: string;
+  provider?: "deezer";
+  providerId?: string;
   title: string;
   artist: string;
   album?: string;
-  platform?: "spotify" | "manual";
+  platform?: "deezer" | "spotify" | "manual";
   url?: string;
+  deezerUrl?: string;
+  previewUrl?: string;
   coverUrl?: string;
-  duration?: string;
+  duration?: string | number;
 };
 
 export type AnonymousPost = {
@@ -32,6 +41,7 @@ export type PostDraft = {
   title: string;
   text: string;
   imageUrl?: string;
+  imageFile?: File;
   music?: Music;
 };
 
