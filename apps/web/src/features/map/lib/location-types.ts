@@ -7,4 +7,6 @@ export type LocationPlaceDTO = {
   tags: string[];
   lat: number;
   lng: number;
+  provider?: "photon" | "nominatim" | "local";
+  bbox?: [number, number, number, number];
 };
