@@ -1,10 +1,14 @@
+"use client";
+
 import { ExternalLink, Music2 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { AudioPreviewButton } from "@/features/music/components/AudioPreviewButton";
 import type { Music } from "@/features/posts/lib/post-types";
 
 export function MusicPreviewCard({ music, compact = false }: { music: Music; compact?: boolean }) {
-  const content = (
-    <div className="flex items-center gap-3">
+  const deezerUrl = music.deezerUrl ?? music.url;
+  return (
+    <div className="flex items-center gap-3 rounded-2xl border bg-muted/50 p-3.5">
       {music.coverUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={music.coverUrl} alt="" className={compact ? "size-10 rounded-xl object-cover" : "size-14 rounded-2xl object-cover shadow-sm"} />
@@ -14,10 +18,22 @@ export function MusicPreviewCard({ music, compact = false }: { music: Music; com
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-semibold">{music.title}</p>
         <p className="mt-0.5 truncate text-xs text-muted-foreground">{music.artist}</p>
+        {!music.previewUrl && (
+          <p className="mt-1 text-[10px] text-muted-foreground">Preview unavailable</p>
+        )}
       </div>
-      {music.platform && <Badge variant="secondary" className="rounded-full capitalize">{music.platform}</Badge>}
-      {music.url && <ExternalLink className="size-3.5 text-muted-foreground" />}
+      <AudioPreviewButton
+        previewUrl={music.previewUrl}
+        providerId={music.providerId ?? music.id}
+        label={music.title}
+      />
+      {deezerUrl && (
+        <Button asChild type="button" variant="ghost" size="icon-sm" className="shrink-0 rounded-full">
+          <a href={deezerUrl} target="_blank" rel="noreferrer" aria-label={`Open ${music.title}`}>
+            <ExternalLink />
+          </a>
+        </Button>
+      )}
     </div>
   );
-  return music.url ? <a href={music.url} target="_blank" rel="noreferrer" className="block rounded-2xl border bg-muted/50 p-3.5 transition hover:bg-muted">{content}</a> : <div className="rounded-2xl border bg-muted/50 p-3.5">{content}</div>;
 }

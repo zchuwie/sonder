@@ -20,8 +20,12 @@ export function PublicPostView({ post }: { post: AnonymousPost }) {
             // eslint-disable-next-line @next/next/no-img-element
             <img src={post.imageUrl} alt="" className="size-full object-cover" />
           ) : post.music?.coverUrl && post.moderationStatus !== "flagged" ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={post.music.coverUrl} alt="" className="absolute left-1/2 top-1/2 size-36 -translate-x-1/2 -translate-y-1/2 rounded-3xl object-cover shadow-xl" />
+            <>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={post.music.coverUrl} alt="" className="size-full scale-110 object-cover opacity-30 blur-xl" />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={post.music.coverUrl} alt="" className="absolute left-1/2 top-1/2 size-36 -translate-x-1/2 -translate-y-1/2 rounded-3xl object-cover shadow-xl" />
+            </>
           ) : <div className="grid size-full place-items-center text-sm text-muted-foreground">An anonymous thought</div>}
         </div>
         <div className="space-y-5 p-6 sm:p-8">
