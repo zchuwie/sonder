@@ -35,6 +35,7 @@ import type {
 import type { LocationPlaceDTO } from "@/features/map/lib/location-types";
 import { useModeration } from "@/features/moderation/components/ModerationProvider";
 import { createSupabasePost } from "@/features/posts/client/use-create-post";
+import { getFunctionErrorMessage } from "@/lib/supabase/function-error";
 import { MyPendingPostsModal } from "@/features/posts/components/MyPendingPostsModal";
 
 type FlyToTarget = { lat: number; lng: number; zoom?: number } | null;
@@ -113,10 +114,18 @@ export function MapExperience() {
     setSelectedMarkerId(existing?.id ?? place.id);
   };
 
-  const addPost = (draft: PostDraft) => {
-    if (!selectedMarker) return;
-    const post = createPost(selectedMarker, draft);
-    void createSupabasePost(selectedMarker, draft).catch(() => undefined);
+  const addPost = async (draft: PostDraft) => {
+    if (!selectedMarker) throw new Error("Select a location first.");
+    let result;
+    try {
+      result = await createSupabasePost(selectedMarker, draft);
+    } catch (cause) {
+      throw new Error(
+        await getFunctionErrorMessage(cause, "Unable to submit thought."),
+      );
+    }
+    if (!result) throw new Error("Unable to submit thought.");
+    const post = { ...createPost(selectedMarker, draft), id: result.postId };
     setMarkers((current) =>
       groupMarkersByLocation(
         current.map((marker) =>

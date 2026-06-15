@@ -17,7 +17,8 @@ export function AdminReportsTable({ reports }: { reports: Report[] | null }) {
               <Flag className="size-5 text-primary" /> Reports queue
             </h1>
             <p className="mt-1 text-xs text-muted-foreground">
-              Reports are private and available only to the authorized admin.
+              Review report reason together with post text, location, photo,
+              music metadata, and possible private information.
             </p>
           </div>
           <Button asChild variant="outline" className="rounded-xl">

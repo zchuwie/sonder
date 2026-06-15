@@ -332,7 +332,7 @@ export function LandingPage() {
               {[
                 "No personal profiles",
                 "Moderation-ready post states",
-                "Public and anonymous reminders",
+                "Publicly anonymous safety reminders",
               ].map((item) => (
                 <li key={item} className="flex items-center gap-3">
                   <Check className="size-4 text-[#a8ba63]" /> {item}

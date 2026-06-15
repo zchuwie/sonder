@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { MapPin, ShieldCheck } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -25,8 +26,10 @@ export default function CreatePostModal({
 }: {
   marker: MarkerData;
   onClose: () => void;
-  onSubmit: (draft: PostDraft) => void;
+  onSubmit: (draft: PostDraft) => Promise<void>;
 }) {
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
   const title = usePostDraftStore((state) => state.title);
   const text = usePostDraftStore((state) => state.text);
   const imageUrl = usePostDraftStore((state) => state.imageUrl);
@@ -47,11 +50,20 @@ export default function CreatePostModal({
   }, [marker, prepareForLocation]);
 
   const canSubmit = Boolean(title.trim() && text.trim());
-  const submit = () => {
-    if (!canSubmit) return;
-    onSubmit(getDraft());
-    resetDraft();
-    onClose();
+  const submit = async () => {
+    if (!canSubmit || submitting) return;
+    setSubmitting(true);
+    setSubmitError("");
+    try {
+      await onSubmit(getDraft());
+      resetDraft();
+      onClose();
+    } catch (cause) {
+      setSubmitError(
+        cause instanceof Error ? cause.message : "Unable to submit thought.",
+      );
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -78,10 +90,10 @@ export default function CreatePostModal({
                 ?
               </span>
               <div>
-                <p className="text-sm font-semibold">Anonymous</p>
+                <p className="text-sm font-semibold">Publicly anonymous</p>
                 <p className="text-[11px] text-muted-foreground">
-                  No public profile is attached. Pending thoughts stay tied to
-                  this browser session.
+                  No profile name is shown, but technical identifiers may be
+                  processed for safety and abuse prevention.
                 </p>
               </div>
             </div>
@@ -142,24 +154,36 @@ export default function CreatePostModal({
             </div>
             <div className="flex items-start gap-2 rounded-2xl border border-primary/10 bg-primary/5 p-3 text-xs leading-5 text-muted-foreground sm:hidden">
               <ShieldCheck className="mt-0.5 size-4 shrink-0 text-primary" />
-              Posts are public and anonymous. Avoid personal information.
+              Approved posts and their selected location become public. Avoid
+              private or identifying information.
             </div>
+            {submitError && (
+              <Alert variant="destructive">
+                <AlertDescription>{submitError}</AlertDescription>
+              </Alert>
+            )}
           </div>
         </div>
 
         <div className="flex items-center gap-2 border-t bg-background/95 px-3 py-2.5 pb-[max(.625rem,env(safe-area-inset-bottom))] sm:gap-3 sm:px-5 sm:py-3">
           <p className="hidden flex-1 text-xs text-muted-foreground sm:block">
-            Your title and thought are required. Attachments are optional.
+            Reviewed before publication. Do not include private information,
+            threats, harassment, or identifying details.
           </p>
-          <Button variant="ghost" className="rounded-xl" onClick={onClose}>
+          <Button
+            variant="ghost"
+            className="rounded-xl"
+            onClick={onClose}
+            disabled={submitting}
+          >
             Cancel
           </Button>
           <Button
             className="rounded-xl px-5"
-            disabled={!canSubmit}
-            onClick={submit}
+            disabled={!canSubmit || submitting}
+            onClick={() => void submit()}
           >
-            Submit for review
+            {submitting ? "Submitting..." : "Submit for review"}
           </Button>
         </div>
       </DialogContent>

@@ -9,9 +9,8 @@ export async function createSupabasePost(marker: MarkerData, draft: PostDraft) {
   const supabase = createClient();
   const session = await ensureAnonymousSession();
   if (!supabase || !session) return null;
-  const uploadId = crypto.randomUUID();
-  const imagePath = draft.imageFile
-    ? await uploadPrivatePostImage(draft.imageFile, uploadId)
+  const uploadId = draft.imageFile
+    ? await uploadPrivatePostImage(draft.imageFile)
     : null;
   const { data, error } = await supabase.functions.invoke("create-post", {
     body: {
@@ -20,7 +19,7 @@ export async function createSupabasePost(marker: MarkerData, draft: PostDraft) {
       lat: marker.lat,
       lng: marker.lng,
       placeName: marker.placeName,
-      imagePath,
+      uploadId,
       music: draft.music,
     },
   });

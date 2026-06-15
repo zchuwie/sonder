@@ -48,3 +48,57 @@ Approved public posts receive one-hour signed URLs through
 The unlinked admin entry route is `/verdant-keeper-7q4m9x`. It is only
 obscurity; authorization always compares the authenticated Supabase user's
 email to the server-side `ADMIN_EMAIL`.
+
+# Security hardening
+
+Required Edge Function secrets:
+
+```bash
+corepack pnpm exec supabase secrets set UPSTASH_REDIS_REST_URL="..." UPSTASH_REDIS_REST_TOKEN="..."
+corepack pnpm exec supabase secrets set RATE_LIMIT_SALT="..." CLEANUP_SECRET="..." IS_DEVELOPMENT="false"
+```
+
+`IS_DEVELOPMENT=true` bypasses Upstash rate limits. Use only for local/test
+projects. Production must use `false`; missing Upstash configuration then fails
+closed.
+
+Generate `RATE_LIMIT_SALT` and `CLEANUP_SECRET` separately using 32 random
+bytes. Never commit or expose either value:
+
+```powershell
+$rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
+$bytes = New-Object byte[] 32
+$rng.GetBytes($bytes)
+$rng.Dispose()
+[Convert]::ToBase64String($bytes)
+```
+
+Apply migration before deploying frontend that uses controlled image uploads:
+
+```bash
+corepack pnpm run supa:db:push
+corepack pnpm exec supabase functions deploy upload-post-image
+corepack pnpm exec supabase functions deploy cleanup-orphan-uploads --no-verify-jwt
+corepack pnpm exec supabase functions deploy create-post
+corepack pnpm exec supabase functions deploy report-post
+```
+
+Run orphan cleanup hourly using Supabase Cron or external cron:
+
+```bash
+curl -X POST \
+  -H "x-cleanup-secret: $CLEANUP_SECRET" \
+  "$SUPABASE_URL/functions/v1/cleanup-orphan-uploads"
+```
+
+Cleanup inspects at most 100 expired temporary uploads per run. Pending and
+approved post images stay private and display through signed URLs.
+
+For Supabase Cron, create an hourly HTTP job in Dashboard Integrations:
+
+```text
+Schedule: 0 * * * *
+Method: POST
+URL: https://<project-ref>.supabase.co/functions/v1/cleanup-orphan-uploads
+Header: x-cleanup-secret: <CLEANUP_SECRET>
+```

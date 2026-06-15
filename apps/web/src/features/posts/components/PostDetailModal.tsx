@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Clock3, Flag, MapPin, Share2 } from "lucide-react";
+import { Check, Clock3, MapPin, Share2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,7 +16,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { MusicPreviewCard } from "./MusicPreviewCard";
 import { relativeTime } from "@/features/posts/lib/post-utils";
 import type { AnonymousPost } from "@/features/posts/lib/post-types";
-import { reportRemotePost } from "@/features/moderation/client/use-admin-reports";
+import { ReportPostButton } from "@/features/moderation/components/ReportPostButton";
 
 export function buildShareUrl(post: AnonymousPost): string {
   if (post.moderationStatus !== "visible") {
@@ -34,7 +34,6 @@ export default function PostDetailModal({
   onClose: () => void;
 }) {
   const [copied, setCopied] = useState(false);
-  const [reported, setReported] = useState(false);
   const flagged = post.moderationStatus === "flagged";
   const canShare = post.moderationStatus === "visible";
 
@@ -99,22 +98,13 @@ export default function PostDetailModal({
             </p>
             {post.music && !flagged && <MusicPreviewCard music={post.music} />}
             <p className="rounded-2xl bg-primary/5 p-4 text-xs leading-5 text-muted-foreground">
-              Be kind. This space is public and anonymous.
+              Be kind. Posts are publicly anonymous, moderated, and
+              abuse-protected.
             </p>
           </div>
         </ScrollArea>
         <DialogFooter className="flex-row items-center border-t px-4 py-3 pb-[max(.75rem,env(safe-area-inset-bottom))] sm:px-6 sm:py-4">
-          <Button
-            variant="ghost"
-            className="rounded-xl"
-            onClick={() => {
-              setReported(true);
-            void reportRemotePost(post.id).catch(() => undefined);
-            }}
-            disabled={reported}
-          >
-            <Flag /> {reported ? "Reported" : "Report"}
-          </Button>
+          <ReportPostButton postId={post.id} />
           {canShare ? (
             <Button
               className="ml-auto rounded-xl px-5"

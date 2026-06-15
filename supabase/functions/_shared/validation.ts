@@ -32,3 +32,28 @@ export function coordinate(value: unknown, field: "lat" | "lng"): number {
 export function groupKey(lat: number, lng: number) {
   return `${lat.toFixed(4)},${lng.toFixed(4)}`;
 }
+
+export function optionalUuid(value: unknown, field: string): string | null {
+  const text = optionalString(value, field, 36);
+  if (
+    text &&
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+      text,
+    )
+  ) {
+    throw new Error(`${field} is invalid`);
+  }
+  return text;
+}
+
+export function requiredUuid(value: unknown, field: string): string {
+  const text = requiredString(value, field, 36);
+  if (
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+      text,
+    )
+  ) {
+    throw new Error(`${field} is invalid`);
+  }
+  return text;
+}

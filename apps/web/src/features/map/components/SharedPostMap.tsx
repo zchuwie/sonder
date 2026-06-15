@@ -37,16 +37,17 @@ export function SharedPostMap({ post }: { post: AnonymousPost }) {
       const panel = document.querySelector<HTMLElement>(
         "[data-shared-post-panel]",
       );
-      const panelWidth = panel?.getBoundingClientRect().width ?? 0;
+      const panelRect = panel?.getBoundingClientRect();
+      const compact = window.innerWidth < 640;
       instance.setPadding({
-        top: 24,
-        bottom: 24,
-        left: 24,
-        right: panelWidth + 32,
+        top: compact ? 12 : 24,
+        bottom: compact ? (panelRect?.height ?? 0) + 20 : 24,
+        left: compact ? 10 : 24,
+        right: compact ? 10 : (panelRect?.width ?? 0) + 32,
       });
       instance.easeTo({
         center: [post.lng, post.lat],
-        zoom: 14.5,
+        zoom: compact ? 13 : 14.5,
         duration: 0,
       });
     };

@@ -40,9 +40,17 @@ function ModerationCard({
           ) : post.music?.coverUrl ? (
             <div className="relative size-full overflow-hidden">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={post.music.coverUrl} alt="" className="size-full scale-110 object-cover opacity-30 blur-xl" />
+              <img
+                src={post.music.coverUrl}
+                alt=""
+                className="size-full scale-110 object-cover opacity-30 blur-xl"
+              />
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={post.music.coverUrl} alt="" className="absolute left-1/2 top-1/2 size-24 -translate-x-1/2 -translate-y-1/2 rounded-2xl object-cover shadow-xl" />
+              <img
+                src={post.music.coverUrl}
+                alt=""
+                className="absolute left-1/2 top-1/2 size-24 -translate-x-1/2 -translate-y-1/2 rounded-2xl object-cover shadow-xl"
+              />
             </div>
           ) : null}
         </div>
@@ -79,7 +87,10 @@ function ModerationCard({
               >
                 <Trash2 /> Reject
               </Button>
-              <Button className="w-full rounded-xl sm:w-auto" onClick={onApprove}>
+              <Button
+                className="w-full rounded-xl sm:w-auto"
+                onClick={onApprove}
+              >
                 <Check /> Approve
               </Button>
             </div>
@@ -144,7 +155,7 @@ export function AdminDashboard({
               <ShieldCheck className="size-5" /> Sonder Admin
             </p>
             <p className="text-xs text-muted-foreground">
-              Moderate anonymous public thoughts
+              Moderate publicly anonymous thoughts
             </p>
           </div>
           <div className="grid grid-cols-2 gap-2 sm:flex">
@@ -158,14 +169,24 @@ export function AdminDashboard({
         </div>
       </header>
       <main className="mx-auto max-w-6xl space-y-4 px-3 py-5 sm:space-y-6 sm:px-5 sm:py-8">
+        <div className="rounded-2xl border border-primary/15 bg-primary/5 p-4 text-xs leading-6 text-muted-foreground">
+          Review full post before approval. Check text, location, photo, music
+          metadata, reports, private information, harassment, and unsafe
+          location details.
+        </div>
         <section className="grid grid-cols-3 gap-2 sm:gap-4">
           {[
             { label: "Pending review", value: pending.length },
             { label: "Visible posts", value: visible.length },
             { label: "Rejected posts", value: rejected.length },
           ].map((item) => (
-            <Card key={item.label} className="rounded-2xl p-3 sm:rounded-3xl sm:p-5">
-              <p className="text-[10px] leading-4 text-muted-foreground sm:text-sm">{item.label}</p>
+            <Card
+              key={item.label}
+              className="rounded-2xl p-3 sm:rounded-3xl sm:p-5"
+            >
+              <p className="text-[10px] leading-4 text-muted-foreground sm:text-sm">
+                {item.label}
+              </p>
               <p className="mt-1 text-2xl font-semibold text-primary sm:mt-2 sm:text-3xl">
                 {item.value}
               </p>
@@ -178,7 +199,10 @@ export function AdminDashboard({
             <TabsTrigger value="visible">Approved</TabsTrigger>
             <TabsTrigger value="rejected">Rejected</TabsTrigger>
           </TabsList>
-          <TabsContent value="pending" className="mt-4 space-y-3 sm:mt-5 sm:space-y-4">
+          <TabsContent
+            value="pending"
+            className="mt-4 space-y-3 sm:mt-5 sm:space-y-4"
+          >
             {pending.length ? (
               pending.map(({ marker, post }) => (
                 <ModerationCard
@@ -193,7 +217,10 @@ export function AdminDashboard({
               <EmptyState text="No posts are waiting for review." />
             )}
           </TabsContent>
-          <TabsContent value="visible" className="mt-4 space-y-3 sm:mt-5 sm:space-y-4">
+          <TabsContent
+            value="visible"
+            className="mt-4 space-y-3 sm:mt-5 sm:space-y-4"
+          >
             {visible.length ? (
               visible.map(({ marker, post }) => (
                 <ModerationCard
@@ -206,7 +233,10 @@ export function AdminDashboard({
               <EmptyState text="No approved posts yet." />
             )}
           </TabsContent>
-          <TabsContent value="rejected" className="mt-4 space-y-3 sm:mt-5 sm:space-y-4">
+          <TabsContent
+            value="rejected"
+            className="mt-4 space-y-3 sm:mt-5 sm:space-y-4"
+          >
             {rejected.length ? (
               rejected.map(({ marker, post }) => (
                 <ModerationCard

@@ -44,3 +44,9 @@ verify_jwt = true
 
 [functions.signed-post-image]
 verify_jwt = false
+
+[functions.upload-post-image]
+verify_jwt = true
+
+[functions.cleanup-orphan-uploads]
+verify_jwt = false
