@@ -4,6 +4,9 @@ The policy pages are templates and do not guarantee compliance. Before a public
 launch, the operator should:
 
 - Replace the placeholder contact with an active monitored address.
+- Verify that P0 security migration and hardened Edge Functions are deployed
+  before claiming rate limits, duplicate-report prevention, tracked temporary
+  uploads, or private signed-image delivery are live.
 - Publish the operator's legal name, business address, and applicable
   jurisdiction after legal review.
 - Document the lawful basis and purpose for each category of personal data.
@@ -11,6 +14,7 @@ launch, the operator should:
   posts, uploaded photos, minors, and moderation records.
 - Define and enforce retention and deletion schedules in the database and
   storage layer.
+- Add user-facing post removal, report appeal, and copyright workflows.
 - Implement accessible reporting, content removal, privacy-rights, copyright,
   and appeal workflows.
 - Maintain a security and personal-data-breach response process.

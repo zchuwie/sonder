@@ -1,4 +1,4 @@
-export const LEGAL_EFFECTIVE_DATE = "June 10, 2026";
+export const LEGAL_EFFECTIVE_DATE = "June 15, 2026";
 export const LEGAL_CONTACT = "privacy@sonder.app";
 
 export type LegalSection = {
@@ -19,66 +19,86 @@ export const privacyPolicy: LegalDocument = {
   eyebrow: "Privacy",
   title: "Privacy Policy",
   summary:
-    "This policy explains what Sonder may process, why it is processed, and the choices available to people who use the service.",
+    "How Sonder processes content, location pins, technical identifiers, and safety records.",
   notice:
-    "Important: Sonder is anonymous to other users, not necessarily anonymous to the service operator. Location, device, moderation, and uploaded-content data may identify or relate to a person.",
+    "Sonder is publicly anonymous, not technically untraceable. Other users do not see a profile name with your post, but technical identifiers may be processed for safety and abuse prevention.",
   sections: [
     {
-      title: "Information Sonder may process",
-      items: [
-        "Content you submit, including titles, thoughts, photos, songs, reports, and the location attached to a post.",
-        "Approximate or precise location when you choose a place, tap the map, or allow browser location access.",
-        "Technical and security data such as IP address, browser type, device information, timestamps, and abuse-prevention identifiers.",
-        "Moderation records, reports, decisions, and communications sent to the operator.",
-      ],
-    },
-    {
-      title: "Why the information is used",
-      items: [
-        "To display approved posts on the map and provide requested features.",
-        "To review submissions, investigate reports, prevent spam, and protect users.",
-        "To maintain, secure, debug, and improve the service.",
-        "To comply with lawful requests and applicable legal obligations.",
-      ],
-    },
-    {
-      title: "Public content and location",
+      title: "What Sonder is",
       paragraphs: [
-        "Approved posts and their attached locations are public. Do not submit names, contact details, private conversations, faces without permission, home addresses, or information that could identify another person.",
-        "Removing your browser data does not necessarily remove a public post. Use the published privacy contact to request access, correction, deletion, or review of content associated with you.",
+        "Sonder is a place-based service for submitting thoughts, photos, and music metadata for review. Approved posts may appear publicly on the map with their selected location.",
       ],
     },
     {
-      title: "Sharing and service providers",
+      title: "Publicly anonymous posting",
       paragraphs: [
-        "Information may be processed by hosting, database, map, moderation, analytics, storage, and music-search providers only as needed to operate the service. Sonder does not sell personal information.",
-        "Information may also be preserved or disclosed when reasonably necessary to address abuse, protect rights and safety, or comply with valid legal process.",
+        "Sonder does not display your public profile name with a post. However, anonymous Supabase session IDs, hashed IP-related identifiers, timestamps, upload records, reports, and moderation logs may be processed to operate and protect the service.",
+        "Do not use publicly anonymous posting to expose, threaten, impersonate, or harm another person.",
+      ],
+    },
+    {
+      title: "Information you submit",
+      items: [
+        "Post titles, thoughts, selected location pins, reports, and optional report details.",
+        "Uploaded photos and related upload records, such as file type, size, storage path, status, and expiry time.",
+        "Selected music metadata, including track title, artist, album, provider ID, cover, preview, and external links.",
+      ],
+    },
+    {
+      title: "Location pins",
+      paragraphs: [
+        "A selected location may become public if a post is approved. Browser location is used only when you choose to provide it, but precise pins can reveal sensitive information. Use a nearby public place instead of a home, shelter, clinic, school, or live location.",
+      ],
+    },
+    {
+      title: "Photos and temporary uploads",
+      paragraphs: [
+        "Photos may contain faces, addresses, IDs, or other identifying details. Only upload photos you have the right to share and remove private information before submission.",
+        "Uploads are stored privately. Unattached temporary uploads are tracked so expired files can be removed. Approved post images are displayed using time-limited signed links rather than a publicly browsable storage bucket.",
+      ],
+    },
+    {
+      title: "Anonymous sessions and abuse prevention",
+      paragraphs: [
+        "Sonder uses anonymous authentication to associate submissions and pending posts with a session without displaying a public identity.",
+        "Hashed IP-related identifiers and rate-limit records may be processed using a secret salt to reduce spam and abuse. Raw IP addresses may still be processed transiently by infrastructure and service providers.",
+      ],
+    },
+    {
+      title: "Reports and moderation logs",
+      paragraphs: [
+        "Reports, moderation decisions, reasons, timestamps, and moderator identifiers may be retained to investigate harm, enforce rules, handle disputes, and improve platform safety.",
+      ],
+    },
+    {
+      title: "Third-party services",
+      items: [
+        "Supabase provides authentication, database, private storage, and Edge Functions.",
+        "Upstash Redis supports rate limiting and abuse prevention.",
+        "Deezer provides music search, cover, and preview metadata.",
+        "OpenFreeMap, MapLibre, Photon, and Nominatim support map display and place search.",
+        "A hosting provider such as Vercel may process requests, logs, and technical data when used for deployment.",
       ],
     },
     {
       title: "Retention and security",
       paragraphs: [
-        "Data should be retained only while needed for the purposes described above, moderation and security, dispute handling, or legal obligations. Published content may remain until removed, rejected, or deleted.",
-        "Reasonable organizational, technical, and physical safeguards should be used, but no online service can promise absolute security.",
+        "Data is retained only as long as reasonably needed for service operation, moderation, abuse prevention, disputes, or legal obligations. Exact retention periods must be finalized before launch.",
+        "Sonder uses access controls, row-level security, private storage, signed links, validation, moderation, and rate limits. No online service can guarantee absolute security.",
       ],
     },
     {
-      title: "Your privacy rights",
+      title: "Your rights and requests",
       paragraphs: [
-        "Depending on applicable law, you may have rights to be informed, access data, object to processing, correct inaccurate data, request deletion or blocking, withdraw consent where consent is the basis, and lodge a complaint with a privacy regulator.",
-        `Send privacy requests to ${LEGAL_CONTACT}. Before public launch, the operator must ensure this address is active and publish the operator's legal identity and mailing address.`,
+        "Depending on applicable law, you may request information, correction, deletion, restriction, or review. Anonymous sessions can make it difficult to verify that a requester submitted a specific post.",
+        `Send privacy, removal, or rights requests to ${LEGAL_CONTACT}. This address and the operator's legal identity must be confirmed before public launch.`,
       ],
     },
     {
-      title: "Children",
+      title: "Children and policy changes",
       paragraphs: [
-        "Sonder is not intended for children under 13. Do not submit content about a minor that reveals sensitive, identifying, or precise-location information. The operator should verify and document the age threshold required in each launch jurisdiction.",
-      ],
-    },
-    {
-      title: "Changes",
-      paragraphs: [
-        "Material changes should be announced in the service, and the effective date should be updated. Continued use after a change means the updated policy applies where permitted by law.",
+        "Sonder is not intended for children under 13. Never post identifying or precise-location information about a minor.",
+        "Material policy changes should be announced and this effective date updated.",
       ],
     },
   ],
@@ -87,52 +107,79 @@ export const privacyPolicy: LegalDocument = {
 export const termsOfUse: LegalDocument = {
   eyebrow: "Terms",
   title: "Terms of Use",
-  summary:
-    "These terms set the basic rules for using Sonder and submitting public anonymous content.",
+  summary: "Rules for using Sonder and submitting publicly anonymous content.",
   notice:
-    "These terms are a launch-ready template, not legal advice. The operator must add its legal identity, jurisdiction, working contact details, and obtain local legal review before a public launch.",
+    "These terms are an MVP draft, not legal advice. Operator identity, governing law, contact details, and launch jurisdictions require qualified legal review.",
   sections: [
     {
-      title: "Using Sonder",
+      title: "Acceptance and service",
       paragraphs: [
-        "You may use Sonder only if you can legally agree to these terms. You are responsible for your submissions and for complying with applicable law.",
-        "Sonder may review, reject, hide, remove, preserve, or restrict content and access when reasonably necessary for safety, legal compliance, or service integrity.",
+        "By using Sonder, you agree to these terms and applicable law. Sonder provides a moderated place-based platform where submissions may be reviewed before becoming public.",
       ],
     },
     {
-      title: "Your content",
+      title: "Public content warning",
       paragraphs: [
-        "You keep ownership of content you create. By submitting content, you grant the operator a non-exclusive, worldwide, royalty-free license to host, store, reproduce, display, moderate, and share it only as needed to operate and promote Sonder.",
-        "You must have the rights and permissions needed for every thought, photo, song link, and other material you submit. Do not upload copyrighted media you are not authorized to use.",
+        "If your post is approved, its text, selected location, attached photo, and selected music metadata may become publicly visible and shareable.",
+        "You are responsible for the content you submit. Publicly anonymous does not remove that responsibility.",
       ],
     },
     {
-      title: "Prohibited use",
+      title: "Prohibited content and conduct",
       items: [
-        "Harassment, threats, stalking, hate, exploitation, or encouragement of violence or self-harm.",
-        "Personal data, doxxing, private communications, or precise locations that endanger another person.",
-        "Sexual content involving minors, non-consensual intimate content, or illegal content.",
-        "Defamation, impersonation, fraud, spam, malware, automated abuse, or attempts to bypass moderation.",
-        "Content that infringes copyright, privacy, publicity, or other rights.",
+        "Harassment, bullying, stalking, threats, graphic violence, hate, or discriminatory content.",
+        "Doxxing, personal information, private communications, unsafe precise locations, or content intended to identify another person.",
+        "Sexual exploitation, non-consensual intimate content, or sexual content involving minors.",
+        "Illegal activity, defamation, impersonation, scams, spam, malware, or automated abuse.",
+        "Encouragement of violence, self-harm, or other serious harm.",
+        "Copyright-infringing photos, music, or other content you do not have permission to share.",
       ],
     },
     {
-      title: "No emergency service",
-      paragraphs: [
-        "Sonder is not monitored continuously and is not an emergency or crisis service. Contact local emergency services when someone is in immediate danger.",
+      title: "Location, photo, and music rules",
+      items: [
+        "Avoid homes, live locations, shelters, clinics, schools, or other sensitive places when a pin could create risk.",
+        "Only upload safe, appropriate photos you have the right to share. Avoid faces, IDs, addresses, and private information.",
+        "Music attachments must use supported provider metadata. Do not use track titles, covers, or links to harass, impersonate, or mislead.",
       ],
     },
     {
-      title: "Service availability and liability",
+      title: "Moderation and reports",
       paragraphs: [
-        "The service may change, pause, or end. To the extent permitted by law, it is provided without guarantees of uninterrupted availability, accuracy, or preservation of submissions.",
+        "We may review, reject, hide, remove, preserve, or report content when necessary to protect users, comply with laws, investigate reports, or prevent abuse.",
+        "Reports must be made honestly. Repeated or abusive reporting may be rate-limited or restricted.",
+      ],
+    },
+    {
+      title: "Rate limits and restrictions",
+      paragraphs: [
+        "Sonder may limit submissions, uploads, reports, or access using anonymous session and hashed IP-related identifiers. Attempts to bypass moderation, validation, or rate limits are prohibited.",
+      ],
+    },
+    {
+      title: "Your content license",
+      paragraphs: [
+        "You keep ownership of your content. By submitting it, you grant the operator a non-exclusive, worldwide, royalty-free license to host, store, reproduce, display, moderate, and share it as needed to operate, secure, and promote Sonder.",
+      ],
+    },
+    {
+      title: "No emergency use",
+      paragraphs: [
+        "Sonder is not continuously monitored and is not an emergency or crisis service. Contact local emergency services when someone is in immediate danger.",
+      ],
+    },
+    {
+      title: "Availability, disclaimer, and liability",
+      paragraphs: [
+        "Sonder may change, pause, restrict, or end features or access. To the extent permitted by law, the service is provided without guarantees of uninterrupted availability, accuracy, or preservation of submissions.",
         "Nothing in these terms excludes rights or liabilities that cannot legally be excluded.",
       ],
     },
     {
-      title: "Reports and disputes",
+      title: "Governing law and contact",
       paragraphs: [
-        `Report unlawful or rights-infringing content to ${LEGAL_CONTACT} with the post link, reason, and enough information to evaluate the request. Do not include unnecessary personal information.`,
+        "Governing law and dispute procedures must be added after the operator selects launch jurisdictions and receives legal review.",
+        `Questions, reports, and rights requests may be sent to ${LEGAL_CONTACT}. This contact must be active before launch.`,
       ],
     },
   ],
@@ -142,29 +189,54 @@ export const communityGuidelines: LegalDocument = {
   eyebrow: "Community",
   title: "Community Guidelines",
   summary:
-    "Sonder is public and anonymous. These rules keep the map reflective without making it unsafe.",
+    "Sonder is for leaving thoughts, not hurting people. Share memories and feelings without exposing someone else's private life.",
   sections: [
     {
-      title: "Leave feelings, not identities",
+      title: "Be kind",
       items: [
-        "Write about your own experience without naming or identifying another person.",
-        "Do not post phone numbers, social handles, private messages, faces without permission, or home and live locations.",
-        "Choose a nearby public place instead of an exact location when precision could put someone at risk.",
+        "Share your own experience without humiliating, bullying, or targeting another person.",
+        "Do not threaten, encourage harm, or use anonymity as cover for cruelty.",
       ],
     },
     {
-      title: "Be lawful and humane",
+      title: "Do not expose private information",
       items: [
-        "No harassment, threats, hate, humiliation, exploitation, or encouragement of harm.",
-        "No illegal content, scams, spam, or instructions intended to facilitate wrongdoing.",
-        "Only submit photos and other media you have permission to share.",
+        "Leave out names, phone numbers, social handles, private messages, IDs, addresses, and identifying details.",
+        "Do not post faces or private conversations without permission.",
       ],
     },
     {
-      title: "Moderation",
+      title: "Be careful with locations",
+      items: [
+        "Choose a nearby public place when an exact pin could put someone at risk.",
+        "Avoid live locations, homes, shelters, clinics, schools, and places connected to vulnerable people.",
+      ],
+    },
+    {
+      title: "Only share safe photos and music",
+      items: [
+        "Upload only photos you have the right to share. Check backgrounds for faces, IDs, addresses, and private information.",
+        "Use music attachments to add feeling, not to harass, impersonate, mislead, or share unsupported content.",
+      ],
+    },
+    {
+      title: "Do not post illegal or harmful content",
+      items: [
+        "No hate, exploitation, sexual content involving minors, scams, malware, graphic violence, or instructions for wrongdoing.",
+        "No encouragement of self-harm, violence, or serious harm.",
+      ],
+    },
+    {
+      title: "Report harm honestly",
       paragraphs: [
-        "Submissions may be reviewed before appearing publicly. Reports and moderation decisions consider context, safety, rights, and applicable law.",
-        "Repeated or severe abuse may result in content removal, blocked access, evidence preservation, or referral to relevant authorities where legally required.",
+        "Report posts that expose private information, threaten people, harass others, promote hate, exploit someone, or otherwise create a safety concern.",
+        "Reports help keep Sonder safe. Abuse of the reporting system may be limited.",
+      ],
+    },
+    {
+      title: "Posts are moderated",
+      paragraphs: [
+        "Posts wait for review before public visibility. Approval is not a guarantee that content is accurate or harmless. Visible posts may later be hidden or removed after review or reports.",
       ],
     },
   ],
@@ -174,33 +246,34 @@ export const safetyPolicy: LegalDocument = {
   eyebrow: "Safety",
   title: "Safety and Reporting",
   summary:
-    "How to protect yourself, protect others, and report content that should not be on Sonder.",
+    "Practical guidance for posting carefully and reporting content that should not be on Sonder.",
   sections: [
     {
       title: "Before posting",
       items: [
-        "Remove names, faces, contact details, identifying stories, and private conversations.",
-        "Avoid homes, shelters, clinics, schools, and other sensitive precise locations.",
-        "Confirm you have permission to share every photo and media attachment.",
+        "Remove names, faces, contact details, addresses, identifying stories, and private conversations.",
+        "Use a nearby public pin when precise location could create risk.",
+        "Confirm you have permission to share every photo and attachment.",
       ],
     },
     {
       title: "Report a post",
       paragraphs: [
-        `Send the public post link and a short explanation to ${LEGAL_CONTACT}. For privacy, copyright, or legal requests, explain your relationship to the content and the action requested.`,
-        "Do not send identity documents unless the operator specifically and securely requests them after reviewing the report.",
+        "Use the report action on a public post and choose the closest safety reason. Reports are stored privately for moderation review.",
+        `For privacy, copyright, removal, or legal requests, send the public post link and a short explanation to ${LEGAL_CONTACT}. Do not send unnecessary personal information.`,
+      ],
+    },
+    {
+      title: "What happens after a report",
+      paragraphs: [
+        "A report does not automatically remove a post. Moderators may review the post text, location, photo, music metadata, report reason, and relevant safety context before deciding what action to take.",
+        "Repeated reports from the same session are prevented or rate-limited to reduce abuse.",
       ],
     },
     {
       title: "Immediate danger",
       paragraphs: [
-        "Sonder is not an emergency service and reports may not be reviewed immediately. Contact local emergency services or an appropriate crisis service when there is immediate danger.",
-      ],
-    },
-    {
-      title: "Transparency",
-      paragraphs: [
-        "The operator should document moderation decisions, maintain a clear escalation process, respond to valid rights requests, and publish material policy changes.",
+        "Sonder is not continuously monitored and is not an emergency service. Contact local emergency services or an appropriate crisis service when there is immediate danger.",
       ],
     },
   ],
