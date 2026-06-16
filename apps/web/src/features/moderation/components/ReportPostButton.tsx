@@ -12,7 +12,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { reportRemotePost } from "@/features/moderation/client/use-admin-reports";
+import { reportRemotePost } from "@/features/moderation/client/report-post";
 import { getFunctionErrorMessage } from "@/lib/supabase/function-error";
 
 const REPORT_REASONS = [

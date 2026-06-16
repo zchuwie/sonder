@@ -160,6 +160,7 @@ export type Database = {
       posts: {
         Row: {
           approved_at: string | null
+          archived_at: string | null
           body: string
           created_at: string
           created_by: string | null
@@ -179,6 +180,7 @@ export type Database = {
         }
         Insert: {
           approved_at?: string | null
+          archived_at?: string | null
           body: string
           created_at?: string
           created_by?: string | null
@@ -198,6 +200,7 @@ export type Database = {
         }
         Update: {
           approved_at?: string | null
+          archived_at?: string | null
           body?: string
           created_at?: string
           created_by?: string | null

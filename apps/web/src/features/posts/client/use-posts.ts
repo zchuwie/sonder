@@ -18,6 +18,7 @@ export function usePosts() {
       const { data, error } = await supabase
         .from("posts")
         .select("*")
+        .is("archived_at", null)
         .order("created_at", { ascending: false });
       if (error) throw error;
       const markers = await rowsToMarkersWithSignedImages(

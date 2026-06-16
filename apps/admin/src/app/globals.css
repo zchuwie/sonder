@@ -1,0 +1,214 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --background: #f3f1e9;
+  --foreground: #172119;
+  --surface: #fbfcf8;
+  --surface-elevated: #ffffff;
+  --muted-surface: #eef3eb;
+  --muted-foreground: #526158;
+  --border: #d7e0d4;
+  --primary: #173f27;
+  --primary-hover: #0e2f1c;
+  --primary-foreground: #ffffff;
+  --accent: #e4eee0;
+  --accent-foreground: #173f27;
+  --danger: #b42318;
+  --danger-hover: #8f1c14;
+  --danger-foreground: #ffffff;
+  --warning-surface: #fff7df;
+  --warning-foreground: #7a4600;
+  --danger-surface: #fff0ef;
+  --focus: #4e8256;
+}
+
+.dark {
+  --background: #111713;
+  --foreground: #edf4ee;
+  --surface: #18201b;
+  --surface-elevated: #202a23;
+  --muted-surface: #253128;
+  --muted-foreground: #b6c5b9;
+  --border: #344239;
+  --primary: #a8c79f;
+  --primary-hover: #bdd8b5;
+  --primary-foreground: #102016;
+  --accent: #2a3b30;
+  --accent-foreground: #edf4ee;
+  --danger: #e36b62;
+  --danger-hover: #ef8279;
+  --danger-foreground: #1f0806;
+  --warning-surface: #3a301c;
+  --warning-foreground: #ffd88a;
+  --danger-surface: #3c2422;
+  --focus: #a8c79f;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-elevated: var(--surface-elevated);
+  --color-muted: var(--muted-surface);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-danger: var(--danger);
+  --color-danger-hover: var(--danger-hover);
+  --color-danger-foreground: var(--danger-foreground);
+  --color-warning-surface: var(--warning-surface);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-danger-surface: var(--danger-surface);
+}
+
+* {
+  box-sizing: border-box;
+  border-color: var(--border);
+}
+
+@media (min-width: 1280px) {
+  html { font-size: 14px; }
+}
+
+body {
+  margin: 0;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+button, input, textarea, select {
+  font: inherit;
+  color: var(--foreground);
+}
+
+button {
+  cursor: pointer;
+}
+
+input, textarea, select {
+  background-color: var(--surface-elevated);
+}
+
+input::placeholder, textarea::placeholder {
+  color: var(--muted-foreground);
+  opacity: 1;
+}
+
+input:focus-visible, textarea:focus-visible, select:focus-visible,
+button:focus-visible, a:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: .55;
+}
+
+/* Contrast guards for every clickable background family used by admin. */
+.bg-primary { color: var(--primary-foreground) !important; }
+.bg-primary * { color: inherit !important; }
+.bg-danger { color: var(--danger-foreground) !important; }
+.bg-danger * { color: inherit !important; }
+
+button.bg-surface,
+button.bg-surface-elevated,
+button.bg-muted,
+button.bg-white {
+  color: var(--foreground);
+}
+
+button.bg-green-700,
+button.bg-green-800,
+button.bg-green-900,
+button.bg-red-700,
+button.bg-red-800,
+button.bg-red-900 {
+  color: #ffffff !important;
+}
+
+button.bg-green-700 *,
+button.bg-green-800 *,
+button.bg-green-900 *,
+button.bg-red-700 *,
+button.bg-red-800 *,
+button.bg-red-900 * {
+  color: inherit !important;
+}
+
+button.bg-green-50,
+button.bg-red-50,
+button.bg-amber-50,
+button.bg-slate-100,
+button.bg-gray-50 {
+  color: #172119;
+}
+
+.dark button.bg-green-50,
+.dark button.bg-red-50,
+.dark button.bg-amber-50,
+.dark button.bg-slate-100,
+.dark button.bg-gray-50 {
+  color: var(--foreground);
+}
+
+/* Light theme: activated dark-green controls and CTAs always use white text. */
+html:not(.dark) [aria-pressed="true"].bg-primary,
+html:not(.dark) a.bg-primary,
+html:not(.dark) button.bg-primary {
+  color: #ffffff !important;
+}
+
+html:not(.dark) [aria-pressed="true"].bg-primary *,
+html:not(.dark) a.bg-primary *,
+html:not(.dark) button.bg-primary * {
+  color: #ffffff !important;
+}
+
+/* Dark theme primary is intentionally pale sage, so text must stay dark. */
+html.dark .bg-primary,
+html.dark .bg-primary * {
+  color: #102016 !important;
+}
+
+a { color: inherit; text-decoration: none; }
+::selection { background: var(--accent); color: var(--accent-foreground); }
+
+.maplibregl-ctrl-group {
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 14px !important;
+  background: color-mix(in srgb, var(--surface-elevated) 95%, transparent) !important;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 18%) !important;
+}
+.maplibregl-ctrl-group button { filter: none; }
+.maplibregl-ctrl-attrib {
+  border-radius: 999px !important;
+  background: color-mix(in srgb, var(--surface-elevated) 90%, transparent) !important;
+  color: var(--foreground) !important;
+}
+
+/* Compatibility layer while feature files migrate to semantic tokens. */
+.dark .bg-white, .dark .bg-white\/95 { background-color: var(--surface-elevated) !important; }
+.dark .bg-\[\#fbfcf8\], .dark .bg-\[\#fbfcf8\]\/95 { background-color: var(--surface) !important; }
+.dark .bg-\[\#f0f4ed\], .dark .bg-\[\#f1f6ee\], .dark .bg-\[\#f5f8f2\],
+.dark .bg-slate-100, .dark .bg-gray-50 { background-color: var(--muted-surface) !important; }
+.dark .text-slate-500, .dark .text-slate-600, .dark .text-slate-700,
+.dark .text-gray-400, .dark .text-gray-500, .dark .text-gray-600 { color: var(--muted-foreground) !important; }
+.dark .text-\[\#172119\], .dark .text-\[\#173f27\], .dark .text-\[\#245236\] { color: var(--foreground) !important; }
+.dark .bg-green-50, .dark .bg-\[\#e4eee0\], .dark .bg-\[\#e7eee3\],
+.dark .bg-\[\#eaf2e6\], .dark .bg-\[\#eff3eb\] { background-color: var(--accent) !important; }
+.dark .text-green-700, .dark .text-green-800, .dark .text-green-900 { color: var(--primary) !important; }
+.dark .bg-red-50 { background-color: var(--danger-surface) !important; }
+.dark .text-red-700, .dark .text-red-800, .dark .text-red-900 { color: #ffaaa3 !important; }
+.dark .bg-amber-50 { background-color: var(--warning-surface) !important; }
+.dark .text-amber-700, .dark .text-amber-800 { color: var(--warning-foreground) !important; }
+.dark .hover\:bg-white:hover { background-color: var(--surface-elevated) !important; }
+.dark .hover\:bg-green-50\/50:hover { background-color: var(--accent) !important; }

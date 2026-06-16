@@ -1,7 +1,6 @@
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
 import { rowToPost } from "@/features/posts/lib/post-mappers";
 import type { PostRow } from "@/features/posts/lib/post-mappers";
 
@@ -18,11 +17,20 @@ export async function getVisiblePost(postId: string) {
   const row = data as PostRow;
   let imageUrl: string | undefined;
   if (row.image_path) {
-    const admin = createAdminClient();
-    const result = await admin?.storage
-      .from("post-images")
-      .createSignedUrl(row.image_path, 3600);
-    imageUrl = result?.data?.signedUrl;
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key =
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    if (url && key) {
+      const response = await fetch(
+        `${url}/functions/v1/signed-post-image?postId=${encodeURIComponent(row.id)}`,
+        { headers: { apikey: key }, next: { revalidate: 300 } },
+      );
+      const signed = (await response.json().catch(() => null)) as {
+        signedUrl?: string;
+      } | null;
+      imageUrl = response.ok ? signed?.signedUrl : undefined;
+    }
   }
   return rowToPost(row, imageUrl);
 }

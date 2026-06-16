@@ -72,7 +72,6 @@ const navItems = [
   ["How it works", "#how-it-works"],
   ["Features", "#features"],
   ["Safety", "#safety"],
-  ["Explore", "/map"],
 ] as const;
 
 function Wordmark({ className = "" }: { className?: string }) {
@@ -345,7 +344,6 @@ export function LandingPage() {
 
       <section className="bg-[#a8ba63] px-5 py-20 text-[#101713] sm:px-8 sm:py-28 lg:py-40">
         <ScrollReveal className="mx-auto max-w-6xl text-center">
-          <Dot className="mx-auto size-40 -mb-20" />
           <blockquote className="mt-10 font-serif text-[clamp(3.4rem,8vw,8rem)] leading-[0.95] tracking-[-0.055em]">
             Every place has a version of someone that stayed behind.
           </blockquote>
@@ -439,7 +437,6 @@ export function LandingPage() {
             </p>
           </div>
           <div className="flex flex-wrap gap-6 text-xs text-[#657067] dark:text-[#aeb7af]">
-            <Link href="/map">Explore</Link>
             <Link href="/safety">Safety</Link>
             <Link href="/privacy">Privacy</Link>
             <Link href="/terms">Terms</Link>

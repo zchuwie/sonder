@@ -14,12 +14,8 @@ corepack pnpm run supa:types
 
 Enable anonymous sign-ins in Supabase Auth before testing submissions.
 
-Create one email/password user for the administrator, then configure:
-
-```bash
-corepack pnpm exec supabase secrets set ADMIN_EMAIL=admin@example.com
-corepack pnpm exec supabase secrets set DEEZER_API_BASE_URL=https://api.deezer.com
-```
+Create one email/password user for the administrator. After applying migration
+`0006_admin_app_rls.sql`, add that user's Auth UUID to `public.admin_users`.
 
 Deploy functions:
 
@@ -28,9 +24,8 @@ corepack pnpm exec supabase functions deploy create-post
 corepack pnpm exec supabase functions deploy report-post
 corepack pnpm exec supabase functions deploy deezer-search
 corepack pnpm exec supabase functions deploy signed-post-image
-corepack pnpm exec supabase functions deploy admin-approve-post
-corepack pnpm exec supabase functions deploy admin-reject-post
-corepack pnpm exec supabase functions deploy admin-hide-post
+corepack pnpm exec supabase functions deploy upload-post-image
+corepack pnpm exec supabase functions deploy cleanup-orphan-uploads --no-verify-jwt
 ```
 
 Local Supabase development requires Docker Desktop. If Docker is unavailable,
@@ -45,9 +40,10 @@ Approved public posts receive one-hour signed URLs through
 
 ## Admin
 
-The unlinked admin entry route is `/verdant-keeper-7q4m9x`. It is only
-obscurity; authorization always compares the authenticated Supabase user's
-email to the server-side `ADMIN_EMAIL`.
+Admin UI runs separately from `apps/admin` on port `3002`. Admin reads and
+moderation updates use authenticated Supabase queries protected by
+`public.is_admin()` RLS policies. No admin Edge Functions or service-role key
+are used by the admin app. See `docs/admin-separation.md`.
 
 # Security hardening
 

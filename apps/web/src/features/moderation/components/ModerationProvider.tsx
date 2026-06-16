@@ -4,24 +4,19 @@ import {
   createContext,
   useContext,
   useEffect,
-  useMemo,
   useState,
   type ReactNode,
 } from "react";
 import { mockMarkers } from "@/features/posts/lib/mock-posts";
 import { groupMarkersByLocation } from "@/features/posts/lib/post-utils";
 import type { MarkerData } from "@/features/posts/lib/post-types";
-import type { ModerationDecision, ModerationQueueItem } from "../types";
 import { usePosts } from "@/features/posts/client/use-posts";
-import { moderateRemotePost } from "@/features/moderation/client/use-admin-posts";
 
 const STORAGE_KEY = "sonder:moderation-markers";
 
 type ModerationContextValue = {
   markers: MarkerData[];
   setMarkers: React.Dispatch<React.SetStateAction<MarkerData[]>>;
-  pending: ModerationQueueItem[];
-  decide: (postId: string, decision: ModerationDecision) => void;
 };
 
 const ModerationContext = createContext<ModerationContextValue | null>(null);
@@ -31,7 +26,7 @@ export function ModerationProvider({ children }: { children: ReactNode }) {
     groupMarkersByLocation(mockMarkers),
   );
   const [hydrated, setHydrated] = useState(false);
-  const { remoteMarkers, refresh } = usePosts();
+  const { remoteMarkers } = usePosts();
 
   useEffect(() => {
     try {
@@ -51,46 +46,8 @@ export function ModerationProvider({ children }: { children: ReactNode }) {
     if (remoteMarkers) setMarkers(groupMarkersByLocation(remoteMarkers));
   }, [remoteMarkers]);
 
-  const pending = useMemo(
-    () =>
-      markers.flatMap((marker) =>
-        marker.posts
-          .filter((post) => post.moderationStatus === "pending")
-          .map((post) => ({ marker, post })),
-      ),
-    [markers],
-  );
-
-  const decide = (postId: string, decision: ModerationDecision) => {
-    void moderateRemotePost(
-      postId,
-      decision === "approve" ? "approve" : "reject",
-    )
-      .then((remote) => {
-        if (remote) return refresh();
-        return null;
-      })
-      .catch(() => undefined);
-    setMarkers((current) =>
-      current.map((marker) => ({
-        ...marker,
-        posts: marker.posts.map((post) =>
-          post.id === postId
-            ? {
-                ...post,
-                moderationStatus:
-                  decision === "approve" ? "visible" : "rejected",
-              }
-            : post,
-        ),
-      })),
-    );
-  };
-
   return (
-    <ModerationContext.Provider
-      value={{ markers, setMarkers, pending, decide }}
-    >
+    <ModerationContext.Provider value={{ markers, setMarkers }}>
       {children}
     </ModerationContext.Provider>
   );

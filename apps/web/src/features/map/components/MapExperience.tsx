@@ -37,6 +37,7 @@ import { useModeration } from "@/features/moderation/components/ModerationProvid
 import { createSupabasePost } from "@/features/posts/client/use-create-post";
 import { getFunctionErrorMessage } from "@/lib/supabase/function-error";
 import { MyPendingPostsModal } from "@/features/posts/components/MyPendingPostsModal";
+import { reverseGeocode } from "@/features/map/client/reverse-geocode";
 
 type FlyToTarget = { lat: number; lng: number; zoom?: number } | null;
 const INITIAL_VIEWPORT: MapViewport = {
@@ -75,17 +76,20 @@ export function MapExperience() {
   const publicSelectedMarker =
     publicMarkers.find((marker) => marker.id === selectedMarkerId) ?? null;
 
-  const addMarker = (marker: MarkerData) => {
+  const addMarker = async (marker: MarkerData) => {
+    const placeName =
+      marker.placeName ?? (await reverseGeocode(marker.lat, marker.lng));
+    const namedMarker = { ...marker, placeName };
     const cleaned = removeEmptyMarkers(markers);
     const existing = cleaned.find(
       (item) =>
         getLocationGroupKey(item.lat, item.lng) ===
-        getLocationGroupKey(marker.lat, marker.lng),
+        getLocationGroupKey(namedMarker.lat, namedMarker.lng),
     );
     setMarkers(
-      groupMarkersByLocation([...cleaned, { ...marker, source: "manual" }]),
+      groupMarkersByLocation([...cleaned, { ...namedMarker, source: "manual" }]),
     );
-    setSelectedMarkerId(existing?.id ?? marker.id);
+    setSelectedMarkerId(existing?.id ?? namedMarker.id);
   };
 
   const selectPlace = (place: LocationPlaceDTO) => {
