@@ -49,14 +49,14 @@ export function PhotoAttachmentPicker({
         <span>
           <span className="block text-sm font-medium">Add photo</span>
           <span className="mt-0.5 block text-xs text-muted-foreground">
-            Optional, shown in a fixed preview
+            Use a photo you can share. Avoid faces, IDs, and addresses.
           </span>
         </span>
       </button>
       <input
         ref={input}
         type="file"
-        accept="image/*"
+        accept="image/jpeg,image/png,image/webp"
         className="hidden"
         onChange={(event) => {
           const file = event.target.files?.[0];

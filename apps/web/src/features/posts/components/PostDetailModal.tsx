@@ -1,29 +1,25 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Clock3, Flag, MapPin, Share2 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Check, Clock3, Send } from "lucide-react";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { MusicPreviewCard } from "./MusicPreviewCard";
 import { relativeTime } from "@/features/posts/lib/post-utils";
 import type { AnonymousPost } from "@/features/posts/lib/post-types";
-import { reportRemotePost } from "@/features/moderation/client/use-admin-reports";
+import { ReportPostButton } from "@/features/moderation/components/ReportPostButton";
 
 export function buildShareUrl(post: AnonymousPost): string {
-  if (post.moderationStatus !== "visible") {
+  if (post.moderationStatus !== "approved") {
     throw new Error("Only approved thoughts can be shared.");
   }
-  const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(post))));
-  return `${typeof window === "undefined" ? "" : window.location.origin}/share?d=${encoded}`;
+  const origin = typeof window === "undefined" ? "" : window.location.origin;
+  return `${origin}/p/${encodeURIComponent(post.id)}`;
 }
 
 export default function PostDetailModal({
@@ -34,105 +30,89 @@ export default function PostDetailModal({
   onClose: () => void;
 }) {
   const [copied, setCopied] = useState(false);
-  const [reported, setReported] = useState(false);
+  const [confirmShare, setConfirmShare] = useState(false);
   const flagged = post.moderationStatus === "flagged";
-  const canShare = post.moderationStatus === "visible";
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-h-[88vh] gap-0 overflow-hidden rounded-[30px] border-primary/15 bg-background/96 p-0 shadow-[0_30px_90px_rgba(18,70,35,.24)] backdrop-blur-xl sm:max-w-xl">
-        <ScrollArea className="max-h-[calc(88vh-72px)]">
-          <div className="p-3">
-            <div className="relative aspect-[16/9] overflow-hidden rounded-[24px] bg-gradient-to-br from-primary/20 via-muted to-background">
-              {post.imageUrl && !flagged ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={post.imageUrl}
-                  alt=""
-                  className="size-full object-cover"
-                />
-              ) : post.music?.coverUrl && !flagged ? (
-                <>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={post.music.coverUrl}
-                    alt=""
-                    className="size-full scale-110 object-cover opacity-30 blur-xl"
-                  />
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={post.music.coverUrl}
-                    alt=""
-                    className="absolute left-1/2 top-1/2 size-32 -translate-x-1/2 -translate-y-1/2 rounded-3xl object-cover shadow-xl"
-                  />
-                </>
-              ) : (
-                <div className="grid size-full place-items-center px-10 text-center text-sm text-muted-foreground">
-                  Someone left a thought here.
-                </div>
-              )}
-            </div>
+      <DialogContent
+        overlayClassName="bg-transparent supports-backdrop-filter:backdrop-blur-none"
+        className="inset-x-2 bottom-2 top-auto flex max-h-[48dvh] w-auto max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-2xl border-black/10 bg-background/96 p-0 shadow-2xl backdrop-blur-xl sm:inset-x-auto sm:bottom-4 sm:right-4 sm:top-4 sm:max-h-none sm:w-[24rem] sm:rounded-3xl lg:w-108"
+      >
+        {/* Image / cover */}
+        {post.imageUrl && !flagged ? (
+          <div className="relative aspect-video w-full overflow-hidden rounded-t-2xl sm:rounded-t-3xl">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={post.imageUrl} alt="" className="size-full object-cover" />
           </div>
-          <DialogHeader className="space-y-4 px-6 pb-4 pt-3 text-left">
-            <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-              <Badge variant="secondary" className="rounded-full px-3">
-                Anonymous
-              </Badge>
-              <span className="flex items-center gap-1">
-                <MapPin className="size-3.5" />{" "}
-                {post.placeName ?? "Pinned nearby"}
-              </span>
-              <span className="flex items-center gap-1">
-                <Clock3 className="size-3.5" /> {relativeTime(post.createdAt)}
-              </span>
-            </div>
-            <DialogTitle className="text-left text-2xl leading-8">
+        ) : post.music?.coverUrl && !flagged ? (
+          <div className="relative aspect-video w-full overflow-hidden rounded-t-2xl bg-gradient-to-br from-primary/20 via-muted to-background sm:rounded-t-3xl">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={post.music.coverUrl} alt="" className="size-full scale-110 object-cover opacity-30 blur-xl" />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={post.music.coverUrl} alt="" className="absolute left-1/2 top-1/2 size-24 -translate-x-1/2 -translate-y-1/2 rounded-2xl object-cover shadow-xl sm:size-32 sm:rounded-3xl" />
+          </div>
+        ) : null}
+
+        {/* Content */}
+        <div className="flex min-h-0 flex-1 flex-col p-5 sm:p-6">
+          {/* Time */}
+          <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Clock3 className="size-3" /> {relativeTime(post.createdAt)}
+          </span>
+
+          <DialogHeader className="mt-2 space-y-2 text-left">
+            <DialogTitle className="font-serif text-xl font-normal leading-snug tracking-[-0.01em] sm:text-2xl">
               {post.title}
             </DialogTitle>
             <DialogDescription className="sr-only">
-              Anonymous post preview
+              Anonymous post details
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-5 px-6 pb-6">
-            <p className="whitespace-pre-wrap text-[15px] leading-7">
-              {flagged ? "This post was flagged for review." : post.text}
-            </p>
-            {post.music && !flagged && <MusicPreviewCard music={post.music} />}
-            <p className="rounded-2xl bg-primary/5 p-4 text-xs leading-5 text-muted-foreground">
-              Be kind. This space is public and anonymous.
-            </p>
-          </div>
-        </ScrollArea>
-        <DialogFooter className="flex-row border-t px-6 py-4">
-          <Button
-            variant="ghost"
-            className="rounded-xl"
-            onClick={() => {
-              setReported(true);
-            void reportRemotePost(post.id).catch(() => undefined);
-            }}
-            disabled={reported}
-          >
-            <Flag /> {reported ? "Reported" : "Report"}
-          </Button>
-          {canShare ? (
-            <Button
-              className="ml-auto rounded-xl px-5"
-              onClick={async () => {
-                await navigator.clipboard?.writeText(buildShareUrl(post));
-                setCopied(true);
-                setTimeout(() => setCopied(false), 1800);
-              }}
-            >
-              {copied ? <Check /> : <Share2 />}
-              {copied ? "Copied" : "Share"}
-            </Button>
-          ) : (
-            <p className="ml-auto text-xs text-muted-foreground">
-              Sharing is available after approval.
-            </p>
+
+          <p className="mt-3 text-sm leading-relaxed text-foreground/80 sm:text-[15px] sm:leading-7">
+            {flagged ? "This post was flagged for review." : post.text}
+          </p>
+
+          {post.music && !flagged && <div className="mt-4"><MusicPreviewCard music={post.music} /></div>}
+
+          {/* Actions — pinned to bottom, only for approved posts */}
+          {post.moderationStatus === "approved" && (
+            <div className="mt-auto flex items-center justify-between border-t border-border/50 pt-4">
+              <ReportPostButton postId={post.id} iconOnly />
+              {confirmShare ? (
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] text-muted-foreground">Copy link?</span>
+                  <button
+                    type="button"
+                    aria-label="Confirm copy link"
+                    className="grid size-9 place-items-center rounded-full bg-primary text-primary-foreground transition-all duration-200 hover:scale-110"
+                    onClick={async () => {
+                      await navigator.clipboard?.writeText(buildShareUrl(post));
+                      setCopied(true);
+                      setConfirmShare(false);
+                      setTimeout(() => setCopied(false), 1800);
+                    }}
+                  >
+                    <Check className="size-4" />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  aria-label={copied ? "Link copied" : "Share post"}
+                  className={`grid size-9 place-items-center rounded-full border border-border text-muted-foreground transition-all duration-200 hover:scale-110 hover:border-primary/30 hover:bg-primary/5 hover:text-primary ${copied ? "border-primary/40 text-primary" : ""}`}
+                  onClick={() => setConfirmShare(true)}
+                >
+                  {copied ? <Check className="size-4" /> : <Send className="size-4" />}
+                </button>
+              )}
+            </div>
           )}
-        </DialogFooter>
+          {post.moderationStatus === "pending" && (
+            <p className="mt-auto pt-4 text-center text-xs text-muted-foreground">Waiting for approval</p>
+          )}
+        </div>
       </DialogContent>
     </Dialog>
   );

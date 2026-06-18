@@ -1,9 +1,9 @@
 export type ModerationStatus =
-  | "visible"
   | "pending"
+  | "approved"
   | "rejected"
   | "flagged"
-  | "hidden";
+  | "archived";
 
 export type PostType = "text" | "photo" | "song" | "mixed";
 
@@ -33,6 +33,7 @@ export type AnonymousPost = {
   lng: number;
   placeName?: string;
   createdAt: string;
+  deletedAt?: string | null;
   distanceLabel?: string;
   moderationStatus: ModerationStatus;
 };

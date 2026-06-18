@@ -1,0 +1,260 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --background: #f7fcf7;
+  --foreground: #0a0a0a;
+  --surface: #f1f7f2;
+  --surface-elevated: #ffffff;
+  --muted-surface: #f5f5f5;
+  --muted-foreground: #737373;
+  --border: #e5e5e5;
+  --primary: #106e20;
+  --primary-hover: #005c0a;
+  --primary-foreground: #fafafa;
+  --accent: #f5f5f5;
+  --accent-foreground: #171717;
+  --sidebar-hover: #e8f3ea;
+  --sidebar-active: #106e20;
+  --sidebar-active-foreground: #fafafa;
+  --danger: #e7000b;
+  --danger-hover: #b80009;
+  --danger-foreground: #fafafa;
+  --warning-surface: #fff7df;
+  --warning-foreground: #7a4600;
+  --danger-surface: #fff0ef;
+  --focus: #4e9a52;
+}
+
+.dark {
+  --background: #0a0a0a;
+  --foreground: #fafafa;
+  --surface: #1d3024;
+  --surface-elevated: #171717;
+  --muted-surface: #262626;
+  --muted-foreground: #a1a1a1;
+  --border: #ffffff1a;
+  --primary: #61bd67;
+  --primary-hover: #7acf7e;
+  --primary-foreground: #051106;
+  --accent: #262626;
+  --accent-foreground: #fafafa;
+  --sidebar-hover: #24382a;
+  --sidebar-active: #61bd67;
+  --sidebar-active-foreground: #051106;
+  --danger: #ff6467;
+  --danger-hover: #ff8587;
+  --danger-foreground: #051106;
+  --warning-surface: #3a301c;
+  --warning-foreground: #ffd88a;
+  --danger-surface: #3c2422;
+  --focus: #5aa75e;
+}
+
+@theme inline {
+  --font-serif: var(--font-gilda);
+  --font-heading: var(--font-gilda);
+  --font-sans: var(--font-manrope);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-elevated: var(--surface-elevated);
+  --color-muted: var(--muted-surface);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-sidebar-hover: var(--sidebar-hover);
+  --color-sidebar-active: var(--sidebar-active);
+  --color-sidebar-active-foreground: var(--sidebar-active-foreground);
+  --color-danger: var(--danger);
+  --color-danger-hover: var(--danger-hover);
+  --color-danger-foreground: var(--danger-foreground);
+  --color-warning-surface: var(--warning-surface);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-danger-surface: var(--danger-surface);
+}
+
+* {
+  box-sizing: border-box;
+  border-color: var(--border);
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--primary) 35%, transparent) color-mix(in srgb, var(--surface) 70%, transparent);
+}
+
+@media (min-width: 1280px) {
+  html { font-size: 14px; }
+}
+
+body {
+  margin: 0;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-manrope), Arial, Helvetica, sans-serif;
+}
+
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-track { background: color-mix(in srgb, var(--surface) 78%, transparent); border-radius: 999px; }
+*::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--primary) 34%, transparent); border: 3px solid transparent; border-radius: 999px; background-clip: content-box; }
+*::-webkit-scrollbar-thumb:hover { background: color-mix(in srgb, var(--primary) 48%, transparent); background-clip: content-box; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .admin-soft-in { animation: admin-soft-in .22s ease-out both; }
+  @keyframes admin-soft-in {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+}
+
+button, input, textarea, select {
+  font: inherit;
+  color: var(--foreground);
+}
+
+button {
+  cursor: pointer;
+}
+
+input, textarea, select {
+  background-color: var(--surface-elevated);
+}
+
+input::placeholder, textarea::placeholder {
+  color: var(--muted-foreground);
+  opacity: 1;
+}
+
+input:focus-visible, textarea:focus-visible, select:focus-visible,
+button:focus-visible, a:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: .55;
+}
+
+.admin-sidebar-link {
+  color: var(--muted-foreground);
+}
+
+.admin-sidebar-link:hover {
+  background: var(--sidebar-hover);
+  color: var(--foreground);
+}
+
+.admin-sidebar-link[aria-current="page"] {
+  background: var(--sidebar-active);
+  color: var(--sidebar-active-foreground);
+  box-shadow: 0 8px 18px rgb(0 0 0 / 12%);
+}
+
+.admin-sidebar-link[aria-current="page"] * {
+  color: inherit;
+}
+
+/* Contrast guards for every clickable background family used by admin. */
+.bg-primary { color: var(--primary-foreground) !important; }
+.bg-primary * { color: inherit !important; }
+.bg-danger { color: var(--danger-foreground) !important; }
+.bg-danger * { color: inherit !important; }
+
+button.bg-surface,
+button.bg-surface-elevated,
+button.bg-muted,
+button.bg-white {
+  color: var(--foreground);
+}
+
+button.bg-green-700,
+button.bg-green-800,
+button.bg-green-900,
+button.bg-red-700,
+button.bg-red-800,
+button.bg-red-900 {
+  color: #ffffff !important;
+}
+
+button.bg-green-700 *,
+button.bg-green-800 *,
+button.bg-green-900 *,
+button.bg-red-700 *,
+button.bg-red-800 *,
+button.bg-red-900 * {
+  color: inherit !important;
+}
+
+button.bg-green-50,
+button.bg-red-50,
+button.bg-amber-50,
+button.bg-slate-100,
+button.bg-gray-50 {
+  color: #0a0a0a;
+}
+
+.dark button.bg-green-50,
+.dark button.bg-red-50,
+.dark button.bg-amber-50,
+.dark button.bg-slate-100,
+.dark button.bg-gray-50 {
+  color: var(--foreground);
+}
+
+/* Light theme: activated dark-green controls and CTAs always use white text. */
+html:not(.dark) [aria-pressed="true"].bg-primary,
+html:not(.dark) a.bg-primary,
+html:not(.dark) button.bg-primary {
+  color: #ffffff !important;
+}
+
+html:not(.dark) [aria-pressed="true"].bg-primary *,
+html:not(.dark) a.bg-primary *,
+html:not(.dark) button.bg-primary * {
+  color: #ffffff !important;
+}
+
+/* Dark theme primary is intentionally pale sage, so text must stay dark. */
+html.dark .bg-primary,
+html.dark .bg-primary * {
+  color: #051106 !important;
+}
+
+a { color: inherit; text-decoration: none; }
+::selection { background: var(--accent); color: var(--accent-foreground); }
+
+.maplibregl-ctrl-group {
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 14px !important;
+  background: color-mix(in srgb, var(--surface-elevated) 95%, transparent) !important;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 18%) !important;
+}
+.maplibregl-ctrl-group button { filter: none; }
+.maplibregl-ctrl-attrib {
+  border-radius: 999px !important;
+  background: color-mix(in srgb, var(--surface-elevated) 90%, transparent) !important;
+  color: var(--foreground) !important;
+}
+
+/* Compatibility layer while feature files migrate to semantic tokens. */
+.dark .bg-white, .dark .bg-white\/95 { background-color: var(--surface-elevated) !important; }
+.dark .bg-\[\#fbfcf8\], .dark .bg-\[\#fbfcf8\]\/95 { background-color: var(--surface) !important; }
+.dark .bg-\[\#f0f4ed\], .dark .bg-\[\#f1f6ee\], .dark .bg-\[\#f5f8f2\],
+.dark .bg-slate-100, .dark .bg-gray-50 { background-color: var(--muted-surface) !important; }
+.dark .text-slate-500, .dark .text-slate-600, .dark .text-slate-700,
+.dark .text-gray-400, .dark .text-gray-500, .dark .text-gray-600 { color: var(--muted-foreground) !important; }
+.dark .text-\[\#172119\], .dark .text-\[\#173f27\], .dark .text-\[\#245236\] { color: var(--foreground) !important; }
+.dark .bg-green-50, .dark .bg-\[\#e4eee0\], .dark .bg-\[\#e7eee3\],
+.dark .bg-\[\#eaf2e6\], .dark .bg-\[\#eff3eb\] { background-color: var(--accent) !important; }
+.dark .text-green-700, .dark .text-green-800, .dark .text-green-900 { color: var(--primary) !important; }
+.dark .bg-red-50 { background-color: var(--danger-surface) !important; }
+.dark .text-red-700, .dark .text-red-800, .dark .text-red-900 { color: #ffaaa3 !important; }
+.dark .bg-amber-50 { background-color: var(--warning-surface) !important; }
+.dark .text-amber-700, .dark .text-amber-800 { color: var(--warning-foreground) !important; }
+.dark .hover\:bg-white:hover { background-color: var(--surface-elevated) !important; }
+.dark .hover\:bg-green-50\/50:hover { background-color: var(--accent) !important; }

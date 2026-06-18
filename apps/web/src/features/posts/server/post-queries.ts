@@ -1,7 +1,7 @@
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { fetchSignedPostImageUrl } from "@/lib/storage/image-url";
 import { rowToPost } from "@/features/posts/lib/post-mappers";
 import type { PostRow } from "@/features/posts/lib/post-mappers";
 
@@ -12,17 +12,13 @@ export async function getVisiblePost(postId: string) {
     .from("posts")
     .select("*")
     .eq("id", postId)
-    .eq("status", "visible")
+    .in("status", ["approved", "flagged"])
+    .is("deleted_at", null)
     .maybeSingle();
   if (!data) return null;
   const row = data as PostRow;
-  let imageUrl: string | undefined;
-  if (row.image_path) {
-    const admin = createAdminClient();
-    const result = await admin?.storage
-      .from("post-images")
-      .createSignedUrl(row.image_path, 3600);
-    imageUrl = result?.data?.signedUrl;
-  }
+  const imageUrl = row.image_path
+    ? await fetchSignedPostImageUrl(row.id, { next: { revalidate: 300 } })
+    : undefined;
   return rowToPost(row, imageUrl);
 }

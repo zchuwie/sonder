@@ -33,14 +33,11 @@ verify_jwt = true
 [functions.deezer-search]
 verify_jwt = false
 
-[functions.admin-approve-post]
-verify_jwt = true
-
-[functions.admin-reject-post]
-verify_jwt = true
-
-[functions.admin-hide-post]
-verify_jwt = true
-
 [functions.signed-post-image]
+verify_jwt = false
+
+[functions.upload-post-image]
+verify_jwt = true
+
+[functions.cleanup-orphan-uploads]
 verify_jwt = false

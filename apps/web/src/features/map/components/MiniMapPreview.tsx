@@ -40,13 +40,28 @@ export function MiniMapPreview({ marker }: { marker: MarkerData }) {
   return (
     <div className="flex h-full flex-col bg-muted/45">
       <div className="relative min-h-0 flex-1 overflow-hidden">
-        <div ref={container} className="size-full" aria-label="OpenFreeMap location preview" />
-        <div className="absolute inset-x-3 bottom-3 rounded-2xl bg-background/90 p-3 shadow-lg backdrop-blur-md">
-          <p className="flex items-center gap-1.5 text-sm font-semibold"><MapPin className="size-4 text-primary" /> {marker.placeName ?? "Selected place"}</p>
-          <p className="mt-1 font-mono text-[10px] text-muted-foreground">{marker.lat.toFixed(4)}, {marker.lng.toFixed(4)}</p>
+        <div
+          ref={container}
+          className="size-full"
+          aria-label="OpenFreeMap location preview"
+        />
+        <div className="absolute inset-x-2 bottom-2 rounded-xl bg-background/90 p-2 shadow-lg backdrop-blur-md md:inset-x-3 md:bottom-3 md:rounded-2xl md:p-3">
+          <p className="flex items-center gap-1.5 truncate text-xs font-semibold md:text-sm">
+            <MapPin className="size-3.5 shrink-0 text-primary md:size-4" />{" "}
+            {marker.placeName ?? "Selected place"}
+          </p>
+          <p className="mt-0.5 font-mono text-[9px] text-muted-foreground md:mt-1 md:text-[10px]">
+            {marker.lat.toFixed(4)}, {marker.lng.toFixed(4)}
+          </p>
         </div>
       </div>
-      <div className="flex gap-2 p-4 text-xs leading-5 text-muted-foreground"><ShieldCheck className="mt-0.5 size-4 shrink-0 text-primary" /><p>Posts are public and anonymous. Avoid identifying information.</p></div>
+      <div className="hidden gap-2 p-4 text-xs leading-5 text-muted-foreground md:flex">
+        <ShieldCheck className="mt-0.5 size-4 shrink-0 text-primary" />
+        <p>
+          Approved posts and selected locations become public. Avoid identifying
+          information.
+        </p>
+      </div>
     </div>
   );
 }

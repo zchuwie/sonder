@@ -144,7 +144,7 @@ export function LandingMapPin() {
   };
 
   return (
-    <div className="relative h-[520px] w-full overflow-hidden rounded-[2rem] border border-black/10 bg-[#dfe4d8] shadow-2xl shadow-black/20 dark:border-white/10 sm:h-[620px]">
+    <div className="relative h-[440px] w-full overflow-hidden rounded-3xl border border-black/10 bg-[#dfe4d8] shadow-2xl shadow-black/20 dark:border-white/10 sm:h-[540px] sm:rounded-[2rem] lg:h-[620px]">
       <div
         ref={container}
         className="absolute inset-0 z-0 size-full"
@@ -175,16 +175,16 @@ export function LandingMapPin() {
         </div>
       )}
 
-      <div className="absolute inset-x-4 top-4 z-20 sm:left-5 sm:right-auto sm:w-[360px]">
+      <div className="absolute inset-x-3 top-3 z-20 sm:left-5 sm:right-auto sm:top-5 sm:w-[360px]">
         <MapSearchBar onPlaceSelect={selectPlace} />
       </div>
 
-      <div className="pointer-events-none absolute inset-x-4 bottom-4 z-20 flex flex-col items-stretch gap-3 sm:inset-x-6 sm:bottom-6 sm:flex-row sm:items-end sm:justify-between">
-        <div className="pointer-events-auto max-w-[390px] rounded-3xl border border-white/70 bg-[#f9f7f0]/95 p-5 text-[#101713] shadow-2xl backdrop-blur-xl">
+      <div className="pointer-events-none absolute inset-x-3 bottom-3 z-20 flex flex-col items-stretch gap-2 sm:inset-x-6 sm:bottom-6 sm:flex-row sm:items-end sm:justify-between sm:gap-3">
+        <div className="pointer-events-auto max-w-[390px] rounded-2xl border border-white/70 bg-[#f9f7f0]/95 p-3.5 text-[#101713] shadow-2xl backdrop-blur-xl sm:rounded-3xl sm:p-5">
           <div className="mb-4 text-[10px] font-bold uppercase tracking-[0.15em] text-[#647067]">
             <span>Your local pin</span>
           </div>
-          <p className="font-serif text-2xl leading-tight">{pin.name}</p>
+          <p className="font-serif text-xl leading-tight sm:text-2xl">{pin.name}</p>
           <div className="mt-4 flex items-center justify-between gap-4 text-xs text-[#687169]">
             <span className="flex min-w-0 items-center gap-1">
               <MapPin className="size-3.5 shrink-0" />

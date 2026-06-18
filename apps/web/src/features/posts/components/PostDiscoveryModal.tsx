@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { MapPin, Search, Sparkles } from "lucide-react";
+import { MapPin, Search } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -33,14 +33,14 @@ export function PostDiscoveryModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[88vh] gap-0 overflow-hidden rounded-3xl border-primary/15 bg-background/95 p-0 shadow-[0_30px_90px_rgba(18,70,35,.24)] backdrop-blur-xl sm:max-w-3xl">
-        <DialogHeader className="border-b px-6 py-5 pr-14">
+      <DialogContent className="max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-none gap-0 overflow-hidden rounded-2xl border-primary/15 bg-background/95 p-0 shadow-[0_30px_90px_rgba(18,70,35,.24)] backdrop-blur-xl sm:max-h-[88dvh] sm:w-full sm:max-w-3xl sm:rounded-3xl">
+        <DialogHeader className="border-b px-4 py-4 pr-12 sm:px-6 sm:py-5 sm:pr-14">
           <DialogTitle className="flex items-center gap-2 text-lg">
-            <Sparkles className="size-5 text-primary" /> Thoughts in this map area
+            <MapPin className="size-5 text-primary" /> Thoughts in this map area
           </DialogTitle>
           <DialogDescription>Approved thoughts visible in your current map preview, nearest first.</DialogDescription>
         </DialogHeader>
-        <div className="space-y-4 border-b px-6 py-4">
+        <div className="space-y-3 border-b px-4 py-3 sm:space-y-4 sm:px-6 sm:py-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search thoughts or places..." className="h-11 rounded-xl pl-9" />
@@ -53,7 +53,7 @@ export function PostDiscoveryModal({
             </TabsList>
           </Tabs>
         </div>
-        <div className="grid max-h-[60vh] gap-5 overflow-y-auto p-6 sm:grid-cols-2">
+        <div className="grid max-h-[calc(100dvh-13.5rem)] gap-3 overflow-y-auto p-3 sm:max-h-[60vh] sm:grid-cols-2 sm:gap-5 sm:p-6">
           {filtered.length ? filtered.map((post) => (
             <AnonymousPostCard key={post.id} post={post} onClick={() => onSelectPost(post)} />
           )) : (

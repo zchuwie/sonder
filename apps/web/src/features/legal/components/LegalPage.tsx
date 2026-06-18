@@ -77,6 +77,16 @@ export function LegalPage({ document }: { document: LegalDocument }) {
             </section>
           ))}
         </div>
+
+        <nav
+          aria-label="Legal and safety pages"
+          className="mt-20 flex flex-wrap gap-x-6 gap-y-3 border-t border-black/10 pt-8 text-xs font-semibold text-[#607064] dark:border-white/10 dark:text-[#aeb7af]"
+        >
+          <Link href="/privacy">Privacy Policy</Link>
+          <Link href="/terms">Terms of Use</Link>
+          <Link href="/community-guidelines">Community Guidelines</Link>
+          <Link href="/safety">Safety and Reporting</Link>
+        </nav>
       </article>
     </main>
   );
