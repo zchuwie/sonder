@@ -21,7 +21,7 @@ function SharedPost() {
   } catch {
     post = null;
   }
-  if (post?.moderationStatus === "visible") return <PublicPostView post={post} />;
+  if (post?.moderationStatus === "approved") return <PublicPostView post={post} />;
   return <main className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-muted/50 p-6 text-center"><AlertTriangle className="size-8 text-primary" /><h1 className="text-xl font-semibold">This share link could not be opened.</h1><p className="text-sm text-muted-foreground">It may be incomplete or no longer available.</p><Button asChild className="rounded-xl"><Link href="/">Open Sonder</Link></Button></main>;
 }
 

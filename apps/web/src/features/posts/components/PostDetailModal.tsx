@@ -19,7 +19,7 @@ import type { AnonymousPost } from "@/features/posts/lib/post-types";
 import { ReportPostButton } from "@/features/moderation/components/ReportPostButton";
 
 export function buildShareUrl(post: AnonymousPost): string {
-  if (post.moderationStatus !== "visible") {
+  if (post.moderationStatus !== "approved") {
     throw new Error("Only approved thoughts can be shared.");
   }
   const origin = typeof window === "undefined" ? "" : window.location.origin;
@@ -35,7 +35,7 @@ export default function PostDetailModal({
 }) {
   const [copied, setCopied] = useState(false);
   const flagged = post.moderationStatus === "flagged";
-  const canShare = post.moderationStatus === "visible";
+  const canShare = post.moderationStatus === "approved";
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>

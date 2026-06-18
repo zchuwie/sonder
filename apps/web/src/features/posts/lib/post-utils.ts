@@ -1,4 +1,16 @@
-import type { AnonymousPost, MarkerData, PostDraft, PostType } from "./post-types";
+import type { AnonymousPost, MarkerData, ModerationStatus, PostDraft, PostType } from "./post-types";
+
+export const PUBLIC_POST_STATUSES = ["approved", "flagged"] as const;
+
+export function isSoftDeletedPost(post: { deletedAt?: string | null }) {
+  return post.deletedAt != null;
+}
+
+export function isPublicPost(post: { moderationStatus: ModerationStatus; deletedAt?: string | null }) {
+  return PUBLIC_POST_STATUSES.includes(
+    post.moderationStatus as (typeof PUBLIC_POST_STATUSES)[number],
+  ) && !isSoftDeletedPost(post);
+}
 
 export function relativeTime(iso: string): string {
   const diff = Math.max(0, Date.now() - new Date(iso).getTime());
@@ -61,7 +73,7 @@ export function groupMarkersByLocation(markers: MarkerData[]): MarkerData[] {
 export function getVisiblePosts(markers: MarkerData[]): AnonymousPost[] {
   return markers
     .flatMap((marker) => marker.posts)
-    .filter((post) => post.moderationStatus === "visible");
+    .filter(isPublicPost);
 }
 
 type Coordinates = { lat: number; lng: number };
@@ -126,7 +138,7 @@ export function getPublicMarkers(markers: MarkerData[]): MarkerData[] {
   return markers
     .map((marker) => ({
       ...marker,
-      posts: marker.posts.filter((post) => post.moderationStatus === "visible"),
+      posts: marker.posts.filter(isPublicPost),
     }))
     .filter((marker) => marker.posts.length > 0);
 }

@@ -7,10 +7,10 @@ import type { PostRow } from "@/features/moderation/types";
 
 const STATUS_COLORS: Record<PostRow["status"], string> = {
   pending: "#d97706",
-  visible: "#197a36",
+  approved: "#197a36",
   rejected: "#b42318",
-  hidden: "#475569",
   flagged: "#dc2626",
+  archived: "#475569",
 };
 
 export function AdminLocationMap({

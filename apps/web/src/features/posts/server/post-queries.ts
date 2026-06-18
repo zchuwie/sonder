@@ -11,26 +11,17 @@ export async function getVisiblePost(postId: string) {
     .from("posts")
     .select("*")
     .eq("id", postId)
-    .eq("status", "visible")
+    .in("status", ["approved", "flagged"])
+    .is("deleted_at", null)
     .maybeSingle();
   if (!data) return null;
   const row = data as PostRow;
   let imageUrl: string | undefined;
   if (row.image_path) {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const key =
-      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    if (url && key) {
-      const response = await fetch(
-        `${url}/functions/v1/signed-post-image?postId=${encodeURIComponent(row.id)}`,
-        { headers: { apikey: key }, next: { revalidate: 300 } },
-      );
-      const signed = (await response.json().catch(() => null)) as {
-        signedUrl?: string;
-      } | null;
-      imageUrl = response.ok ? signed?.signedUrl : undefined;
-    }
+    const { data: signed } = await supabase.storage
+      .from("post-images")
+      .createSignedUrl(row.image_path, 3600);
+    imageUrl = signed?.signedUrl;
   }
   return rowToPost(row, imageUrl);
 }

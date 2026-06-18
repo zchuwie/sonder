@@ -20,7 +20,7 @@ export function MapPostPreview({
   onViewGroup: () => void;
 }) {
   const reduceMotion = useReducedMotion();
-  const posts = marker.posts.filter((item) => item.moderationStatus !== "hidden");
+  const posts = marker.posts;
 
   return (
     <motion.div

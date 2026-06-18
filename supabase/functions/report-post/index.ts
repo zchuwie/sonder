@@ -32,9 +32,10 @@ Deno.serve(async (req) => {
       .from("posts")
       .select("id")
       .eq("id", postId)
-      .eq("status", "visible")
+      .eq("status", "approved")
+      .is("deleted_at", null)
       .maybeSingle();
-    if (!post) throw new Error("Visible post not found");
+    if (!post) throw new Error("Approved post not found");
     const { error: insertError } = await admin.from("post_reports").insert({
       post_id: postId,
       reason: requiredString(input.reason, "reason", 120),
@@ -49,6 +50,17 @@ Deno.serve(async (req) => {
       );
     }
     if (insertError) throw insertError;
+    const { error: updateError } = await admin
+      .from("posts")
+      .update({
+        status: "flagged",
+        status_updated_at: new Date().toISOString(),
+        moderation_reason: "Reported by user",
+      })
+      .eq("id", postId)
+      .eq("status", "approved")
+      .is("deleted_at", null);
+    if (updateError) throw updateError;
     return json({ reported: true }, 201);
   } catch (cause) {
     return appError(cause, "Unable to report post.");

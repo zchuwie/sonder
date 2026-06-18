@@ -24,42 +24,23 @@ export function rowToPost(row: PostRow, imageUrl?: string): AnonymousPost {
     lng: row.lng,
     placeName: row.place_name ?? undefined,
     createdAt: row.created_at,
+    deletedAt: row.deleted_at,
     moderationStatus: row.status,
   };
 }
 
-export function rowsToMarkers(rows: PostRow[]): MarkerData[] {
-  return groupMarkersByLocation(
-    rows.map((row) => ({
-      id: row.group_key,
-      lat: row.lat,
-      lng: row.lng,
-      placeName: row.place_name ?? undefined,
-      posts: [rowToPost(row)],
-      source: "manual",
-    })),
-  );
-}
-
 export async function rowsToMarkersWithSignedImages(
   rows: PostRow[],
+  signFn?: (imagePath: string) => Promise<string | undefined>,
 ): Promise<MarkerData[]> {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key =
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   const posts = await Promise.all(
     rows.map(async (row) => {
-      if (!row.image_path || !url || !key) return rowToPost(row);
+      if (!row.image_path) return rowToPost(row);
       try {
-        const response = await fetch(
-          `${url}/functions/v1/signed-post-image?postId=${encodeURIComponent(row.id)}`,
-          {
-            headers: { apikey: key },
-          },
-        );
-        const data = await response.json();
-        return rowToPost(row, response.ok ? data.signedUrl : undefined);
+        const url = signFn
+          ? await signFn(row.image_path)
+          : undefined;
+        return rowToPost(row, url);
       } catch {
         return rowToPost(row);
       }

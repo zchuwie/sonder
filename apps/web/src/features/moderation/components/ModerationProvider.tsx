@@ -7,7 +7,6 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { mockMarkers } from "@/features/posts/lib/mock-posts";
 import { groupMarkersByLocation } from "@/features/posts/lib/post-utils";
 import type { MarkerData } from "@/features/posts/lib/post-types";
 import { usePosts } from "@/features/posts/client/use-posts";
@@ -22,9 +21,7 @@ type ModerationContextValue = {
 const ModerationContext = createContext<ModerationContextValue | null>(null);
 
 export function ModerationProvider({ children }: { children: ReactNode }) {
-  const [markers, setMarkers] = useState<MarkerData[]>(() =>
-    groupMarkersByLocation(mockMarkers),
-  );
+  const [markers, setMarkers] = useState<MarkerData[]>([]);
   const [hydrated, setHydrated] = useState(false);
   const { remoteMarkers } = usePosts();
 
@@ -43,7 +40,20 @@ export function ModerationProvider({ children }: { children: ReactNode }) {
   }, [hydrated, markers]);
 
   useEffect(() => {
-    if (remoteMarkers) setMarkers(groupMarkersByLocation(remoteMarkers));
+    if (remoteMarkers)
+      setMarkers((current) =>
+        groupMarkersByLocation([
+          ...remoteMarkers,
+          ...current
+            .map((marker) => ({
+              ...marker,
+              posts: marker.posts.filter(
+                (post) => post.moderationStatus === "pending",
+              ),
+            }))
+            .filter((marker) => marker.posts.length > 0),
+        ]),
+      );
   }, [remoteMarkers]);
 
   return (

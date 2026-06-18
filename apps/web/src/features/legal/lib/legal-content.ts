@@ -236,7 +236,7 @@ export const communityGuidelines: LegalDocument = {
     {
       title: "Posts are moderated",
       paragraphs: [
-        "Posts wait for review before public visibility. Approval is not a guarantee that content is accurate or harmless. Visible posts may later be hidden or removed after review or reports.",
+        "Posts wait for review before public visibility. Approval is not a guarantee that content is accurate or harmless. Public posts may later be archived or removed after review or reports.",
       ],
     },
   ],

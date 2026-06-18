@@ -159,13 +159,12 @@ export type Database = {
       }
       posts: {
         Row: {
-          approved_at: string | null
-          archived_at: string | null
           body: string
           created_at: string
           created_by: string | null
+          delete_reason: string | null
+          deleted_at: string | null
           group_key: string
-          hidden_at: string | null
           id: string
           image_path: string | null
           lat: number
@@ -173,19 +172,18 @@ export type Database = {
           moderation_reason: string | null
           music: Json | null
           place_name: string | null
-          rejected_at: string | null
           status: Database["public"]["Enums"]["post_status"]
+          status_updated_at: string
           title: string
           updated_at: string
         }
         Insert: {
-          approved_at?: string | null
-          archived_at?: string | null
           body: string
           created_at?: string
           created_by?: string | null
+          delete_reason?: string | null
+          deleted_at?: string | null
           group_key: string
-          hidden_at?: string | null
           id?: string
           image_path?: string | null
           lat: number
@@ -193,19 +191,18 @@ export type Database = {
           moderation_reason?: string | null
           music?: Json | null
           place_name?: string | null
-          rejected_at?: string | null
           status?: Database["public"]["Enums"]["post_status"]
+          status_updated_at?: string
           title: string
           updated_at?: string
         }
         Update: {
-          approved_at?: string | null
-          archived_at?: string | null
           body?: string
           created_at?: string
           created_by?: string | null
+          delete_reason?: string | null
+          deleted_at?: string | null
           group_key?: string
-          hidden_at?: string | null
           id?: string
           image_path?: string | null
           lat?: number
@@ -213,8 +210,8 @@ export type Database = {
           moderation_reason?: string | null
           music?: Json | null
           place_name?: string | null
-          rejected_at?: string | null
           status?: Database["public"]["Enums"]["post_status"]
+          status_updated_at?: string
           title?: string
           updated_at?: string
         }
@@ -228,8 +225,8 @@ export type Database = {
       is_visible_post_image: { Args: { object_name: string }; Returns: boolean }
     }
     Enums: {
-      post_status: "pending" | "visible" | "rejected" | "hidden" | "flagged"
-      report_status: "open" | "reviewed" | "dismissed" | "actioned"
+      post_status: "pending" | "approved" | "rejected" | "flagged" | "archived"
+      report_status: "open" | "reviewing" | "resolved" | "dismissed" | "actioned"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -810,8 +807,8 @@ export const Constants = {
   },
   public: {
     Enums: {
-      post_status: ["pending", "visible", "rejected", "hidden", "flagged"],
-      report_status: ["open", "reviewed", "dismissed", "actioned"],
+      post_status: ["pending", "approved", "rejected", "flagged", "archived"],
+      report_status: ["open", "reviewing", "resolved", "dismissed", "actioned"],
     },
   },
   storage: {

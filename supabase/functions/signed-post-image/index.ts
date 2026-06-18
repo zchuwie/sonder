@@ -13,7 +13,8 @@ Deno.serve(async (req) => {
       .from("posts")
       .select("image_path")
       .eq("id", postId)
-      .eq("status", "visible")
+      .in("status", ["approved", "flagged"])
+      .is("deleted_at", null)
       .maybeSingle();
     if (!post?.image_path) throw new Error("Public image not found");
     const { data, error: signError } = await admin.storage

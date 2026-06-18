@@ -7,7 +7,7 @@ import type { AnonymousPost, MarkerData } from "@/features/posts/lib/post-types"
 
 export function GroupedPostsModal({ marker, open, onOpenChange, onSelectPost }: { marker: MarkerData | null; open: boolean; onOpenChange: (open: boolean) => void; onSelectPost: (post: AnonymousPost) => void }) {
   if (!marker) return null;
-  const posts = marker.posts.filter((post) => post.moderationStatus !== "hidden");
+  const posts = marker.posts;
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-none gap-0 overflow-hidden rounded-2xl border-primary/15 bg-background/96 p-0 shadow-[0_30px_90px_rgba(18,70,35,.24)] backdrop-blur-xl sm:max-h-[88dvh] sm:w-full sm:max-w-3xl sm:rounded-[30px]">

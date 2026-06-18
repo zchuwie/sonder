@@ -323,7 +323,7 @@ export function LandingPage() {
               Anonymous does not mean careless.
             </h2>
             <p className="mt-6 max-w-md text-sm leading-7 text-[#b8c0b8]">
-              Posts can be reviewed, reported, and hidden. Sonder reminds
+              Posts can be reviewed, reported, and archived. Sonder reminds
               everyone not to share names, contact details, or identifying
               information.
             </p>
