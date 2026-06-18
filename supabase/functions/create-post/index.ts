@@ -23,7 +23,7 @@ Deno.serve(async (req) => {
       { key: `create-post:ip:${ipHash}`, limit: 20, windowSeconds: 3600 },
     ]);
     const input = await req.json();
-    const title = requiredString(input.title, "title", 80);
+    const title = requiredString(input.title, "title", 50);
     const body = requiredString(input.body, "body", 1000);
     const lat = coordinate(input.lat, "lat");
     const lng = coordinate(input.lng, "lng");

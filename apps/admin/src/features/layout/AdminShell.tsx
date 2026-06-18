@@ -26,7 +26,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   return (
-    <div className="min-h-dvh overflow-x-hidden bg-background text-foreground md:grid md:grid-cols-[200px_1fr] md:gap-3 md:p-3">
+    <div className="min-h-dvh overflow-x-hidden bg-background text-foreground md:grid md:grid-cols-[200px_1fr] md:p-3">
       {/* Mobile top bar */}
       <header className="flex items-center justify-between border-b border-border bg-surface px-4 py-3 md:hidden">
         <p className="font-serif text-xl text-foreground">Sonder<span className="text-primary">.</span></p>
@@ -46,11 +46,8 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
               <Link
                 key={href}
                 href={href}
-                className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition ${
-                  active
-                    ? "bg-accent text-accent-foreground"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                }`}
+                className="admin-sidebar-link flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition"
+                aria-current={active ? "page" : undefined}
               >
                 <Icon className="size-4" strokeWidth={1.8} />
                 {label}
@@ -73,11 +70,10 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             <Link
               key={href}
               href={href}
-              className={`flex flex-1 flex-col items-center gap-0.5 py-2 text-[10px] font-semibold transition ${
-                active ? "text-accent-foreground" : "text-muted-foreground"
-              }`}
+              className="admin-sidebar-link flex flex-1 flex-col items-center gap-0.5 py-2 text-[10px] font-semibold transition"
+              aria-current={active ? "page" : undefined}
             >
-              <span className={`rounded-xl p-1.5 ${active ? "bg-accent" : ""}`}>
+              <span className="rounded-xl p-1.5">
                 <Icon className="size-4" strokeWidth={1.8} />
               </span>
               <span className="leading-none">{label.split(" ")[0]}</span>
@@ -86,7 +82,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         })}
       </nav>
 
-      <main className="min-w-0 overflow-x-hidden p-3 pb-20 md:pb-3 md:pt-0">{children}</main>
+      <main className="min-w-0 overflow-x-hidden px-3 pb-20 pt-3 md:pb-3 md:pl-4 md:pt-0">{children}</main>
     </div>
   );
 }

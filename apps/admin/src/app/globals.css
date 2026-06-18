@@ -3,50 +3,59 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  --background: #f3f1e9;
-  --foreground: #172119;
-  --surface: #fbfcf8;
+  --background: #f7fcf7;
+  --foreground: #0a0a0a;
+  --surface: #f1f7f2;
   --surface-elevated: #ffffff;
-  --muted-surface: #eef3eb;
-  --muted-foreground: #526158;
-  --border: #d7e0d4;
-  --primary: #173f27;
-  --primary-hover: #0e2f1c;
-  --primary-foreground: #ffffff;
-  --accent: #e4eee0;
-  --accent-foreground: #173f27;
-  --danger: #b42318;
-  --danger-hover: #8f1c14;
-  --danger-foreground: #ffffff;
+  --muted-surface: #f5f5f5;
+  --muted-foreground: #737373;
+  --border: #e5e5e5;
+  --primary: #106e20;
+  --primary-hover: #005c0a;
+  --primary-foreground: #fafafa;
+  --accent: #f5f5f5;
+  --accent-foreground: #171717;
+  --sidebar-hover: #e8f3ea;
+  --sidebar-active: #106e20;
+  --sidebar-active-foreground: #fafafa;
+  --danger: #e7000b;
+  --danger-hover: #b80009;
+  --danger-foreground: #fafafa;
   --warning-surface: #fff7df;
   --warning-foreground: #7a4600;
   --danger-surface: #fff0ef;
-  --focus: #4e8256;
+  --focus: #4e9a52;
 }
 
 .dark {
-  --background: #111713;
-  --foreground: #edf4ee;
-  --surface: #18201b;
-  --surface-elevated: #202a23;
-  --muted-surface: #253128;
-  --muted-foreground: #b6c5b9;
-  --border: #344239;
-  --primary: #a8c79f;
-  --primary-hover: #bdd8b5;
-  --primary-foreground: #102016;
-  --accent: #2a3b30;
-  --accent-foreground: #edf4ee;
-  --danger: #e36b62;
-  --danger-hover: #ef8279;
-  --danger-foreground: #1f0806;
+  --background: #0a0a0a;
+  --foreground: #fafafa;
+  --surface: #1d3024;
+  --surface-elevated: #171717;
+  --muted-surface: #262626;
+  --muted-foreground: #a1a1a1;
+  --border: #ffffff1a;
+  --primary: #61bd67;
+  --primary-hover: #7acf7e;
+  --primary-foreground: #051106;
+  --accent: #262626;
+  --accent-foreground: #fafafa;
+  --sidebar-hover: #24382a;
+  --sidebar-active: #61bd67;
+  --sidebar-active-foreground: #051106;
+  --danger: #ff6467;
+  --danger-hover: #ff8587;
+  --danger-foreground: #051106;
   --warning-surface: #3a301c;
   --warning-foreground: #ffd88a;
   --danger-surface: #3c2422;
-  --focus: #a8c79f;
+  --focus: #5aa75e;
 }
 
 @theme inline {
+  --font-serif: var(--font-gilda);
+  --font-heading: var(--font-gilda);
+  --font-sans: var(--font-manrope);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-surface: var(--surface);
@@ -59,6 +68,9 @@
   --color-primary-foreground: var(--primary-foreground);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
+  --color-sidebar-hover: var(--sidebar-hover);
+  --color-sidebar-active: var(--sidebar-active);
+  --color-sidebar-active-foreground: var(--sidebar-active-foreground);
   --color-danger: var(--danger);
   --color-danger-hover: var(--danger-hover);
   --color-danger-foreground: var(--danger-foreground);
@@ -82,7 +94,7 @@ body {
   margin: 0;
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-manrope), Arial, Helvetica, sans-serif;
 }
 
 *::-webkit-scrollbar { width: 10px; height: 10px; }
@@ -127,6 +139,25 @@ button:disabled {
   opacity: .55;
 }
 
+.admin-sidebar-link {
+  color: var(--muted-foreground);
+}
+
+.admin-sidebar-link:hover {
+  background: var(--sidebar-hover);
+  color: var(--foreground);
+}
+
+.admin-sidebar-link[aria-current="page"] {
+  background: var(--sidebar-active);
+  color: var(--sidebar-active-foreground);
+  box-shadow: 0 8px 18px rgb(0 0 0 / 12%);
+}
+
+.admin-sidebar-link[aria-current="page"] * {
+  color: inherit;
+}
+
 /* Contrast guards for every clickable background family used by admin. */
 .bg-primary { color: var(--primary-foreground) !important; }
 .bg-primary * { color: inherit !important; }
@@ -163,7 +194,7 @@ button.bg-red-50,
 button.bg-amber-50,
 button.bg-slate-100,
 button.bg-gray-50 {
-  color: #172119;
+  color: #0a0a0a;
 }
 
 .dark button.bg-green-50,
@@ -190,7 +221,7 @@ html:not(.dark) button.bg-primary * {
 /* Dark theme primary is intentionally pale sage, so text must stay dark. */
 html.dark .bg-primary,
 html.dark .bg-primary * {
-  color: #102016 !important;
+  color: #051106 !important;
 }
 
 a { color: inherit; text-decoration: none; }

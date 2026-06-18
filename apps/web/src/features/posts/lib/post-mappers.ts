@@ -1,4 +1,5 @@
 import type { Database, Json } from "@/lib/supabase/database.types";
+import { fetchSignedPostImageUrl } from "@/lib/storage/image-url";
 import type { AnonymousPost, MarkerData, Music } from "./post-types";
 import { groupMarkersByLocation } from "./post-utils";
 
@@ -31,16 +32,12 @@ export function rowToPost(row: PostRow, imageUrl?: string): AnonymousPost {
 
 export async function rowsToMarkersWithSignedImages(
   rows: PostRow[],
-  signFn?: (imagePath: string) => Promise<string | undefined>,
 ): Promise<MarkerData[]> {
   const posts = await Promise.all(
     rows.map(async (row) => {
       if (!row.image_path) return rowToPost(row);
       try {
-        const url = signFn
-          ? await signFn(row.image_path)
-          : undefined;
-        return rowToPost(row, url);
+        return rowToPost(row, await fetchSignedPostImageUrl(row.id));
       } catch {
         return rowToPost(row);
       }

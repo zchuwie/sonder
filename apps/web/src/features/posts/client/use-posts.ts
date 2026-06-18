@@ -22,18 +22,8 @@ export function usePosts() {
         .is("deleted_at", null)
         .order("created_at", { ascending: false });
       if (error) throw error;
-
-      // ponytail: sign directly from client like admin does — edge function was returning 404
-      const signFn = async (imagePath: string) => {
-        const { data: signed } = await supabase.storage
-          .from("post-images")
-          .createSignedUrl(imagePath, 3600);
-        return signed?.signedUrl;
-      };
-
       const markers = await rowsToMarkersWithSignedImages(
         (data ?? []) as PostRow[],
-        signFn,
       );
       setRemoteMarkers(markers);
       return markers;

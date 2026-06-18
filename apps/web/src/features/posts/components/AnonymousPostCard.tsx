@@ -1,6 +1,6 @@
 "use client";
 
-import { Clock3, ImageIcon, Leaf, Music2, ShieldCheck, TriangleAlert } from "lucide-react";
+import { Clock3, Leaf, ShieldCheck, TriangleAlert } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -41,32 +41,30 @@ export function AnonymousPostCard({
             <img src={post.music.coverUrl} alt="" className="absolute left-1/2 top-1/2 size-24 -translate-x-1/2 -translate-y-1/2 rounded-2xl object-cover shadow-xl" />
           </>
         ) : (
-          <div className="grid size-full place-items-center text-primary"><div className="grid size-16 place-items-center rounded-full bg-background/70 shadow-sm backdrop-blur"><Leaf className="size-7" /></div></div>
+          <div className="grid size-full place-items-center text-primary">
+            <div className="grid size-16 place-items-center rounded-full bg-background/70 shadow-sm backdrop-blur">
+              <Leaf className="size-7" />
+            </div>
+          </div>
         )}
-        <span className="absolute bottom-3 left-3 rounded-full bg-background/85 px-2.5 py-1 text-[10px] font-semibold text-primary shadow-sm backdrop-blur">
-          {post.imageUrl ? "Photo thought" : post.music ? "Song thought" : "Written thought"}
-        </span>
       </div>
       <div className="flex flex-1 flex-col space-y-3 p-4 sm:space-y-4 sm:p-5">
-        <div className="flex flex-wrap gap-1.5 sm:gap-2">
-          <Badge variant="secondary" className="rounded-full">
-            Anonymous
-          </Badge>
-          {post.imageUrl && <Badge variant="outline"><ImageIcon /> Photo</Badge>}
-          {post.music && <Badge variant="outline"><Music2 /> Song</Badge>}
-          {post.moderationStatus === "pending" && (
-            <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100">
-              <ShieldCheck /> Pending review
-            </Badge>
-          )}
-          {flagged && (
-            <Badge variant="destructive"><TriangleAlert /> Flagged</Badge>
-          )}
-        </div>
+        {(post.moderationStatus === "pending" || flagged) && (
+          <div className="flex flex-wrap gap-1.5">
+            {post.moderationStatus === "pending" && (
+              <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100">
+                <ShieldCheck /> Pending review
+              </Badge>
+            )}
+            {flagged && (
+              <Badge variant="destructive"><TriangleAlert /> Flagged</Badge>
+            )}
+          </div>
+        )}
         <div>
           <h3 className="line-clamp-1 text-base font-semibold leading-6">{post.title}</h3>
           <p className={cn("mt-2 line-clamp-2 text-sm leading-6 text-muted-foreground", flagged && "text-muted-foreground")}>
-          {flagged ? "This post was flagged for review." : post.text || "An anonymous moment was left here."}
+            {flagged ? "This post was flagged for review." : post.text || "An anonymous moment was left here."}
           </p>
         </div>
         <div className="mt-auto flex items-center justify-between gap-3 border-t border-primary/10 pt-3 text-xs text-muted-foreground sm:pt-4">

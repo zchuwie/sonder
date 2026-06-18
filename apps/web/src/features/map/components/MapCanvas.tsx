@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence } from "framer-motion";
-import { FiMapPin } from "react-icons/fi";
+import { MapPin } from "lucide-react";
 import {
   Map,
   Marker as MLMarker,
@@ -11,14 +11,21 @@ import {
 } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { useTheme } from "next-themes";
+import {
+  addPinMarkerImage,
+  createPinMarkerElement,
+} from "@/features/map/lib/map-markers";
 import { MapPostPreview } from "./MapPostPreview";
 import type { MarkerData } from "@/features/posts/lib/post-types";
 import { getOpenFreeMapStyle } from "@/features/map/lib/openfreemap";
 import { AppLoading } from "@/components/shared/AppLoading";
 
-const PIN_COLOR = "#137818";
-
-type FlyToTarget = { lat: number; lng: number; zoom?: number } | null;
+type FlyToTarget = {
+  lat: number;
+  lng: number;
+  zoom?: number;
+  frameRightPanel?: boolean;
+} | null;
 export type MapViewport = {
   center: { lat: number; lng: number };
   bounds: { north: number; south: number; east: number; west: number };
@@ -34,6 +41,23 @@ type Props = {
   onViewportChange?: (viewport: MapViewport) => void;
   flyTo?: FlyToTarget;
 };
+
+type HoverPreview = {
+  x: number;
+  y: number;
+  title: string;
+  detail: string;
+} | null;
+
+function contentSummary(posts: MarkerData["posts"]) {
+  const types = new Set<string>();
+  for (const post of posts) {
+    if (post.imageUrl) types.add("Photos");
+    if (post.music) types.add("Songs");
+    if (!post.imageUrl && !post.music) types.add("Text");
+  }
+  return types.size ? [...types].join(" + ") : "Text";
+}
 
 export default function MapCanvas({
   markers,
@@ -62,15 +86,16 @@ export default function MapCanvas({
   const lat = 14.5995;
   const zoom = 12;
   const [mapLoaded, setMapLoaded] = useState(false);
-  const [previewPosition, setPreviewPosition] = useState<{
-    x: number;
-    y: number;
-  } | null>(null);
   const [holdIndicator, setHoldIndicator] = useState<{
     x: number;
     y: number;
     key: number;
   } | null>(null);
+  const [previewPosition, setPreviewPosition] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
+  const [hoverPreview, setHoverPreview] = useState<HoverPreview>(null);
 
   onMarkerSelectRef.current = onMarkerSelect;
   onMarkerAddRef.current = onMarkerAdd;
@@ -83,8 +108,13 @@ export default function MapCanvas({
       .filter((m) => m.source !== "search" && m.posts.length > 0)
       .map((m) => ({
         type: "Feature",
+        id: m.id,
         geometry: { type: "Point", coordinates: [m.lng, m.lat] },
-        properties: { id: m.id, postCount: m.posts.length },
+        properties: {
+          id: m.id,
+          postCount: m.posts.length,
+          content: contentSummary(m.posts),
+        },
       })),
   });
 
@@ -103,6 +133,10 @@ export default function MapCanvas({
     map.current.getCanvas().style.cursor = "pointer";
 
     map.current.addControl(new NavigationControl(), "bottom-left");
+    map.current.on("styleimagemissing", (event) => {
+      if (event.id === "sonder-map-pin" && map.current)
+        void addPinMarkerImage(map.current);
+    });
 
     const reportViewport = () => {
       if (!map.current) return;
@@ -121,30 +155,39 @@ export default function MapCanvas({
     map.current.on("moveend", reportViewport);
 
     // GeoJSON
-    map.current.on("load", () => {
+    map.current.on("load", async () => {
       if (!map.current) return;
+      await addPinMarkerImage(map.current);
       setMapLoaded(true);
       reportViewport();
 
       map.current.addSource("pins", {
         type: "geojson",
         data: buildGeoJSON(markersRef.current),
+        promoteId: "id",
         cluster: true,
         clusterMaxZoom: 13,
         clusterRadius: 50,
       });
 
-      // Cluster bubble
       map.current.addLayer({
         id: "clusters",
-        type: "circle",
+        type: "symbol",
         source: "pins",
         filter: ["has", "point_count"],
-        paint: {
-          "circle-color": PIN_COLOR,
-          "circle-radius": ["step", ["get", "point_count"], 13, 10, 17, 30, 21],
-          "circle-stroke-width": 2,
-          "circle-stroke-color": "#ffffff",
+        layout: {
+          "icon-image": "sonder-map-pin",
+          "icon-size": [
+            "step",
+            ["get", "point_count"],
+            0.82,
+            10,
+            0.95,
+            30,
+            1.08,
+          ],
+          "icon-anchor": "bottom",
+          "icon-allow-overlap": true,
         },
       });
 
@@ -158,6 +201,7 @@ export default function MapCanvas({
           "text-field": "{point_count_abbreviated}",
           "text-size": 11,
           "text-font": ["Noto Sans Bold", "Arial Unicode MS Bold"],
+          "text-offset": [0, -1.9],
         },
         paint: { "text-color": "#ffffff" },
       });
@@ -165,19 +209,14 @@ export default function MapCanvas({
       // Individual pin — green + larger when it has posts, gray + smaller when empty
       map.current.addLayer({
         id: "unclustered-point",
-        type: "circle",
+        type: "symbol",
         source: "pins",
         filter: ["!", ["has", "point_count"]],
-        paint: {
-          "circle-color": [
-            "case",
-            [">", ["get", "postCount"], 0],
-            PIN_COLOR,
-            "#9ca3af",
-          ],
-          "circle-radius": ["case", [">", ["get", "postCount"], 0], 9, 6],
-          "circle-stroke-width": 2,
-          "circle-stroke-color": "#ffffff",
+        layout: {
+          "icon-image": "sonder-map-pin",
+          "icon-size": 0.72,
+          "icon-anchor": "bottom",
+          "icon-allow-overlap": true,
         },
       });
 
@@ -194,6 +233,7 @@ export default function MapCanvas({
           "text-field": ["to-string", ["get", "postCount"]],
           "text-size": 10,
           "text-font": ["Noto Sans Bold", "Arial Unicode MS Bold"],
+          "text-offset": [0, -1.95],
         },
         paint: { "text-color": "#ffffff" },
       });
@@ -218,21 +258,79 @@ export default function MapCanvas({
       // Click individual pin → open sidebar
       map.current.on("click", "unclustered-point", (e) => {
         const id = e.features?.[0]?.properties?.id as string | undefined;
-        if (id) onMarkerSelectRef.current(id);
+        if (id) {
+          setHoverPreview(null);
+          onMarkerSelectRef.current(id);
+        }
       });
 
       // Cursor feedback
       const setCursor = (cur: string) => {
         if (map.current) map.current.getCanvas().style.cursor = cur;
       };
-      map.current.on("mouseenter", "clusters", () => setCursor("pointer"));
-      map.current.on("mouseleave", "clusters", () => setCursor("pointer"));
-      map.current.on("mouseenter", "unclustered-point", () =>
-        setCursor("pointer"),
-      );
-      map.current.on("mouseleave", "unclustered-point", () =>
-        setCursor("pointer"),
-      );
+      map.current.on("mouseenter", "clusters", async (event) => {
+        setCursor("pointer");
+        const feature = event.features?.[0];
+        const count = Number(feature?.properties?.point_count ?? 0);
+        const clusterId = feature?.properties?.cluster_id as number | undefined;
+        let detail = "Mixed posts";
+        if (clusterId !== undefined) {
+          const leaves = await (map.current?.getSource("pins") as GeoJSONSource)
+            .getClusterLeaves(clusterId, 25, 0)
+            .catch(() => []);
+          detail =
+            [
+              ...new Set(
+                leaves.flatMap((leaf) =>
+                  String(leaf.properties?.content ?? "")
+                    .split(" + ")
+                    .filter(Boolean),
+                ),
+              ),
+            ].join(" + ") || detail;
+        }
+        setHoverPreview({
+          x: event.point.x,
+          y: event.point.y,
+          title: `${count} thoughts nearby`,
+          detail,
+        });
+      });
+      map.current.on("mousemove", "clusters", (event) => {
+        setHoverPreview(
+          (preview) =>
+            preview && { ...preview, x: event.point.x, y: event.point.y },
+        );
+      });
+      map.current.on("mouseleave", "clusters", () => {
+        setCursor("pointer");
+        setHoverPreview(null);
+      });
+      map.current.on("mouseenter", "unclustered-point", (event) => {
+        setCursor("pointer");
+        const feature = event.features?.[0];
+        const id = feature?.properties?.id as string | undefined;
+        const marker = markersRef.current.find((item) => item.id === id);
+        if (marker)
+          setHoverPreview({
+            x: event.point.x,
+            y: event.point.y,
+            title: `${marker.posts.length} ${
+              marker.posts.length === 1 ? "thought" : "thoughts"
+            }`,
+            detail: contentSummary(marker.posts),
+          });
+      });
+      map.current.on("mousemove", "unclustered-point", (event) => {
+        setHoverPreview(
+          (preview) =>
+            preview && { ...preview, x: event.point.x, y: event.point.y },
+        );
+      });
+      map.current.on("mouseleave", "unclustered-point", () => {
+        setCursor("pointer");
+        setHoverPreview(null);
+      });
     });
 
     // Right-click → add pin
@@ -318,14 +416,33 @@ export default function MapCanvas({
     // Add new
     for (const pin of searchPins) {
       if (searchMarkersRef.current.has(pin.id)) continue;
-      const mlMarker = new MLMarker()
+      const mlMarker = new MLMarker({
+        element: createPinMarkerElement(pin.posts.length),
+        anchor: "bottom",
+      })
         .setLngLat([pin.lng, pin.lat])
         .addTo(map.current);
       mlMarker.getElement().style.cursor = "pointer";
       mlMarker.getElement().addEventListener("click", (e) => {
         e.stopPropagation();
+        setHoverPreview(null);
         onMarkerSelectRef.current(pin.id);
       });
+      mlMarker.getElement().addEventListener("mouseenter", () => {
+        const point = map.current?.project([pin.lng, pin.lat]);
+        if (point)
+          setHoverPreview({
+            x: point.x,
+            y: point.y,
+            title: `${pin.posts.length} ${
+              pin.posts.length === 1 ? "thought" : "thoughts"
+            }`,
+            detail: contentSummary(pin.posts),
+          });
+      });
+      mlMarker
+        .getElement()
+        .addEventListener("mouseleave", () => setHoverPreview(null));
       searchMarkersRef.current.set(pin.id, mlMarker);
     }
   }, [markers]);
@@ -333,11 +450,20 @@ export default function MapCanvas({
   // Fly to a location when the flyTo prop changes
   useEffect(() => {
     if (!flyTo || !map.current) return;
+    const compact = window.innerWidth < 640;
     map.current.flyTo({
       center: [flyTo.lng, flyTo.lat],
       zoom: flyTo.zoom ?? 15,
       speed: 1.4,
       curve: 1.5,
+      padding: flyTo.frameRightPanel
+        ? {
+            top: compact ? 12 : 24,
+            bottom: compact ? 300 : 24,
+            left: compact ? 10 : 24,
+            right: compact ? 10 : 460,
+          }
+        : undefined,
     });
   }, [flyTo]);
 
@@ -434,6 +560,12 @@ export default function MapCanvas({
   return (
     <div className="relative w-full h-full">
       <style>{`
+        @keyframes sonder-pin-hover {
+          0%, 100% { transform: translateY(0) scale(1); }
+          50% { transform: translateY(-5px) scale(1.08); }
+        }
+        .sonder-pin-marker { transition: transform 150ms ease; transform-origin: 50% 100%; }
+        .sonder-pin-marker:hover { animation: sonder-pin-hover 700ms ease-in-out infinite; }
         @keyframes sonder-ring-progress {
           0% { transform: scale(0.72); opacity: 0.35; }
           100% { transform: scale(1); opacity: 1; }
@@ -446,21 +578,33 @@ export default function MapCanvas({
 
       <div ref={mapContainer} className="w-full h-full" />
       {!mapLoaded && <AppLoading contained label="Loading the map..." />}
-
       <AnimatePresence>
         {selectedMarkerId &&
           previewPosition &&
           markers.some((marker) => marker.id === selectedMarkerId) && (
-          <MapPostPreview
-            key={selectedMarkerId}
-            marker={markers.find((marker) => marker.id === selectedMarkerId)!}
-            position={previewPosition}
-            onClose={() => onMarkerSelect(null)}
-            onCreatePost={onCreatePost}
-            onViewGroup={onViewGroup}
-          />
-        )}
+            <MapPostPreview
+              key={selectedMarkerId}
+              marker={markers.find((marker) => marker.id === selectedMarkerId)!}
+              position={previewPosition}
+              onClose={() => onMarkerSelect(null)}
+              onCreatePost={onCreatePost}
+              onViewGroup={onViewGroup}
+            />
+          )}
       </AnimatePresence>
+      {hoverPreview && (
+        <div
+          className="pointer-events-none absolute z-40 min-w-32 rounded-lg border border-white/70 bg-background/95 px-3 py-2 text-xs shadow-xl backdrop-blur"
+          style={{
+            left: hoverPreview.x,
+            top: hoverPreview.y,
+            transform: "translate(-50%, calc(-100% - 36px))",
+          }}
+        >
+          <p className="font-semibold text-foreground">{hoverPreview.title}</p>
+          <p className="mt-0.5 text-muted-foreground">{hoverPreview.detail}</p>
+        </div>
+      )}
 
       {/* Long-press progress ring (mobile) */}
       {holdIndicator && (
@@ -503,8 +647,10 @@ export default function MapCanvas({
                 boxSizing: "border-box",
               }}
             />
-            <FiMapPin
+            <MapPin
               size={24}
+              fill="var(--primary)"
+              strokeWidth={1.5}
               style={{ color: "var(--primary)", position: "relative" }}
             />
           </div>

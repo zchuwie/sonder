@@ -13,6 +13,30 @@ const STATUS_COLORS: Record<PostRow["status"], string> = {
   archived: "#475569",
 };
 
+const PIN_PATH =
+  "M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0";
+
+function addAdminPinImages(map: Map) {
+  return Promise.all(
+    Object.entries(STATUS_COLORS).flatMap(([status, color]) =>
+      [false, true].map((reported) => {
+        const id = `admin-map-pin-${status}${reported ? "-reported" : ""}`;
+        if (map.hasImage(id)) return Promise.resolve();
+        return new Promise<void>((resolve, reject) => {
+          const image = new Image(36, 46);
+          const stroke = reported ? "#ef4444" : "#ffffff";
+          image.onload = () => {
+            map.addImage(id, image);
+            resolve();
+          };
+          image.onerror = reject;
+          image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="36" height="46" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path fill="${color}" stroke="${stroke}" stroke-width="${reported ? 3.4 : 2.4}" d="${PIN_PATH}"/></svg>`)}`;
+        });
+      }),
+    ),
+  );
+}
+
 export function AdminLocationMap({
   posts,
   selectedId,
@@ -62,8 +86,9 @@ export function AdminLocationMap({
       zoom: 10,
     });
     map.current.addControl(new NavigationControl(), "bottom-right");
-    map.current.on("load", () => {
+    map.current.on("load", async () => {
       if (!map.current) return;
+      await addAdminPinImages(map.current);
       map.current.addSource("admin-posts", {
         type: "geojson",
         data: geojsonRef.current,
@@ -73,14 +98,14 @@ export function AdminLocationMap({
       });
       map.current.addLayer({
         id: "admin-clusters",
-        type: "circle",
+        type: "symbol",
         source: "admin-posts",
         filter: ["has", "point_count"],
-        paint: {
-          "circle-color": "#173f27",
-          "circle-radius": ["step", ["get", "point_count"], 16, 10, 20, 30, 25],
-          "circle-stroke-color": "#ffffff",
-          "circle-stroke-width": 3,
+        layout: {
+          "icon-image": "admin-map-pin-approved",
+          "icon-size": ["step", ["get", "point_count"], 0.9, 10, 1, 30, 1.15],
+          "icon-anchor": "bottom",
+          "icon-allow-overlap": true,
         },
       });
       map.current.addLayer({
@@ -88,19 +113,28 @@ export function AdminLocationMap({
         type: "symbol",
         source: "admin-posts",
         filter: ["has", "point_count"],
-        layout: { "text-field": "{point_count_abbreviated}", "text-size": 12 },
+        layout: {
+          "text-field": "{point_count_abbreviated}",
+          "text-size": 12,
+          "text-offset": [0, -1.9],
+        },
         paint: { "text-color": "#ffffff" },
       });
       map.current.addLayer({
         id: "admin-points",
-        type: "circle",
+        type: "symbol",
         source: "admin-posts",
         filter: ["!", ["has", "point_count"]],
-        paint: {
-          "circle-color": ["get", "color"],
-          "circle-radius": ["case", ["get", "reported"], 11, 8],
-          "circle-stroke-color": ["case", ["get", "reported"], "#ef4444", "#ffffff"],
-          "circle-stroke-width": ["case", ["get", "reported"], 4, 2],
+        layout: {
+          "icon-image": [
+            "concat",
+            "admin-map-pin-",
+            ["get", "status"],
+            ["case", ["get", "reported"], "-reported", ""],
+          ],
+          "icon-size": ["case", ["get", "reported"], 1.08, 0.95],
+          "icon-anchor": "bottom",
+          "icon-allow-overlap": true,
         },
       });
       map.current.on("click", "admin-points", (event) => {
@@ -110,7 +144,8 @@ export function AdminLocationMap({
       map.current.on("click", "admin-clusters", (event) => {
         const feature = event.features?.[0];
         const clusterId = feature?.properties?.cluster_id as number | undefined;
-        const coordinates = (feature?.geometry as GeoJSON.Point | undefined)?.coordinates as [number, number] | undefined;
+        const coordinates = (feature?.geometry as GeoJSON.Point | undefined)
+          ?.coordinates as [number, number] | undefined;
         if (clusterId === undefined || !coordinates) return;
         void (map.current?.getSource("admin-posts") as GeoJSONSource)
           .getClusterExpansionZoom(clusterId)
@@ -132,14 +167,27 @@ export function AdminLocationMap({
   }, []);
 
   useEffect(() => {
-    (map.current?.getSource("admin-posts") as GeoJSONSource | undefined)?.setData(geojson);
+    (
+      map.current?.getSource("admin-posts") as GeoJSONSource | undefined
+    )?.setData(geojson);
   }, [geojson]);
 
   useEffect(() => {
     if (!selectedId) return;
     const post = posts.find((item) => item.id === selectedId);
-    if (post) map.current?.flyTo({ center: [post.lng, post.lat], zoom: 15, speed: 1.2 });
+    if (post)
+      map.current?.flyTo({
+        center: [post.lng, post.lat],
+        zoom: 15,
+        speed: 1.2,
+      });
   }, [posts, selectedId]);
 
-  return <div ref={container} className={`h-full w-full ${compact ? "min-h-56" : "min-h-[420px]"}`} aria-label="Admin location review map" />;
+  return (
+    <div
+      ref={container}
+      className={`h-full w-full ${compact ? "min-h-56" : "min-h-[420px]"}`}
+      aria-label="Admin location review map"
+    />
+  );
 }

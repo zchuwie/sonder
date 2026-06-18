@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { MapPin, Search, Sparkles } from "lucide-react";
+import { MapPin, Search } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -36,7 +36,7 @@ export function PostDiscoveryModal({
       <DialogContent className="max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-none gap-0 overflow-hidden rounded-2xl border-primary/15 bg-background/95 p-0 shadow-[0_30px_90px_rgba(18,70,35,.24)] backdrop-blur-xl sm:max-h-[88dvh] sm:w-full sm:max-w-3xl sm:rounded-3xl">
         <DialogHeader className="border-b px-4 py-4 pr-12 sm:px-6 sm:py-5 sm:pr-14">
           <DialogTitle className="flex items-center gap-2 text-lg">
-            <Sparkles className="size-5 text-primary" /> Thoughts in this map area
+            <MapPin className="size-5 text-primary" /> Thoughts in this map area
           </DialogTitle>
           <DialogDescription>Approved thoughts visible in your current map preview, nearest first.</DialogDescription>
         </DialogHeader>

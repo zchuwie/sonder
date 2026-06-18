@@ -76,6 +76,7 @@ export function Dashboard() {
       })
       .catch(() => setError("Dashboard data could not be loaded."));
   }, []);
+
   useAdminRealtime(["posts", "post_reports", "moderation_events"], () => {
     Promise.all([fetchPosts(), fetchReports(), fetchAuditHistory()])
       .then(([postRows, reportRows, auditRows]) => {
@@ -92,6 +93,7 @@ export function Dashboard() {
     openReports.forEach((report) => counts.set(report.reason, (counts.get(report.reason) ?? 0) + 1));
     return [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 4);
   }, [openReports]);
+
   const statusCounts = useMemo(() => {
     const rows = [
       ["Pending", pending.length, "bg-amber-400"],
@@ -101,12 +103,14 @@ export function Dashboard() {
     ] as const;
     return rows.map(([label, value, color]) => ({ label, value, color }));
   }, [pending.length, posts]);
+
   const dailyActivity = useMemo(() => {
     const days = Array.from({ length: 7 }, (_, index) => {
       const date = new Date();
       date.setDate(date.getDate() - (6 - index));
       return { key: date.toDateString(), label: dayKey(date.toISOString()), posts: 0, reports: 0 };
     });
+
     posts.forEach((post) => { const day = days.find((item) => item.key === new Date(post.created_at).toDateString()); if (day) day.posts += 1; });
     reports.forEach((report) => { const day = days.find((item) => item.key === new Date(report.created_at).toDateString()); if (day) day.reports += 1; });
     return days;
@@ -121,26 +125,11 @@ export function Dashboard() {
   ] as const;
 
   return (
-    <section className="mx-auto w-full max-w-[1500px]">
-      {/* Header */}
-      <div className="flex flex-wrap items-start justify-between gap-2">
-        <div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-green-700">Overview</p>
-          <h1 className="mt-1 font-serif text-xl text-foreground md:text-3xl">Dashboard</h1>
-          <p className="mt-1 text-xs text-muted-foreground md:text-sm">Moderation queue, safety signals, and recent decisions.</p>
-        </div>
-        <Link
-          href="/posts"
-          className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-primary px-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary-hover"
-        >
-          Review pending <ArrowRight className="size-3.5" />
-        </Link>
-      </div>
-
-      {error && <p className="mt-3 rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}
+    <section className="mx-auto w-full max-w-full">
+      {error && <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}
 
       {/* Metric cards — 2-col mobile, 3-col sm, 5-col xl */}
-      <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-5">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-5">
         {cards.map(([label, value, note, href, Icon], i) => (
           <Link
             key={label}

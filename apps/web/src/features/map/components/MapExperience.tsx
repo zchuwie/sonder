@@ -2,12 +2,10 @@
 
 import { useMemo, useState } from "react";
 import {
-  Clock3,
   Compass,
   LocateFixed,
   MapPin,
   Plus,
-  Sparkles,
   X,
 } from "lucide-react";
 import MapCanvas, { type MapViewport } from "./MapCanvas";
@@ -36,24 +34,27 @@ import type { LocationPlaceDTO } from "@/features/map/lib/location-types";
 import { useModeration } from "@/features/moderation/components/ModerationProvider";
 import { createSupabasePost } from "@/features/posts/client/use-create-post";
 import { getFunctionErrorMessage } from "@/lib/supabase/function-error";
-import { MyPendingPostsModal } from "@/features/posts/components/MyPendingPostsModal";
 import { reverseGeocode } from "@/features/map/client/reverse-geocode";
 
-type FlyToTarget = { lat: number; lng: number; zoom?: number } | null;
+type FlyToTarget = {
+  lat: number;
+  lng: number;
+  zoom?: number;
+  frameRightPanel?: boolean;
+} | null;
 const INITIAL_VIEWPORT: MapViewport = {
   center: { lat: 14.5995, lng: 120.9842 },
   bounds: { north: 14.85, south: 14.35, east: 121.25, west: 120.7 },
 };
 
 export function MapExperience() {
-  const { markers, setMarkers } = useModeration();
+  const { markers, setMarkers, trackMyPost } = useModeration();
   const [selectedMarkerId, setSelectedMarkerId] = useState<string | null>(null);
   const [selectedPost, setSelectedPost] = useState<AnonymousPost | null>(null);
   const [flyTo, setFlyTo] = useState<FlyToTarget>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [discoveryOpen, setDiscoveryOpen] = useState(false);
   const [groupOpen, setGroupOpen] = useState(false);
-  const [myPostsOpen, setMyPostsOpen] = useState(false);
   const [viewport, setViewport] = useState<MapViewport>(INITIAL_VIEWPORT);
   const selectedMarker =
     markers.find((marker) => marker.id === selectedMarkerId) ?? null;
@@ -61,13 +62,6 @@ export function MapExperience() {
   const nearbyPosts = useMemo(
     () => getNearbyVisiblePosts(markers, viewport.center, viewport.bounds),
     [markers, viewport],
-  );
-  const myPosts = useMemo(
-    () =>
-      markers.flatMap((marker) =>
-        marker.posts.filter((post) => post.moderationStatus === "pending"),
-      ),
-    [markers],
   );
   const mapMarkers =
     selectedMarker && selectedMarker.posts.length === 0
@@ -87,7 +81,10 @@ export function MapExperience() {
         getLocationGroupKey(namedMarker.lat, namedMarker.lng),
     );
     setMarkers(
-      groupMarkersByLocation([...cleaned, { ...namedMarker, source: "manual" }]),
+      groupMarkersByLocation([
+        ...cleaned,
+        { ...namedMarker, source: "manual" },
+      ]),
     );
     setSelectedMarkerId(existing?.id ?? namedMarker.id);
   };
@@ -130,6 +127,7 @@ export function MapExperience() {
     }
     if (!result) throw new Error("Unable to submit thought.");
     const post = { ...createPost(selectedMarker, draft), id: result.postId };
+    trackMyPost(result.postId);
     setMarkers((current) =>
       groupMarkersByLocation(
         current.map((marker) =>
@@ -153,11 +151,25 @@ export function MapExperience() {
       setFlyTo({ lat: coords.latitude, lng: coords.longitude, zoom: 15 }),
     );
 
+  const openPostOnMap = (post: AnonymousPost) => {
+    const marker = publicMarkers.find((item) =>
+      item.posts.some((markerPost) => markerPost.id === post.id),
+    );
+    setSelectedMarkerId(marker?.id ?? null);
+    setFlyTo({
+      lat: marker?.lat ?? post.lat,
+      lng: marker?.lng ?? post.lng,
+      zoom: 15,
+      frameRightPanel: true,
+    });
+    window.setTimeout(() => setSelectedPost(post), 250);
+  };
+
   return (
     <main className="relative h-dvh w-screen overflow-hidden bg-muted">
       <MapCanvas
         markers={mapMarkers}
-        selectedMarkerId={selectedMarkerId}
+        selectedMarkerId={selectedPost ? null : selectedMarkerId}
         onMarkerAdd={addMarker}
         onMarkerSelect={setSelectedMarkerId}
         onCreatePost={() => setCreateOpen(true)}
@@ -192,27 +204,17 @@ export function MapExperience() {
       <div className="absolute bottom-16 right-5 z-30 hidden space-y-2 sm:block">
         <Button
           variant="secondary"
-          className="ml-auto flex h-11 rounded-2xl border border-black/10 bg-background/95 px-4 shadow-lg backdrop-blur-xl transition-[transform,box-shadow,background-color] duration-200 ease-out hover:-translate-y-0.5 hover:shadow-xl"
-          onClick={() => setMyPostsOpen(true)}
-        >
-          <Clock3 /> My thoughts{" "}
-          <span className="rounded-full bg-primary px-2 py-0.5 text-[11px] text-primary-foreground">
-            {myPosts.length}
-          </span>
-        </Button>
-        <Button
-          variant="secondary"
           className="h-11 rounded-2xl border border-black/10 bg-background/95 px-4 shadow-lg backdrop-blur-xl transition-[transform,box-shadow,background-color] duration-200 ease-out hover:-translate-y-0.5 hover:shadow-xl"
           onClick={() => setDiscoveryOpen(true)}
         >
-          <Sparkles /> Explore nearby{" "}
+          <Compass /> Explore nearby{" "}
           <span className="rounded-full bg-primary px-2 py-0.5 text-[11px] text-primary-foreground">
             {nearbyPosts.length}
           </span>
         </Button>
       </div>
       <div className="absolute inset-x-2.5 bottom-0 z-30 pb-[max(.625rem,env(safe-area-inset-bottom))] sm:hidden">
-        {selectedMarker ? (
+        {selectedMarker && !selectedPost ? (
           <div className="rounded-2xl border border-black/10 bg-background/95 p-3 shadow-2xl backdrop-blur-xl">
             <div className="flex items-start gap-3">
               <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
@@ -263,19 +265,12 @@ export function MapExperience() {
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-2">
+          <div>
             <Button
-              variant="secondary"
-              className="h-12 rounded-2xl shadow-xl"
-              onClick={() => setMyPostsOpen(true)}
-            >
-              <Clock3 /> My thoughts
-            </Button>
-            <Button
-              className="h-12 rounded-2xl shadow-xl"
+              className="h-12 w-full rounded-2xl shadow-xl"
               onClick={() => setDiscoveryOpen(true)}
             >
-              <Sparkles /> Explore nearby
+              <Compass /> Explore nearby
             </Button>
           </div>
         )}
@@ -285,17 +280,8 @@ export function MapExperience() {
         posts={nearbyPosts}
         onOpenChange={setDiscoveryOpen}
         onSelectPost={(post) => {
-          setSelectedPost(post);
           setDiscoveryOpen(false);
-        }}
-      />
-      <MyPendingPostsModal
-        open={myPostsOpen}
-        posts={myPosts}
-        onOpenChange={setMyPostsOpen}
-        onSelectPost={(post) => {
-          setSelectedPost(post);
-          setMyPostsOpen(false);
+          openPostOnMap(post);
         }}
       />
       <GroupedPostsModal
@@ -304,7 +290,7 @@ export function MapExperience() {
         onOpenChange={setGroupOpen}
         onSelectPost={(post) => {
           setGroupOpen(false);
-          setSelectedPost(post);
+          openPostOnMap(post);
         }}
       />
       {createOpen && selectedMarker && (

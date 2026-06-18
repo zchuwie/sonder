@@ -11,9 +11,16 @@ export async function reportRemotePost(
   const supabase = createClient();
   if (!supabase) return false;
   await ensureAnonymousSession();
-  const { error } = await supabase.functions.invoke("report-post", {
-    body: { postId, reason, details },
+  const response = await fetch("/api/report-post", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ postId, reason, details }),
   });
-  if (error) throw error;
+  if (!response.ok) {
+    const payload = (await response.json().catch(() => null)) as {
+      message?: string;
+    } | null;
+    throw new Error(payload?.message ?? "Unable to report post.");
+  }
   return true;
 }

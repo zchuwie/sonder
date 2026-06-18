@@ -106,7 +106,7 @@ export default function CreatePostModal({
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
                 placeholder="Give this thought a short title"
-                maxLength={80}
+                maxLength={50}
                 className="h-10 rounded-2xl bg-muted/25 px-4"
               />
             </div>

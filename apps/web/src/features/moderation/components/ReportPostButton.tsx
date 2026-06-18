@@ -28,9 +28,11 @@ const REPORT_REASONS = [
 export function ReportPostButton({
   postId,
   className,
+  iconOnly = false,
 }: {
   postId: string;
   className?: string;
+  iconOnly?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [state, setState] = useState<"idle" | "loading" | "reported">("idle");
@@ -64,13 +66,18 @@ export function ReportPostButton({
   return (
     <div className={className}>
       <Button
-        variant="ghost"
-        className="w-full rounded-xl text-muted-foreground"
+        variant="outline"
+        size={iconOnly ? "icon" : "default"}
+        className={iconOnly
+          ? "size-9 rounded-full border-red-200 text-red-500 transition-all duration-200 hover:scale-110 hover:border-red-300 hover:bg-red-50 hover:text-red-600"
+          : "w-full rounded-xl border-destructive/30 bg-destructive/5 text-destructive hover:bg-destructive/10"
+        }
         onClick={() => setOpen(true)}
         disabled={state !== "idle"}
+        aria-label="Report post"
       >
-        <Flag />
-        {state === "reported" ? "Reported" : "Report post"}
+        <Flag className={iconOnly ? "size-4" : ""} />
+        {!iconOnly && (state === "reported" ? "Reported" : "Report post")}
       </Button>
       {error && !open && (
         <p className="mt-1 text-xs text-destructive">{error}</p>
