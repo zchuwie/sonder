@@ -30,7 +30,7 @@ export function AdminModal({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[100] grid place-items-end bg-black/45 p-3 backdrop-blur-sm sm:place-items-center"
+      className="fixed inset-0 z-100 grid place-items-end bg-black/45 p-3 backdrop-blur-sm sm:place-items-center"
       onClick={onClose}
     >
       {children}

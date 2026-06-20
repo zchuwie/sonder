@@ -71,33 +71,39 @@ export function ReportsTable() {
     if (!selected || !selectedPost) return;
     try {
       await dismissReport(selected.id, selectedPost.id);
-      setSelected(null); setReason(""); await load();
-    } catch { setError("Report could not be dismissed."); }
+    } catch (err) {
+      console.error("Dismiss failed:", err);
+      setError("Report could not be dismissed.");
+      return;
+    }
+    setSelected(null); setReason("");
+    void load();
   }
 
   return <section>
-    <div className="rounded-2xl border border-border bg-surface p-4 shadow-sm">
-      <div className="flex flex-wrap items-end justify-between gap-3">
+    <div className="rounded-2xl border border-border bg-surface p-3 shadow-sm md:p-4">
+      <div className="hidden flex-wrap items-end justify-between gap-3 md:flex">
         <div><p className="text-xs font-bold uppercase tracking-[0.2em] text-green-700">Safety</p><h1 className="mt-2 text-2xl font-semibold md:text-3xl">Reports</h1><p className="mt-2 text-sm text-slate-600">{reports.length} reports received.</p></div>
         <p className="rounded-full bg-accent px-3 py-1 text-xs font-semibold text-accent-foreground">{total} results</p>
       </div>
-    <div className="mt-4 grid gap-2 lg:grid-cols-[1fr_180px_auto_auto_auto]">
-      <input aria-label="Search reports" value={query} onChange={(event) => { setQuery(event.target.value); setPage(1); }} placeholder="Search report or reason..." className={controlClass} />
-      <select aria-label="Status" value={status} onChange={(event) => { setStatus(event.target.value as typeof status); setPage(1); }} className={controlClass}><option value="open">Open</option><option value="reviewing">Reviewing</option><option value="resolved">Resolved</option><option value="dismissed">Dismissed</option><option value="actioned">Actioned</option><option value="all">All statuses</option></select>
+    <div className="flex items-center gap-2 md:mt-4 md:grid md:grid-cols-[1fr_180px_auto_auto_auto]">
+      <input aria-label="Search reports" value={query} onChange={(event) => { setQuery(event.target.value); setPage(1); }} placeholder="Search..." className={`min-w-0 flex-1 ${controlClass}`} />
+      <select aria-label="Status" value={status} onChange={(event) => { setStatus(event.target.value as typeof status); setPage(1); }} className={`hidden md:block ${controlClass}`}><option value="open">Open</option><option value="reviewing">Reviewing</option><option value="resolved">Resolved</option><option value="dismissed">Dismissed</option><option value="actioned">Actioned</option><option value="all">All statuses</option></select>
       <div className="relative">
-        <button type="button" onClick={() => { setFilterOpen((open) => !open); setSortOpen(false); }} className={`flex w-full items-center justify-center gap-2 ${toolButtonClass}`}><Filter className="size-4" />Filter</button>
+        <button type="button" onClick={() => { setFilterOpen((open) => !open); setSortOpen(false); }} className="grid size-10 place-items-center rounded-xl border border-border shadow-sm md:flex md:h-11 md:w-auto md:items-center md:gap-2 md:px-3 md:text-sm md:font-semibold"><Filter className="size-4" /><span className="hidden md:inline">Filter</span></button>
         {filterOpen && <div className={panelClass}>
-          <label className="block text-xs font-bold uppercase tracking-wide text-muted-foreground">Reason<select aria-label="Reason" value={reasonFilter} onChange={(event) => { setReasonFilter(event.target.value); setPage(1); }} className={`mt-2 w-full ${controlClass}`}><option value="all">All reasons</option>{reasons.map((value) => <option key={value} value={value}>{value.replaceAll("_", " ")}</option>)}</select></label>
+          <label className="block text-xs font-bold uppercase tracking-wide text-muted-foreground md:hidden">Status<select aria-label="Status" value={status} onChange={(event) => { setStatus(event.target.value as typeof status); setPage(1); }} className={`mt-2 w-full ${controlClass}`}><option value="open">Open</option><option value="reviewing">Reviewing</option><option value="resolved">Resolved</option><option value="dismissed">Dismissed</option><option value="actioned">Actioned</option><option value="all">All</option></select></label>
+          <label className="mt-3 block text-xs font-bold uppercase tracking-wide text-muted-foreground md:mt-0">Reason<select aria-label="Reason" value={reasonFilter} onChange={(event) => { setReasonFilter(event.target.value); setPage(1); }} className={`mt-2 w-full ${controlClass}`}><option value="all">All reasons</option>{reasons.map((value) => <option key={value} value={value}>{value.replaceAll("_", " ")}</option>)}</select></label>
           <label className="mt-3 block text-xs font-bold uppercase tracking-wide text-muted-foreground">Date<select aria-label="Date" value={date} onChange={(event) => { setDate(event.target.value as DateRange); setPage(1); }} className={`mt-2 w-full ${controlClass}`}><option value="all">All time</option><option value="today">Today</option><option value="7d">Last 7 days</option><option value="30d">Last 30 days</option></select></label>
         </div>}
       </div>
       <div className="relative">
-        <button type="button" onClick={() => { setSortOpen((open) => !open); setFilterOpen(false); }} className={`flex w-full items-center justify-center gap-2 ${toolButtonClass}`}><SlidersHorizontal className="size-4" />Sort</button>
+        <button type="button" onClick={() => { setSortOpen((open) => !open); setFilterOpen(false); }} className="grid size-10 place-items-center rounded-xl border border-border shadow-sm md:flex md:h-11 md:w-auto md:items-center md:gap-2 md:px-3 md:text-sm md:font-semibold"><SlidersHorizontal className="size-4" /><span className="hidden md:inline">Sort</span></button>
         {sortOpen && <div className={panelClass}>
           <select aria-label="Sort" value={sort} onChange={(event) => { setSort(event.target.value as typeof sort); setPage(1); }} className={`w-full ${controlClass}`}><option value="newest">Newest first</option><option value="oldest">Oldest first</option><option value="count">Most reported</option><option value="reason">Reason A-Z</option></select>
         </div>}
       </div>
-      <button onClick={() => { setQuery(""); setStatus("open"); setReasonFilter("all"); setDate("all"); setSort("newest"); setPage(1); }} className={toolButtonClass}>Reset</button>
+      <button onClick={() => { setQuery(""); setStatus("open"); setReasonFilter("all"); setDate("all"); setSort("newest"); setPage(1); }} className={`hidden md:block ${toolButtonClass}`}>Reset</button>
     </div>
     </div>
     {error && <p className="mt-5 rounded-xl bg-red-50 p-3 text-red-700">{error}</p>}

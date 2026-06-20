@@ -20,6 +20,7 @@ type ModerationContextValue = {
   setMarkers: React.Dispatch<React.SetStateAction<MarkerData[]>>;
   myPostIds: Set<string>;
   trackMyPost: (postId: string) => void;
+  refreshPosts: () => Promise<MarkerData[] | null>;
 };
 
 const ModerationContext = createContext<ModerationContextValue | null>(null);
@@ -28,7 +29,7 @@ export function ModerationProvider({ children }: { children: ReactNode }) {
   const [markers, setMarkers] = useState<MarkerData[]>([]);
   const [myPostIds, setMyPostIds] = useState<Set<string>>(new Set());
   const [hydrated, setHydrated] = useState(false);
-  const { remoteMarkers } = usePosts();
+  const { remoteMarkers, refresh: refreshPosts } = usePosts();
 
   useEffect(() => {
     try {
@@ -83,7 +84,7 @@ export function ModerationProvider({ children }: { children: ReactNode }) {
   }, [remoteMarkers]);
 
   return (
-    <ModerationContext.Provider value={{ markers, setMarkers, myPostIds, trackMyPost }}>
+    <ModerationContext.Provider value={{ markers, setMarkers, myPostIds, trackMyPost, refreshPosts }}>
       {children}
     </ModerationContext.Provider>
   );

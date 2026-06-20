@@ -8,6 +8,9 @@ const nextConfig = {
   turbopack: {
     root: path.join(currentDirectory, "../.."),
   },
+  devIndicators: {
+    position: "top-left"
+  }
 };
 
 export default nextConfig;

@@ -68,8 +68,8 @@ export function AuditHistory() {
 
   return (
     <section className="admin-soft-in">
-      <div className="rounded-2xl border border-border bg-surface p-4 shadow-sm">
-        <div className="flex flex-wrap items-end justify-between gap-3">
+      <div className="rounded-2xl border border-border bg-surface p-3 shadow-sm md:p-4">
+        <div className="hidden flex-wrap items-end justify-between gap-3 md:flex">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-green-700">Accountability</p>
             <h1 className="mt-2 text-2xl font-semibold md:text-3xl">Audit history</h1>
@@ -77,22 +77,23 @@ export function AuditHistory() {
           </div>
           <p className="rounded-full bg-accent px-3 py-1 text-xs font-semibold text-accent-foreground">{total} events</p>
         </div>
-        <div className="mt-4 grid gap-2 lg:grid-cols-[1fr_220px_auto_auto_auto]">
-          <input aria-label="Search audit history" value={query} onChange={(event) => { setQuery(event.target.value); setPage(1); }} placeholder="Search audit history..." className={controlClass} />
-          <select aria-label="Action" value={action} onChange={(event) => { setAction(event.target.value); setPage(1); }} className={controlClass}>{actionOptions.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select>
+        <div className="flex items-center gap-2 md:mt-4 md:grid md:grid-cols-[1fr_220px_auto_auto_auto]">
+          <input aria-label="Search audit history" value={query} onChange={(event) => { setQuery(event.target.value); setPage(1); }} placeholder="Search..." className={`min-w-0 flex-1 ${controlClass}`} />
+          <select aria-label="Action" value={action} onChange={(event) => { setAction(event.target.value); setPage(1); }} className={`hidden md:block ${controlClass}`}>{actionOptions.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select>
           <div className="relative">
-            <button type="button" onClick={() => { setFilterOpen((open) => !open); setSortOpen(false); }} className={`flex w-full items-center justify-center gap-2 ${toolButtonClass}`}><Filter className="size-4" />Filter</button>
+            <button type="button" onClick={() => { setFilterOpen((open) => !open); setSortOpen(false); }} className="grid size-10 place-items-center rounded-xl border border-border shadow-sm md:flex md:h-11 md:w-auto md:items-center md:gap-2 md:px-3 md:text-sm md:font-semibold"><Filter className="size-4" /><span className="hidden md:inline">Filter</span></button>
             {filterOpen && <div className={panelClass}>
-              <label className="block text-xs font-bold uppercase tracking-wide text-muted-foreground">Date<select aria-label="Date" value={date} onChange={(event) => { setDate(event.target.value as DateRange); setPage(1); }} className={`mt-2 w-full ${controlClass}`}><option value="all">All time</option><option value="today">Today</option><option value="7d">Last 7 days</option><option value="30d">Last 30 days</option></select></label>
+              <label className="block text-xs font-bold uppercase tracking-wide text-muted-foreground md:hidden">Action<select aria-label="Action" value={action} onChange={(event) => { setAction(event.target.value); setPage(1); }} className={`mt-2 w-full ${controlClass}`}>{actionOptions.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+              <label className="mt-3 block text-xs font-bold uppercase tracking-wide text-muted-foreground md:mt-0">Date<select aria-label="Date" value={date} onChange={(event) => { setDate(event.target.value as DateRange); setPage(1); }} className={`mt-2 w-full ${controlClass}`}><option value="all">All time</option><option value="today">Today</option><option value="7d">Last 7 days</option><option value="30d">Last 30 days</option></select></label>
             </div>}
           </div>
           <div className="relative">
-            <button type="button" onClick={() => { setSortOpen((open) => !open); setFilterOpen(false); }} className={`flex w-full items-center justify-center gap-2 ${toolButtonClass}`}><SlidersHorizontal className="size-4" />Sort</button>
+            <button type="button" onClick={() => { setSortOpen((open) => !open); setFilterOpen(false); }} className="grid size-10 place-items-center rounded-xl border border-border shadow-sm md:flex md:h-11 md:w-auto md:items-center md:gap-2 md:px-3 md:text-sm md:font-semibold"><SlidersHorizontal className="size-4" /><span className="hidden md:inline">Sort</span></button>
             {sortOpen && <div className={panelClass}>
               <select aria-label="Sort" value={sort} onChange={(event) => { setSort(event.target.value as typeof sort); setPage(1); }} className={`w-full ${controlClass}`}><option value="newest">Newest first</option><option value="oldest">Oldest first</option><option value="action">Action type</option></select>
             </div>}
           </div>
-          <button type="button" onClick={reset} className={toolButtonClass}>Reset</button>
+          <button type="button" onClick={reset} className={`hidden md:block ${toolButtonClass}`}>Reset</button>
         </div>
       </div>
 

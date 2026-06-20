@@ -26,7 +26,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   return (
-    <div className="min-h-dvh overflow-x-hidden bg-background text-foreground md:grid md:grid-cols-[200px_1fr] md:p-3">
+    <div className="min-h-dvh bg-background text-foreground md:grid md:grid-cols-[200px_1fr] md:p-3">
       {/* Mobile top bar */}
       <header className="flex items-center justify-between border-b border-border bg-surface px-4 py-3 md:hidden">
         <p className="font-serif text-xl text-foreground">Sonder<span className="text-primary">.</span></p>
@@ -34,7 +34,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       </header>
 
       {/* Desktop sidebar */}
-      <aside className="hidden flex-col rounded-2xl border border-border bg-surface p-4 shadow-sm md:sticky md:top-3 md:flex md:h-[calc(100dvh-1.5rem)]">
+      <aside className="hidden flex-col rounded-2xl border border-border bg-surface p-4 shadow-sm md:sticky md:top-3 md:flex md:h-[calc(100dvh-1.5rem)] overflow-hidden">
         <div>
           <p className="font-serif text-2xl text-foreground">Sonder<span className="text-primary">.</span></p>
           <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Admin workspace</p>

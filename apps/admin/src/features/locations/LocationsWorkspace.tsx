@@ -175,7 +175,9 @@ export function LocationsWorkspace() {
   const uniqueLocations = new Set(visible.map((p) => `${p.lat.toFixed(3)},${p.lng.toFixed(3)}`)).size;
 
   return (
-    <section className="admin-soft-in flex flex-col gap-3">
+    <section className="admin-soft-in">
+      {/* ═══ DESKTOP layout (md+) — original side-by-side ═══ */}
+      <div className="hidden md:flex md:flex-col md:gap-3">
       {/* Header + toolbar */}
       <div className="rounded-2xl border border-border bg-surface p-4 shadow-sm">
         <div className="flex flex-wrap items-end justify-between gap-3">
@@ -478,6 +480,97 @@ export function LocationsWorkspace() {
           </article>
         </AdminModal>
       )}
+      </div>{/* end desktop wrapper */}
+
+      {/* ═══ MOBILE layout (<md) — full-screen map + bottom sheet ═══ */}
+      <div className="relative -mx-3 -mt-3 h-[calc(100dvh-4rem)] overflow-hidden md:hidden">
+        {/* Full-bleed map */}
+        <div className="absolute inset-0">
+          <AdminLocationMap
+            posts={visible}
+            selectedId={selectedId}
+            reportCounts={reportCounts}
+            onSelect={(id) => {
+              const post = visible.find((p) => p.id === id);
+              if (post) selectPost(post);
+            }}
+          />
+        </div>
+
+        {/* Floating search */}
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-10 p-2">
+          <input
+            aria-label="Search locations"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search..."
+            className="pointer-events-auto h-10 w-full rounded-xl border border-border bg-surface/95 px-3 text-sm shadow-lg backdrop-blur-md outline-none placeholder:text-muted-foreground focus:border-primary"
+          />
+        </div>
+
+        {/* Bottom sheet */}
+        <div className={`absolute inset-x-0 bottom-0 z-10 flex flex-col rounded-t-2xl border-t border-border bg-surface shadow-2xl transition-[max-height] duration-300 ${selected ? "max-h-[55%]" : "max-h-[180px]"}`}>
+          <div className="flex w-full shrink-0 flex-col items-center pt-2 pb-1">
+            <div className="h-1 w-10 rounded-full bg-muted-foreground/30" />
+          </div>
+
+          {selected ? (
+            <>
+              <div className="flex shrink-0 items-start justify-between gap-3 px-4 pb-2">
+                <div className="min-w-0">
+                  <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize ring-1 ring-inset ${statusStyles[selected.status]}`}>{selected.status}</span>
+                  <h2 className="mt-1 truncate text-base font-semibold">{selected.title}</h2>
+                  {selected.place_name && <p className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground"><MapPin className="size-3" />{selected.place_name}</p>}
+                </div>
+                <button aria-label="Close" onClick={() => { setSelected(null); setSelectedId(null); }} className="grid size-8 shrink-0 place-items-center rounded-full border text-muted-foreground"><X className="size-3.5" /></button>
+              </div>
+              <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-3">
+                <p className="text-sm leading-6">{selected.body}</p>
+                <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
+                  <span className="font-mono">{selected.lat.toFixed(4)}, {selected.lng.toFixed(4)}</span>
+                  <span>{new Date(selected.created_at).toLocaleDateString()}</span>
+                </div>
+              </div>
+              <div className="shrink-0 border-t border-border p-3">
+                {selected.status === "pending" && (
+                  <div className="grid grid-cols-2 gap-2">
+                    <button onClick={() => void decide(selected, "rejected")} className={`${secondaryButtonClass} border-danger text-danger hover:bg-danger-surface`}><XCircle className="size-4" />Reject</button>
+                    <button onClick={() => void decide(selected, "approved")} className={primaryButtonClass}><Check className="size-4" />Approve</button>
+                  </div>
+                )}
+                {selected.status === "archived" && <button onClick={() => void restoreSelected()} className={`w-full ${primaryButtonClass}`}><RotateCcw className="size-4" />Restore</button>}
+                {(selected.status === "approved" || selected.status === "flagged") && (
+                  <button onClick={() => setArchiveConfirm(true)} className={`w-full ${secondaryButtonClass} border-danger text-danger hover:bg-danger-surface`}><Archive className="size-4" />Archive</button>
+                )}
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="flex shrink-0 items-center justify-between px-4 pb-2">
+                <p className="text-sm font-semibold">{visible.length} posts · {uniqueLocations} locations</p>
+              </div>
+              <div className="flex shrink-0 items-center gap-2 px-4 pb-2">
+                <select value={status} onChange={(e) => setStatus(e.target.value as StatusFilter)} className="h-8 rounded-lg border border-border bg-surface-elevated px-2 text-xs font-semibold">
+                  {statusOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                </select>
+                <button type="button" onClick={reset} className="h-8 rounded-lg border border-border bg-surface-elevated px-2.5 text-xs font-semibold">Reset</button>
+              </div>
+              <div className="min-h-0 flex-1 overflow-y-auto px-3 pb-3">
+                {!loading && !visible.length && <p className="py-4 text-center text-xs text-muted-foreground">No posts match filters.</p>}
+                {!loading && visible.map((post) => (
+                  <button key={post.id} type="button" onClick={() => selectPost(post)} className={`mb-1 w-full rounded-xl p-2.5 text-left transition ${selectedId === post.id ? "bg-accent" : "hover:bg-muted"}`}>
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="truncate text-sm font-semibold">{post.title || "Untitled"}</p>
+                      <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize ring-1 ring-inset ${statusStyles[post.status]}`}>{post.status}</span>
+                    </div>
+                    <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{post.place_name || `${post.lat.toFixed(3)}, ${post.lng.toFixed(3)}`}</p>
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      </div>
     </section>
   );
 }

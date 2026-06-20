@@ -36,7 +36,7 @@ export function getPostType(draft: PostDraft): PostType {
 
 export function createPost(marker: MarkerData, draft: PostDraft): AnonymousPost {
   return {
-    id: crypto.randomUUID(),
+    id: crypto.randomUUID?.() ?? `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`,
     title: draft.title,
     type: getPostType(draft),
     text: draft.text,

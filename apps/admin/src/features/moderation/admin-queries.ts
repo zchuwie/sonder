@@ -254,24 +254,36 @@ export async function dismissReport(reportId: string, postId: string) {
     .update({ status: "dismissed" })
     .eq("id", reportId);
   if (reportError) throw reportError;
-  const { error: postError } = await supabase
-    .from("posts")
-    .update({
-      status: "approved",
-      status_updated_at: new Date().toISOString(),
-      moderation_reason: "Report dismissed",
-    })
-    .eq("id", postId)
-    .eq("status", "flagged")
-    .is("deleted_at", null);
-  if (postError) throw postError;
+  // Best-effort: restore post to approved if it was flagged (ignore failures)
+  try {
+    await supabase
+      .from("posts")
+      .update({
+        status: "approved",
+        moderation_reason: "Report dismissed",
+      })
+      .eq("id", postId)
+      .eq("status", "flagged")
+      .is("deleted_at", null);
+  } catch {
+    // Post may be deleted or already approved — that's fine
+  }
 }
 
+// ponytail: in-memory cache for signed URLs. TTL 5 min (signed URLs last 10 min).
+const imageUrlCache = new Map<string, { url: string; expires: number }>();
+const IMAGE_CACHE_TTL = 5 * 60_000;
+
 export async function createPostImageUrl(imagePath: string) {
+  const cached = imageUrlCache.get(imagePath);
+  if (cached && cached.expires > Date.now()) return cached.url;
+
   const supabase = createClient();
   if (!supabase) return "";
   const { data } = await supabase.storage
     .from("post-images")
     .createSignedUrl(imagePath, 600);
-  return data?.signedUrl ?? "";
+  const url = data?.signedUrl ?? "";
+  if (url) imageUrlCache.set(imagePath, { url, expires: Date.now() + IMAGE_CACHE_TTL });
+  return url;
 }

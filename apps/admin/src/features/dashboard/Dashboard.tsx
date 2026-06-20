@@ -2,14 +2,18 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, CheckCircle2, Clock3, Eye, EyeOff, History, MessageSquareWarning } from "lucide-react";
+import { ArrowRight, Check, CheckCircle2, Clock3, Eye, EyeOff, History, MapPin, MessageSquareWarning, Users, X, XCircle } from "lucide-react";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
+import { AdminModal } from "@/components/ui/admin-modal";
 import { AuditEventCard } from "@/features/history/audit-event-ui";
-import { fetchAuditHistory, fetchPosts, fetchReports } from "@/features/moderation/admin-queries";
-import { PostVisual } from "@/features/moderation/PostVisual";
+import { fetchAuditHistory, fetchPosts, fetchReports, moderatePost } from "@/features/moderation/admin-queries";
+import { MusicCard, PostVisual } from "@/features/moderation/PostVisual";
+import { AdminLocationMap } from "@/features/locations/AdminLocationMap";
+import { useLocationLabels } from "@/features/locations/use-location-labels";
 import type { AuditRow, PostRow, ReportRow } from "@/features/moderation/types";
 import { useAdminRealtime } from "@/features/realtime/use-admin-realtime";
+import { primaryButtonClass, secondaryButtonClass, textareaClass, type DateRange, isWithinDateRange } from "@/lib/admin-list-utils";
 
 const flowChartConfig = {
   posts: { label: "Posts", color: "var(--primary)" },
@@ -22,7 +26,6 @@ const statusChartConfig = {
 
 function dayKey(value: string) {
   const d = new Date(value);
-  // ponytail: short labels fit 320px. Full "Jun 11" overflows small charts.
   return `${d.getDate()}`;
 }
 
@@ -65,28 +68,60 @@ export function Dashboard() {
   const [posts, setPosts] = useState<PostRow[]>([]);
   const [reports, setReports] = useState<ReportRow[]>([]);
   const [history, setHistory] = useState<AuditRow[]>([]);
+  const [selected, setSelected] = useState<PostRow | null>(null);
+  const [reason, setReason] = useState("");
   const [error, setError] = useState("");
+  const [dateRange, setDateRange] = useState<DateRange>("all");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [activeUsers, setActiveUsers] = useState(0);
+  const locationLabel = useLocationLabels(posts);
 
-  useEffect(() => {
-    Promise.all([fetchPosts(), fetchReports(), fetchAuditHistory()])
-      .then(([postRows, reportRows, auditRows]) => {
-        setPosts(postRows);
-        setReports(reportRows);
-        setHistory(auditRows);
-      })
-      .catch(() => setError("Dashboard data could not be loaded."));
-  }, []);
-
-  useAdminRealtime(["posts", "post_reports", "moderation_events"], () => {
+  const load = () =>
     Promise.all([fetchPosts(), fetchReports(), fetchAuditHistory()])
       .then(([postRows, reportRows, auditRows]) => {
         setPosts(postRows); setReports(reportRows); setHistory(auditRows);
       })
-      .catch(() => setError("Dashboard data could not be refreshed."));
+      .catch(() => setError("Dashboard data could not be loaded."));
+
+  useEffect(() => { void load(); }, []);
+
+  useAdminRealtime(["posts", "post_reports", "moderation_events"], () => {
+    void load();
   });
 
-  const pending = posts.filter((post) => post.status === "pending");
-  const openReports = reports.filter((report) => report.status === "open");
+  // Poll active users every 30s
+  useEffect(() => {
+    async function fetchActive() {
+      try {
+        const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+        const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+        if (!url || !key) return;
+        const since = new Date(Date.now() - 2 * 60_000).toISOString();
+        const res = await fetch(
+          `${url}/rest/v1/heartbeats?last_seen=gte.${since}&select=user_id`,
+          { headers: { apikey: key, Authorization: `Bearer ${key}`, Prefer: "count=exact" } },
+        );
+        const count = res.headers.get("content-range")?.split("/")[1];
+        setActiveUsers(count ? parseInt(count, 10) : 0);
+      } catch { /* silent */ }
+    }
+    void fetchActive();
+    const timer = setInterval(fetchActive, 30_000);
+    return () => clearInterval(timer);
+  }, []);
+
+  async function decide(post: PostRow, nextStatus: "approved" | "rejected") {
+    try {
+      await moderatePost(post.id, nextStatus, reason);
+      setSelected(null); setReason(""); void load();
+    } catch { setError("Moderation action failed."); }
+  }
+
+  const pending = posts.filter((post) => post.status === "pending" && !post.deleted_at && isWithinDateRange(post.created_at, dateRange, dateFrom, dateTo));
+  const filteredPosts = posts.filter((post) => !post.deleted_at && isWithinDateRange(post.created_at, dateRange, dateFrom, dateTo));
+  const filteredReports = reports.filter((report) => isWithinDateRange(report.created_at, dateRange, dateFrom, dateTo));
+  const openReports = filteredReports.filter((report) => report.status === "open");
   const reportedPosts = new Set(openReports.map((report) => report.post_id)).size;
   const reportReasons = useMemo(() => {
     const counts = new Map<string, number>();
@@ -97,12 +132,12 @@ export function Dashboard() {
   const statusCounts = useMemo(() => {
     const rows = [
       ["Pending", pending.length, "bg-amber-400"],
-      ["Approved", posts.filter((post) => post.status === "approved" && !post.deleted_at).length, "bg-green-700"],
-      ["Flagged", posts.filter((post) => post.status === "flagged" && !post.deleted_at).length, "bg-red-500"],
-      ["Archived", posts.filter((post) => post.status === "archived").length, "bg-slate-500"],
+      ["Approved", filteredPosts.filter((post) => post.status === "approved").length, "bg-green-700"],
+      ["Flagged", filteredPosts.filter((post) => post.status === "flagged").length, "bg-red-500"],
+      ["Archived", filteredPosts.filter((post) => post.status === "archived").length, "bg-slate-500"],
     ] as const;
     return rows.map(([label, value, color]) => ({ label, value, color }));
-  }, [pending.length, posts]);
+  }, [pending.length, filteredPosts]);
 
   const dailyActivity = useMemo(() => {
     const days = Array.from({ length: 7 }, (_, index) => {
@@ -111,33 +146,65 @@ export function Dashboard() {
       return { key: date.toDateString(), label: dayKey(date.toISOString()), posts: 0, reports: 0 };
     });
 
-    posts.forEach((post) => { const day = days.find((item) => item.key === new Date(post.created_at).toDateString()); if (day) day.posts += 1; });
+    posts.filter((post) => !post.deleted_at).forEach((post) => { const day = days.find((item) => item.key === new Date(post.created_at).toDateString()); if (day) day.posts += 1; });
     reports.forEach((report) => { const day = days.find((item) => item.key === new Date(report.created_at).toDateString()); if (day) day.reports += 1; });
     return days;
   }, [posts, reports]);
 
   const cards = [
+    ["Active now", activeUsers, "On Sonder right now", "/", Users],
     ["Pending review", pending.length, "Needs decision", "/posts", Clock3],
-    ["Approved posts", posts.filter((post) => post.status === "approved" && !post.deleted_at).length, "Live on map", "/posts", Eye],
+    ["Approved posts", filteredPosts.filter((post) => post.status === "approved").length, "Live on map", "/posts", Eye],
     ["Open reports", openReports.length, `${reportedPosts} affected posts`, "/reports", MessageSquareWarning],
     ["Actions logged", history.length, "Latest 200 actions", "/history", History],
-    ["Archived posts", posts.filter((post) => post.status === "archived").length, "Recoverable posts", "/posts?status=archived", EyeOff],
+    ["Archived posts", filteredPosts.filter((post) => post.status === "archived").length, "Recoverable posts", "/posts?status=archived", EyeOff],
   ] as const;
 
   return (
-    <section className="mx-auto w-full max-w-full">
+    <section className="mx-auto w-full max-w-full overflow-hidden">
       {error && <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}
 
-      {/* Metric cards — 2-col mobile, 3-col sm, 5-col xl */}
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-5">
-        {cards.map(([label, value, note, href, Icon], i) => (
+      {/* Date range filter */}
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        {(["all", "today", "7d", "30d"] as const).map((range) => (
+          <button
+            key={range}
+            type="button"
+            onClick={() => { setDateRange(range); setDateFrom(""); setDateTo(""); }}
+            className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+              dateRange === range
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+            }`}
+          >
+            {range === "all" ? "All" : range === "today" ? "Today" : range === "7d" ? "7d" : "30d"}
+          </button>
+        ))}
+        <span className="text-xs text-muted-foreground">or</span>
+        <input
+          type="date"
+          aria-label="From date"
+          value={dateFrom}
+          onChange={(e) => { setDateFrom(e.target.value); setDateRange("custom"); }}
+          className="h-8 rounded-lg border border-border bg-surface-elevated px-2 text-xs"
+        />
+        <span className="text-xs text-muted-foreground">–</span>
+        <input
+          type="date"
+          aria-label="To date"
+          value={dateTo}
+          onChange={(e) => { setDateTo(e.target.value); setDateRange("custom"); }}
+          className="h-8 rounded-lg border border-border bg-surface-elevated px-2 text-xs"
+        />
+      </div>
+
+      {/* Metric cards — 2-col mobile, 3-col sm, 6-col xl */}
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-6">
+        {cards.map(([label, value, note, href, Icon]) => (
           <Link
             key={label}
             href={href}
-            className={`group rounded-2xl border border-border bg-surface p-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md md:p-4 ${
-              // last card spans 2 cols on mobile when 5 items in 2-col grid
-              i === 4 ? "col-span-2 sm:col-span-1" : ""
-            }`}
+            className="group rounded-2xl border border-border bg-surface p-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md md:p-4"
           >
             <div className="flex items-start justify-between gap-1">
               <p className="text-xs font-semibold text-foreground md:text-sm">{label}</p>
@@ -152,9 +219,9 @@ export function Dashboard() {
       </div>
 
       {/* Main grid */}
-      <div className="mt-3 grid gap-3 xl:grid-cols-[1.55fr_.85fr]">
+      <div className="mt-3 grid gap-3 overflow-hidden xl:grid-cols-[1.55fr_.85fr]">
         {/* Next in queue */}
-        <section className="rounded-2xl border border-border bg-surface p-4 shadow-sm md:rounded-3xl md:p-5">
+        <section className="overflow-hidden rounded-2xl border border-border bg-surface p-4 shadow-sm md:rounded-3xl md:p-5">
           <div className="flex items-center justify-between gap-2">
             <div className="min-w-0">
               <h2 className="truncate text-base font-semibold md:text-lg">Next in queue</h2>
@@ -164,10 +231,10 @@ export function Dashboard() {
           </div>
           <div className="mt-3 space-y-1.5">
             {pending.slice(0, 5).map((post) => (
-              <Link
-                href={`/posts?post=${post.id}`}
+              <div
                 key={post.id}
-                className="flex items-center gap-2.5 rounded-xl border border-transparent p-2 transition hover:border-border hover:bg-muted"
+                onClick={() => setSelected(post)}
+                className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-transparent p-2 transition hover:border-border hover:bg-muted"
               >
                 <div className="w-14 shrink-0 md:w-20">
                   <PostVisual post={post} compact />
@@ -179,8 +246,27 @@ export function Dashboard() {
                     {post.lat.toFixed(3)}, {post.lng.toFixed(3)} · {new Date(post.created_at).toLocaleDateString()}
                   </p>
                 </div>
-                <span className="hidden shrink-0 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-800 sm:inline">Pending</span>
-              </Link>
+                <div className="flex shrink-0 items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                  <button
+                    type="button"
+                    aria-label="Reject"
+                    title="Reject"
+                    onClick={() => void decide(post, "rejected")}
+                    className="grid size-7 place-items-center rounded-md border border-danger text-danger transition hover:bg-danger-surface"
+                  >
+                    <X className="size-3" />
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="Approve"
+                    title="Approve"
+                    onClick={() => void decide(post, "approved")}
+                    className="grid size-7 place-items-center rounded-md bg-primary text-primary-foreground transition hover:bg-primary-hover"
+                  >
+                    <Check className="size-3" />
+                  </button>
+                </div>
+              </div>
             ))}
             {!pending.length && (
               <div className="flex items-center gap-3 rounded-xl border border-dashed border-border bg-muted/50 px-4 py-5">
@@ -194,7 +280,7 @@ export function Dashboard() {
           </div>
         </section>
 
-        <div className="space-y-3">
+        <div className="min-w-0 space-y-3">
           {/* 7-day flow chart */}
           <section className="rounded-2xl border border-border bg-surface p-4 shadow-sm md:rounded-3xl md:p-5">
             <h2 className="text-sm font-semibold md:text-base">7-day flow</h2>
@@ -278,6 +364,57 @@ export function Dashboard() {
           </section>
         </div>
       </div>
+
+      {/* Post detail modal — mirrors ModerationTable */}
+      {selected && (
+        <AdminModal onClose={() => setSelected(null)}>
+          <article role="dialog" aria-modal="true" aria-labelledby="dash-post-title" className="relative flex max-h-[94dvh] w-full max-w-5xl flex-col overflow-hidden rounded-3xl bg-surface shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <header className="flex justify-between gap-4 border-b border-border p-4 sm:p-6">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.16em] text-green-700">{selected.status} post</p>
+                <h2 id="dash-post-title" className="mt-2 text-2xl font-semibold">{selected.title}</h2>
+              </div>
+              <button aria-label="Close" onClick={() => setSelected(null)} className="grid size-10 place-items-center rounded-full border bg-white text-slate-600"><X className="size-4" /></button>
+            </header>
+            <div className="min-h-0 overflow-y-auto p-4 sm:p-6">
+              <div className="grid items-start gap-5 lg:grid-cols-[1.05fr_.95fr]">
+                <div className="space-y-4">
+                  {selected.image_path && <PostVisual post={selected} />}
+                  <section className="rounded-2xl border border-border bg-white p-5 shadow-sm">
+                    <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-green-700">Thought</p>
+                    <p className="mt-3 whitespace-pre-wrap text-[15px] leading-7 text-foreground">{selected.body}</p>
+                  </section>
+                  {selected.music && <MusicCard post={selected} />}
+                </div>
+                <section className="rounded-2xl border border-border bg-white p-4 shadow-sm">
+                  <div className="mb-3 flex items-center gap-2">
+                    <MapPin className="size-4 text-green-700" />
+                    <div>
+                      <h3 className="text-sm font-semibold">Pinned coordinates</h3>
+                      <p className="font-mono text-xs text-slate-600">{locationLabel(selected)}</p>
+                    </div>
+                  </div>
+                  <div className="h-72 overflow-hidden rounded-xl border border-border bg-muted">
+                    <AdminLocationMap posts={[selected]} selectedId={selected.id} reportCounts={{}} onSelect={() => undefined} compact />
+                  </div>
+                </section>
+              </div>
+              {selected.status === "pending" && (
+                <label className="mt-5 block text-sm font-medium">
+                  Moderation reason <span className="font-normal text-slate-600">Optional note for audit history.</span>
+                  <textarea value={reason} onChange={(e) => setReason(e.target.value)} maxLength={500} className={`mt-2 ${textareaClass}`} />
+                </label>
+              )}
+            </div>
+            {selected.status === "pending" && (
+              <footer className="grid gap-2 border-t border-border bg-surface p-4 sm:grid-cols-2 sm:px-6">
+                <button onClick={() => void decide(selected, "rejected")} className={`${secondaryButtonClass} border-danger text-danger hover:bg-danger-surface`}><XCircle className="size-4" />Reject</button>
+                <button onClick={() => void decide(selected, "approved")} className={primaryButtonClass}><Check className="size-4" />Approve</button>
+              </footer>
+            )}
+          </article>
+        </AdminModal>
+      )}
     </section>
   );
 }

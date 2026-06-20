@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { MapPin, ShieldCheck } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -57,11 +58,12 @@ export default function CreatePostModal({
     try {
       await onSubmit(getDraft());
       resetDraft();
+      toast.success("Thought submitted for review.");
       onClose();
     } catch (cause) {
-      setSubmitError(
-        cause instanceof Error ? cause.message : "Unable to submit thought.",
-      );
+      const msg = cause instanceof Error ? cause.message : "Unable to submit thought.";
+      setSubmitError(msg);
+      toast.error("Something went wrong. Please try again.");
       setSubmitting(false);
     }
   };

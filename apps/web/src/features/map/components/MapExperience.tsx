@@ -35,6 +35,7 @@ import { useModeration } from "@/features/moderation/components/ModerationProvid
 import { createSupabasePost } from "@/features/posts/client/use-create-post";
 import { getFunctionErrorMessage } from "@/lib/supabase/function-error";
 import { reverseGeocode } from "@/features/map/client/reverse-geocode";
+import { useActivityPulse } from "@/features/activity/use-activity-pulse";
 
 type FlyToTarget = {
   lat: number;
@@ -48,7 +49,8 @@ const INITIAL_VIEWPORT: MapViewport = {
 };
 
 export function MapExperience() {
-  const { markers, setMarkers, trackMyPost } = useModeration();
+  const { markers, setMarkers, trackMyPost, refreshPosts } = useModeration();
+  useActivityPulse(refreshPosts);
   const [selectedMarkerId, setSelectedMarkerId] = useState<string | null>(null);
   const [selectedPost, setSelectedPost] = useState<AnonymousPost | null>(null);
   const [flyTo, setFlyTo] = useState<FlyToTarget>(null);
@@ -265,12 +267,13 @@ export function MapExperience() {
             </div>
           </div>
         ) : (
-          <div>
+          <div className="flex justify-end">
             <Button
-              className="h-12 w-full rounded-2xl shadow-xl"
+              size="icon"
+              className="size-12 rounded-full shadow-xl"
               onClick={() => setDiscoveryOpen(true)}
             >
-              <Compass /> Explore nearby
+              <Compass />
             </Button>
           </div>
         )}

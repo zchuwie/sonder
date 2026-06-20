@@ -105,7 +105,7 @@ export default function MapCanvas({
   const buildGeoJSON = (items: MarkerData[]): GeoJSON.FeatureCollection => ({
     type: "FeatureCollection",
     features: items
-      .filter((m) => m.source !== "search" && m.posts.length > 0)
+      .filter((m) => m.source !== "search" && (m.posts.length > 0 || m.source === "manual"))
       .map((m) => ({
         type: "Feature",
         id: m.id,
@@ -113,7 +113,7 @@ export default function MapCanvas({
         properties: {
           id: m.id,
           postCount: m.posts.length,
-          content: contentSummary(m.posts),
+          content: m.posts.length > 0 ? contentSummary(m.posts) : "new",
         },
       })),
   });
@@ -338,7 +338,7 @@ export default function MapCanvas({
       e.preventDefault();
 
       onMarkerAddRef.current({
-        id: crypto.randomUUID(),
+        id: crypto.randomUUID?.() ?? `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`,
         lat: e.lngLat.lat,
         lng: e.lngLat.lng,
         posts: [],
@@ -451,20 +451,21 @@ export default function MapCanvas({
   useEffect(() => {
     if (!flyTo || !map.current) return;
     const compact = window.innerWidth < 640;
-    map.current.flyTo({
+    const options: Parameters<typeof map.current.flyTo>[0] = {
       center: [flyTo.lng, flyTo.lat],
       zoom: flyTo.zoom ?? 15,
       speed: 1.4,
       curve: 1.5,
-      padding: flyTo.frameRightPanel
-        ? {
-            top: compact ? 12 : 24,
-            bottom: compact ? 300 : 24,
-            left: compact ? 10 : 24,
-            right: compact ? 10 : 460,
-          }
-        : undefined,
-    });
+    };
+    if (flyTo.frameRightPanel) {
+      options.padding = {
+        top: compact ? 12 : 24,
+        bottom: compact ? 300 : 24,
+        left: compact ? 10 : 24,
+        right: compact ? 10 : 460,
+      };
+    }
+    map.current.flyTo(options);
   }, [flyTo]);
 
   useEffect(() => {
@@ -523,9 +524,11 @@ export default function MapCanvas({
 
       timer = setTimeout(() => {
         if (!map.current) return;
+        // ponytail: vibrate on successful hold to confirm pin placement
+        navigator.vibrate?.(50);
         const lngLat = map.current.unproject([relX, relY]);
         onMarkerAddRef.current({
-          id: crypto.randomUUID(),
+          id: crypto.randomUUID?.() ?? `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`,
           lat: lngLat.lat,
           lng: lngLat.lng,
           posts: [],

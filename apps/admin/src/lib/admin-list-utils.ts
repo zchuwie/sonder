@@ -1,10 +1,15 @@
-export type DateRange = "all" | "today" | "7d" | "30d";
+export type DateRange = "all" | "today" | "7d" | "30d" | "custom";
 
-export function isWithinDateRange(value: string, range: DateRange) {
+export function isWithinDateRange(value: string, range: DateRange, from?: string, to?: string) {
   if (range === "all") return true;
   const date = new Date(value);
   const now = new Date();
   if (range === "today") return date.toDateString() === now.toDateString();
+  if (range === "custom") {
+    if (from && date < new Date(from)) return false;
+    if (to) { const end = new Date(to); end.setHours(23, 59, 59, 999); if (date > end) return false; }
+    return true;
+  }
   const days = range === "7d" ? 7 : 30;
   return date.getTime() >= now.getTime() - days * 86_400_000;
 }
