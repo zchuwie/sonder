@@ -270,9 +270,9 @@ export async function dismissReport(reportId: string, postId: string) {
   }
 }
 
-// ponytail: in-memory cache for signed URLs. TTL 5 min (signed URLs last 10 min).
+// ponytail: in-memory cache for signed URLs. TTL 50 min (signed URLs valid 1h).
 const imageUrlCache = new Map<string, { url: string; expires: number }>();
-const IMAGE_CACHE_TTL = 5 * 60_000;
+const IMAGE_CACHE_TTL = 50 * 60_000;
 
 export async function createPostImageUrl(imagePath: string) {
   const cached = imageUrlCache.get(imagePath);
@@ -282,7 +282,7 @@ export async function createPostImageUrl(imagePath: string) {
   if (!supabase) return "";
   const { data } = await supabase.storage
     .from("post-images")
-    .createSignedUrl(imagePath, 600);
+    .createSignedUrl(imagePath, 3600);
   const url = data?.signedUrl ?? "";
   if (url) imageUrlCache.set(imagePath, { url, expires: Date.now() + IMAGE_CACHE_TTL });
   return url;

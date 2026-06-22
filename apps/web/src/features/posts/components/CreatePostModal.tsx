@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { MapPin, ShieldCheck } from "lucide-react";
+import { MapPin } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
@@ -87,20 +87,8 @@ export default function CreatePostModal({
             <MiniMapPreview marker={marker} />
           </div>
           <div className="min-h-0 space-y-3 overflow-y-auto p-3.5 sm:p-4 md:p-5">
-            <div className="flex items-center gap-3 rounded-2xl bg-primary/5 p-3">
-              <span className="grid size-8 place-items-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
-                ?
-              </span>
-              <div>
-                <p className="text-sm font-semibold">Publicly anonymous</p>
-                <p className="text-[11px] text-muted-foreground">
-                  No profile name is shown, but technical identifiers may be
-                  processed for safety and abuse prevention.
-                </p>
-              </div>
-            </div>
             <div className="space-y-1.5">
-              <label htmlFor="title" className="text-sm font-medium">
+              <label htmlFor="title" className="text-xs font-medium">
                 Title <span className="text-primary">*</span>
               </label>
               <Input
@@ -109,12 +97,12 @@ export default function CreatePostModal({
                 onChange={(event) => setTitle(event.target.value)}
                 placeholder="Give this thought a short title"
                 maxLength={50}
-                className="h-10 rounded-2xl bg-muted/25 px-4"
+                className="h-9 rounded-xl bg-muted/25 px-3 text-sm"
               />
             </div>
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <label htmlFor="thought" className="text-sm font-medium">
+                <label htmlFor="thought" className="text-xs font-medium">
                   Your thought <span className="text-primary">*</span>
                 </label>
                 <span className="text-[10px] text-muted-foreground">
@@ -127,16 +115,13 @@ export default function CreatePostModal({
                 onChange={(event) => setText(event.target.value)}
                 placeholder="A memory, confession, or quiet thought..."
                 maxLength={500}
-                className="min-h-24 rounded-2xl bg-muted/25 px-4 py-3 leading-6"
+                className="min-h-20 rounded-xl bg-muted/25 px-3 py-2.5 text-sm leading-6"
               />
             </div>
-            <div className="space-y-3">
-              <div className="space-y-1.5">
-                <p className="text-sm font-medium">
-                  Photo{" "}
-                  <span className="font-normal text-muted-foreground">
-                    (optional)
-                  </span>
+            <div className="space-y-2.5">
+              <div>
+                <p className="text-xs font-medium">
+                  Photo <span className="font-normal text-muted-foreground">(optional)</span>
                 </p>
                 <PhotoAttachmentPicker
                   value={imageUrl}
@@ -144,20 +129,12 @@ export default function CreatePostModal({
                   onFileChange={setImageFile}
                 />
               </div>
-              <div className="space-y-1.5">
-                <p className="text-sm font-medium">
-                  Song{" "}
-                  <span className="font-normal text-muted-foreground">
-                    (optional)
-                  </span>
+              <div>
+                <p className="text-xs font-medium">
+                  Song <span className="font-normal text-muted-foreground">(optional)</span>
                 </p>
                 <SongSearchPicker value={music} onChange={setMusic} />
               </div>
-            </div>
-            <div className="flex items-start gap-2 rounded-2xl border border-primary/10 bg-primary/5 p-3 text-xs leading-5 text-muted-foreground sm:hidden">
-              <ShieldCheck className="mt-0.5 size-4 shrink-0 text-primary" />
-              Approved posts and their selected location become public. Avoid
-              private or identifying information.
             </div>
             {submitError && (
               <Alert variant="destructive">
@@ -167,21 +144,19 @@ export default function CreatePostModal({
           </div>
         </div>
 
-        <div className="flex items-center gap-2 border-t bg-background/95 px-3 py-2.5 pb-[max(.625rem,env(safe-area-inset-bottom))] sm:gap-3 sm:px-5 sm:py-3">
-          <p className="hidden flex-1 text-xs text-muted-foreground sm:block">
-            Reviewed before publication. Do not include private information,
-            threats, harassment, or identifying details.
-          </p>
+        <div className="flex items-center justify-end gap-2 border-t bg-background/95 px-3 py-2 pb-[max(.5rem,env(safe-area-inset-bottom))] sm:px-5 sm:py-2.5">
           <Button
             variant="ghost"
-            className="rounded-xl"
+            size="sm"
+            className="rounded-xl text-xs"
             onClick={onClose}
             disabled={submitting}
           >
             Cancel
           </Button>
           <Button
-            className="rounded-xl px-5"
+            size="sm"
+            className="rounded-xl px-4 text-xs"
             disabled={!canSubmit || submitting}
             onClick={() => void submit()}
           >

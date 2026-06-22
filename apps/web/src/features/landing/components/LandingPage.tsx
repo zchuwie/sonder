@@ -1,61 +1,23 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowRight,
-  Camera,
   Check,
-  Eye,
-  MapPin,
-  Menu,
-  MessageCircleMore,
   Music2,
   ShieldCheck,
-  X,
-  Dot,
 } from "lucide-react";
-import { useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { ScrollReveal } from "@/components/animations/ScrollReveal";
 import { LandingThemeToggle } from "@/features/landing/components/LandingThemeToggle";
-import { LandingMapPin } from "@/features/landing/components/LandingMapPin";
-
-const features = [
-  {
-    icon: MessageCircleMore,
-    title: "Anonymous by design",
-    copy: "No profiles or public identity. Just the thought and the place.",
-  },
-  {
-    icon: MapPin,
-    title: "Pin memories to places",
-    copy: "Leave a confession, memory, or feeling exactly where it happened.",
-  },
-  {
-    icon: Camera,
-    title: "Add photos and songs",
-    copy: "Give a thought more context with an image or a song.",
-  },
-  {
-    icon: Eye,
-    title: "Explore nearby thoughts",
-    copy: "Find what people left around a city, campus, or neighborhood.",
-  },
-  {
-    icon: ArrowRight,
-    title: "Share public moments",
-    copy: "Each approved post can become a link worth passing on.",
-  },
-  {
-    icon: ShieldCheck,
-    title: "A safer public space",
-    copy: "Review, reporting, and moderation are part of the experience.",
-  },
-];
+import { HeroMapCarousel } from "@/features/landing/components/HeroMapCarousel";
 
 const steps = [
-  ["01", "Choose a place", "Search or tap the map where the thought belongs."],
+  [
+    "01", 
+    "Choose a place", 
+    "Search or tap the map where the thought belongs."
+  ],
   [
     "02",
     "Leave something behind",
@@ -68,12 +30,6 @@ const steps = [
   ],
 ];
 
-const navItems = [
-  ["How it works", "#how-it-works"],
-  ["Features", "#features"],
-  ["Safety", "#safety"],
-] as const;
-
 function Wordmark({ className = "" }: { className?: string }) {
   return (
     <span className={`font-serif text-3xl tracking-[-0.04em] ${className}`}>
@@ -83,25 +39,12 @@ function Wordmark({ className = "" }: { className?: string }) {
 }
 
 function LandingNavbar() {
-  const [open, setOpen] = useState(false);
-
   return (
     <header className="fixed inset-x-0 top-0 z-50 px-4 pt-4 sm:px-6">
       <nav className="mx-auto flex max-w-7xl items-center justify-between rounded-full border border-black/10 bg-[#f5f1e8]/80 px-5 py-3 text-[#101713] shadow-2xl shadow-black/10 backdrop-blur-xl dark:border-white/10 dark:bg-[#050706]/75 dark:text-[#f5f1e8]">
         <Link href="/" aria-label="Sonder home">
           <Wordmark />
         </Link>
-        <div className="hidden items-center gap-8 text-xs font-semibold uppercase tracking-[0.16em] text-[#607064] dark:text-[#c3c9c2] md:flex">
-          {navItems.map(([label, href]) => (
-            <Link
-              key={label}
-              href={href}
-              className="transition hover:text-[#101713] dark:hover:text-[#f5f1e8]"
-            >
-              {label}
-            </Link>
-          ))}
-        </div>
         <div className="hidden items-center gap-2 md:flex">
           <LandingThemeToggle />
           <Link
@@ -111,38 +54,10 @@ function LandingNavbar() {
             Open map <ArrowRight className="size-4" />
           </Link>
         </div>
-        <button
-          type="button"
-          className="rounded-full p-2 text-[#101713] dark:text-[#f5f1e8] md:hidden"
-          aria-label={open ? "Close navigation" : "Open navigation"}
-          onClick={() => setOpen((current) => !current)}
-        >
-          {open ? <X /> : <Menu />}
-        </button>
-      </nav>
-      {open && (
-        <div className="mx-auto mt-2 flex max-w-7xl flex-col rounded-3xl border border-black/10 bg-[#f5f1e8] p-5 text-[#101713] shadow-2xl dark:border-white/10 dark:bg-[#101713] dark:text-[#f5f1e8] md:hidden">
-          {navItems.map(([label, href]) => (
-            <Link
-              key={label}
-              href={href}
-              className="border-b border-black/10 py-3 text-sm dark:border-white/10"
-              onClick={() => setOpen(false)}
-            >
-              {label}
-            </Link>
-          ))}
-          <div className="mt-4">
-            <LandingThemeToggle />
-          </div>
-          <Link
-            href="/map"
-            className="mt-4 rounded-full bg-[#a8ba63] px-5 py-3 text-center font-bold text-[#101713]"
-          >
-            Open map
-          </Link>
+        <div className="md:hidden">
+          <LandingThemeToggle />
         </div>
-      )}
+      </nav>
     </header>
   );
 }
@@ -162,10 +77,6 @@ export function LandingPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
           >
-            <div className="mb-8 flex items-center gap-3 text-xs font-bold uppercase tracking-[0.2em] text-[#a8ba63]">
-              <span className="size-2 rounded-full bg-[#a8ba63]" />
-              Anonymous memories, tied to real places
-            </div>
             <h1 className="max-w-3xl font-serif text-[clamp(4rem,9vw,8.5rem)] leading-[0.88] tracking-[-0.055em]">
               Leave a thought where it happened.
             </h1>
@@ -194,60 +105,8 @@ export function LandingPage() {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 1, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
           >
-            <div className="absolute inset-0 rotate-3 overflow-hidden rounded-[2.5rem] border border-white/10 bg-[#101713]">
-              <Image
-                src="/brand/sonder-wordmark.png"
-                alt="Sonder"
-                fill
-                priority
-                className="object-contain p-8 opacity-80"
-              />
-            </div>
-            <div className="absolute -bottom-2 left-2 max-w-[270px] -rotate-3 rounded-3xl border border-white/10 bg-[#f5f1e8] p-5 text-[#101713] shadow-2xl sm:left-[-2rem]">
-              <div className="mb-4 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#607064]">
-                <MapPin className="size-4 text-[#2f4439]" /> Escolta, Manila
-              </div>
-              <p className="font-serif text-2xl leading-tight">
-                I still take the long way home because it passes here.
-              </p>
-              <div className="mt-5 flex items-center gap-2 text-xs text-[#657067]">
-                <Music2 className="size-4" /> Leaves · Ben&Ben
-              </div>
-            </div>
+            <HeroMapCarousel />
           </motion.div>
-        </div>
-      </section>
-
-      <section id="features" className="px-5 py-16 sm:px-8 sm:py-24 lg:py-32">
-        <div className="mx-auto max-w-7xl">
-          <ScrollReveal className="grid gap-8 lg:grid-cols-2">
-            <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#607064]">
-              What Sonder is
-            </p>
-            <h2 className="font-serif text-4xl leading-[1.08] tracking-[-0.035em] sm:text-6xl">
-              Places become quiet confession walls.
-            </h2>
-          </ScrollReveal>
-          <ScrollReveal className="mt-16" delay={0.1}>
-            <LandingMapPin />
-          </ScrollReveal>
-          <div className="mt-12 grid gap-px overflow-hidden rounded-[2rem] border border-[#d7d4c9] bg-[#d7d4c9] sm:mt-16 md:grid-cols-2 lg:mt-20 lg:grid-cols-3">
-            {features.map((feature, index) => (
-              <ScrollReveal
-                key={feature.title}
-                delay={index * 0.06}
-                className="bg-[#f8f5ed]"
-              >
-                <article className="group min-h-52 p-5 transition duration-300 hover:bg-[#eef0e5] sm:min-h-64 sm:p-7 lg:p-9">
-                  <feature.icon className="size-6 text-[#2f4439] transition group-hover:scale-110" />
-                  <h3 className="mt-12 font-serif text-3xl">{feature.title}</h3>
-                  <p className="mt-4 max-w-xs text-sm leading-7 text-[#687168]">
-                    {feature.copy}
-                  </p>
-                </article>
-              </ScrollReveal>
-            ))}
-          </div>
         </div>
       </section>
 
@@ -257,9 +116,6 @@ export function LandingPage() {
       >
         <div className="mx-auto max-w-7xl">
           <ScrollReveal className="max-w-3xl">
-            <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#a8ba63]">
-              How it works
-            </p>
             <h2 className="mt-5 font-serif text-5xl leading-none tracking-[-0.04em] sm:text-7xl">
               Start with a place.
             </h2>
@@ -342,80 +198,10 @@ export function LandingPage() {
         </div>
       </section>
 
-      <section className="bg-[#a8ba63] px-5 py-20 text-[#101713] sm:px-8 sm:py-28 lg:py-40">
-        <ScrollReveal className="mx-auto max-w-6xl text-center">
-          <blockquote className="mt-10 font-serif text-[clamp(3.4rem,8vw,8rem)] leading-[0.95] tracking-[-0.055em]">
-            Every place has a version of someone that stayed behind.
-          </blockquote>
-        </ScrollReveal>
-      </section>
-
-      <section className="px-5 py-16 sm:px-8 sm:py-24 lg:py-32">
-        <div className="mx-auto max-w-7xl">
-          <ScrollReveal>
-            <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#607064] dark:text-[#a8ba63]">
-              Before you pin
-            </p>
-            <h2 className="mt-5 max-w-4xl font-serif text-5xl leading-[1.02] tracking-[-0.04em] sm:text-7xl">
-              Public, anonymous, and still accountable.
-            </h2>
-            <p className="mt-7 max-w-2xl text-sm leading-7 text-[#657067] dark:text-[#b8c0b8]">
-              Sonder explains what data may be processed, what cannot be posted,
-              how moderation works, and how to request removal or report harm.
-            </p>
-          </ScrollReveal>
-          <div className="mt-12 grid items-stretch gap-4 md:grid-cols-2 lg:grid-cols-4">
-            {(
-              [
-                [
-                  "Privacy Policy",
-                  "How location, content, and technical data are handled.",
-                  "/privacy",
-                ],
-                [
-                  "Terms of Use",
-                  "The rules and responsibilities for using Sonder.",
-                  "/terms",
-                ],
-                [
-                  "Community Guidelines",
-                  "What belongs on the map and what does not.",
-                  "/community-guidelines",
-                ],
-                [
-                  "Safety & Reporting",
-                  "Protect yourself, report content, and request review.",
-                  "/safety",
-                ],
-              ] as const
-            ).map(([title, copy, href], index) => (
-              <ScrollReveal key={title} delay={index * 0.06} className="h-full">
-                <Link
-                  href={href}
-                  className="group flex h-full min-h-72 flex-col rounded-[2rem] border border-black/10 bg-[#f8f5ed] p-7 transition hover:-translate-y-1 hover:bg-[#eef0e5] dark:border-white/10 dark:bg-[#101713] dark:hover:bg-[#162019]"
-                >
-                  <ShieldCheck className="size-5 text-[#2f4439] dark:text-[#a8ba63]" />
-                  <h3 className="mt-12 min-h-[4.5rem] font-serif text-3xl leading-tight">
-                    {title}
-                  </h3>
-                  <p className="mt-3 text-xs leading-6 text-[#657067] dark:text-[#b8c0b8]">
-                    {copy}
-                  </p>
-                  <ArrowRight className="mt-auto size-4 pt-6 box-content transition group-hover:translate-x-1" />
-                </Link>
-              </ScrollReveal>
-            ))}
-          </div>
-        </div>
-      </section>
-
       <section className="bg-[#e6eadc] px-5 py-16 text-[#101713] transition-colors dark:bg-[#050706] dark:text-[#f5f1e8] sm:px-8 sm:py-24 lg:py-32">
         <ScrollReveal className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-10 rounded-[2.5rem] border border-black/10 bg-[#f5f1e8] p-8 dark:border-white/10 dark:bg-[#101713] sm:p-14 lg:flex-row lg:items-end">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#a8ba63]">
-              Ready when you are
-            </p>
-            <h2 className="mt-5 max-w-3xl font-serif text-5xl leading-[1] tracking-[-0.04em] sm:text-7xl">
+            <h2 className="mt-5 max-w-3xl font-serif text-5xl leading-none tracking-[-0.04em] sm:text-7xl">
               Leave what words could not hold.
             </h2>
           </div>

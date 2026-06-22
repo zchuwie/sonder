@@ -40,7 +40,7 @@ export default function RootLayout({
         <ThemeProvider>
           <ModerationProvider>{children}</ModerationProvider>
           <Toaster
-            position="top-center"
+            position="bottom-center"
             toastOptions={{
               className: "font-serif text-base tracking-tight",
               style: { fontFamily: "var(--font-gilda), serif", borderRadius: "1rem", padding: "14px 20px" },

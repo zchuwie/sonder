@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Filter, SlidersHorizontal } from "lucide-react";
+import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { AdminModal } from "@/components/ui/admin-modal";
 import { archivePost, dismissReport, fetchPosts, fetchReportsPage, updateReportStatus } from "@/features/moderation/admin-queries";
 import { MusicCard, PostVisual } from "@/features/moderation/PostVisual";
@@ -16,6 +17,8 @@ export function ReportsTable() {
   const [reason, setReason] = useState("");
   const [error, setError] = useState("");
   const [archiveConfirm, setArchiveConfirm] = useState(false);
+  const [dismissConfirm, setDismissConfirm] = useState(false);
+  const [reviewConfirm, setReviewConfirm] = useState(false);
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
@@ -76,7 +79,16 @@ export function ReportsTable() {
       setError("Report could not be dismissed.");
       return;
     }
-    setSelected(null); setReason("");
+    setDismissConfirm(false); setSelected(null); setReason("");
+    void load();
+  }
+
+  async function markReviewing() {
+    if (!selected) return;
+    try {
+      await updateReportStatus(selected.id, "reviewing");
+    } catch { setError("Could not update report."); return; }
+    setReviewConfirm(false); setSelected(null); setReason("");
     void load();
   }
 
@@ -140,9 +152,55 @@ export function ReportsTable() {
     </div>
     {selected && <AdminModal onClose={() => setSelected(null)}>
       <article role="dialog" aria-modal="true" aria-labelledby="report-detail-title" className="relative flex max-h-[92dvh] w-full max-w-3xl flex-col overflow-hidden rounded-3xl bg-surface shadow-2xl" onClick={(event) => event.stopPropagation()}>
-        <header className="flex justify-between border-b p-5"><div><p className="text-xs uppercase text-red-700">{counts[selected.post_id] ?? 1} report(s) · {selected.status}</p><h2 id="report-detail-title" className="mt-2 text-2xl font-semibold capitalize">{selected.reason.replaceAll("_", " ")}</h2></div><button onClick={() => setSelected(null)}>Close</button></header>
-        <div className="overflow-y-auto p-5"><p className="rounded-xl bg-red-50 p-3 text-sm text-red-900">{selected.details ?? "No additional details."}</p>{selectedPost && <><div className="mt-5"><PostVisual post={selectedPost} /></div><h3 className="mt-5 text-xl font-semibold">{selectedPost.title}</h3><p className="mt-2 leading-7">{selectedPost.body}</p><MusicCard post={selectedPost} /><label className="mt-5 block text-sm font-medium">Moderation reason<textarea value={reason} onChange={(event) => setReason(event.target.value)} className={`mt-2 ${textareaClass}`} /></label></>}</div>
-        {selectedPost && <footer className="flex flex-wrap justify-end gap-2 border-t bg-surface p-4"><button onClick={() => void updateReportStatus(selected.id, "reviewing").then(load)} disabled={selected.status !== "open"} className={secondaryButtonClass}>Mark reviewing</button><button onClick={() => void dismiss()} className={secondaryButtonClass}>Dismiss report</button><button onClick={() => setArchiveConfirm(true)} disabled={selectedPost.status === "archived"} className={dangerButtonClass}>{selectedPost.status === "archived" ? "Post archived" : "Archive post"}</button></footer>}
+        <header className="flex justify-between border-b p-5">
+          <div>
+            <p className="text-xs uppercase text-red-700">{counts[selected.post_id] ?? 1} report(s) · {selected.status}</p>
+            <h2 id="report-detail-title" className="mt-2 text-2xl font-semibold">Report details</h2>
+          </div>
+          <button onClick={() => setSelected(null)} className="text-sm font-semibold text-muted-foreground">Close</button>
+        </header>
+        <div className="overflow-y-auto p-5">
+          {/* Reason breakdown table */}
+          <section className="rounded-xl border border-border">
+            <table className="w-full text-sm">
+              <thead className="bg-muted text-xs uppercase text-muted-foreground"><tr><th className="px-4 py-2 text-left">Reason</th><th className="px-4 py-2 text-right">Count</th></tr></thead>
+              <tbody>
+                {(() => {
+                  const reasonCounts = new Map<string, number>();
+                  reports.filter((r) => r.post_id === selected.post_id).forEach((r) => {
+                    reasonCounts.set(r.reason, (reasonCounts.get(r.reason) ?? 0) + 1);
+                  });
+                  return [...reasonCounts.entries()].sort((a, b) => b[1] - a[1]).map(([r, c]) => (
+                    <tr key={r} className="border-t"><td className="px-4 py-2 capitalize">{r.replaceAll("_", " ")}</td><td className="px-4 py-2 text-right font-semibold text-red-700">{c}</td></tr>
+                  ));
+                })()}
+              </tbody>
+            </table>
+          </section>
+
+          {/* Post content */}
+          {selectedPost && (
+            <div className="mt-5">
+              {selectedPost.image_path && <div className="mb-4"><PostVisual post={selectedPost} /></div>}
+              <h3 className="text-xl font-semibold">{selectedPost.title}</h3>
+              <p className="mt-2 leading-7 text-foreground">{selectedPost.body}</p>
+              <MusicCard post={selectedPost} />
+              <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                <span className="font-mono">{selectedPost.lat.toFixed(4)}, {selectedPost.lng.toFixed(4)}</span>
+                {selectedPost.place_name && <span>{selectedPost.place_name}</span>}
+                <span>{new Date(selectedPost.created_at).toLocaleString()}</span>
+              </div>
+              <label className="mt-5 block text-sm font-medium">Moderation reason<textarea value={reason} onChange={(event) => setReason(event.target.value)} className={`mt-2 ${textareaClass}`} /></label>
+            </div>
+          )}
+        </div>
+        {selectedPost && <footer className="flex flex-wrap justify-end gap-2 border-t bg-surface p-4">
+          <button onClick={() => setReviewConfirm(true)} disabled={selected.status !== "open"} className={secondaryButtonClass}>Mark reviewing</button>
+          <button onClick={() => setDismissConfirm(true)} className={secondaryButtonClass}>Dismiss report</button>
+          <button onClick={() => setArchiveConfirm(true)} disabled={selectedPost.status === "archived"} className={dangerButtonClass}>{selectedPost.status === "archived" ? "Post archived" : "Archive post"}</button>
+        </footer>}
+        <ConfirmModal open={reviewConfirm} title="Mark as reviewing?" description="This report will be marked as under review." confirmLabel="Mark reviewing" variant="primary" onConfirm={() => void markReviewing()} onCancel={() => setReviewConfirm(false)} />
+        <ConfirmModal open={dismissConfirm} title="Dismiss this report?" description="The report will be dismissed. If the post was flagged, it will be restored to approved." confirmLabel="Dismiss" variant="primary" onConfirm={() => void dismiss()} onCancel={() => setDismissConfirm(false)} />
         {archiveConfirm && <div className="absolute inset-0 z-10 grid place-items-center bg-black/50 p-4" onClick={() => setArchiveConfirm(false)}><section role="alertdialog" aria-modal="true" aria-labelledby="report-archive-title" className="w-full max-w-md rounded-2xl border border-border bg-surface p-5 shadow-2xl" onClick={(event) => event.stopPropagation()}><h3 id="report-archive-title" className="text-lg font-semibold">Archive reported post?</h3><p className="mt-2 text-sm leading-6 text-muted-foreground">Post leaves the public map and remains recoverable from Archived posts.</p><div className="mt-5 flex justify-end gap-2"><button onClick={() => setArchiveConfirm(false)} className={secondaryButtonClass}>Cancel</button><button onClick={() => void archive()} className={dangerButtonClass}>Archive post</button></div></section></div>}
       </article>
     </AdminModal>}

@@ -7,9 +7,9 @@ export function getSignedPostImageFunctionUrl(postId: string) {
 
 type SignedImageFetchInit = RequestInit & { next?: { revalidate?: number } };
 
-// ponytail: in-memory cache for signed image URLs. TTL 5 min. Ceiling: unbounded map if thousands of posts; upgrade to LRU if needed.
+// ponytail: in-memory cache for signed image URLs. TTL 50 min (signed URLs valid 1h). Ceiling: unbounded map; upgrade to LRU if needed.
 const signedUrlCache = new Map<string, { url: string; expires: number }>();
-const SIGNED_URL_CACHE_TTL = 5 * 60_000;
+const SIGNED_URL_CACHE_TTL = 50 * 60_000;
 
 export async function fetchSignedPostImageUrl(
   postId: string,

@@ -1,9 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
-// ponytail: single cached query per request. Multiple clients hitting this
-// within the same second get the same result via HTTP cache headers.
-
 export async function GET() {
   const supabase = await createClient();
   if (!supabase) return NextResponse.json({ postCount: 0, activeUsers: 0 }, { status: 503 });

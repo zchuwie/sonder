@@ -25,7 +25,7 @@ export function LegalPage({ document }: { document: LegalDocument }) {
           href="/"
           className="mb-12 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-[#607064] dark:text-[#a8ba63]"
         >
-          <ArrowLeft className="size-4" /> Back to landing
+          <ArrowLeft className="size-4" /> Back to page
         </Link>
         <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#607064] dark:text-[#a8ba63]">
           {document.eyebrow}

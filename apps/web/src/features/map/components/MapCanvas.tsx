@@ -38,6 +38,7 @@ type Props = {
   onMarkerSelect: (id: string | null) => void;
   onCreatePost: () => void;
   onViewGroup: () => void;
+  onSelectPost?: (post: MarkerData["posts"][number]) => void;
   onViewportChange?: (viewport: MapViewport) => void;
   flyTo?: FlyToTarget;
 };
@@ -66,6 +67,7 @@ export default function MapCanvas({
   onMarkerSelect,
   onCreatePost,
   onViewGroup,
+  onSelectPost,
   onViewportChange,
   flyTo,
 }: Props) {
@@ -333,9 +335,10 @@ export default function MapCanvas({
       });
     });
 
-    // Right-click → add pin
+    // Right-click → add pin (mobile/tablet only, desktop uses navbar modal)
     map.current.on("contextmenu", (e) => {
       e.preventDefault();
+      if (window.innerWidth >= 1024) return;
 
       onMarkerAddRef.current({
         id: crypto.randomUUID?.() ?? `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`,
@@ -592,6 +595,7 @@ export default function MapCanvas({
               onClose={() => onMarkerSelect(null)}
               onCreatePost={onCreatePost}
               onViewGroup={onViewGroup}
+              onSelectPost={onSelectPost}
             />
           )}
       </AnimatePresence>

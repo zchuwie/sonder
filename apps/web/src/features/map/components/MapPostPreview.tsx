@@ -1,10 +1,11 @@
 "use client";
 
-import { MapPin, Plus, X } from "lucide-react";
+import { MapPin, X } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import type { MarkerData } from "@/features/posts/lib/post-types";
 import { PostClusterList } from "@/features/posts/components/PostClusterList";
+import { relativeTime } from "@/features/posts/lib/post-utils";
 
 export function MapPostPreview({
   marker,
@@ -12,12 +13,14 @@ export function MapPostPreview({
   onClose,
   onCreatePost,
   onViewGroup,
+  onSelectPost,
 }: {
   marker: MarkerData;
   position: { x: number; y: number };
   onClose: () => void;
   onCreatePost: () => void;
   onViewGroup: () => void;
+  onSelectPost?: (post: MarkerData["posts"][number]) => void;
 }) {
   const reduceMotion = useReducedMotion();
   const posts = marker.posts;
@@ -38,16 +41,33 @@ export function MapPostPreview({
       <Button variant="secondary" size="icon-sm" className="absolute right-2 top-2 rounded-full" onClick={onClose} aria-label="Close preview">
         <X />
       </Button>
-      <div className="space-y-4">
+      <div className="space-y-3">
         <div>
           <p className="flex items-center gap-1.5 pr-8 text-xs font-semibold text-primary"><MapPin className="size-3.5" /> {marker.placeName ?? "Selected place"}</p>
-          <p className="mt-2 text-sm font-medium">{posts.length ? `${posts.length} ${posts.length === 1 ? "thought" : "thoughts"} pinned here` : "No thoughts pinned here yet"}</p>
         </div>
-        {posts.length > 0 && <PostClusterList posts={posts} limit={2} onSelect={onViewGroup} />}
-        <div className="grid grid-cols-2 gap-2">
-          <Button size="sm" variant="outline" className="rounded-xl" onClick={onCreatePost}><Plus /> Leave thought</Button>
-          <Button size="sm" className="rounded-xl" onClick={onViewGroup} disabled={!posts.length}>View details</Button>
-        </div>
+
+        {posts.length === 1 ? (
+          /* Single post — show directly, click to open detail */
+          <button
+            type="button"
+            className="w-full rounded-xl bg-muted/50 p-3 text-left transition hover:bg-muted"
+            onClick={() => onSelectPost?.(posts[0]!)}
+          >
+            <p className="text-sm font-semibold">{posts[0]!.title}</p>
+            <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{posts[0]!.text}</p>
+            <p className="mt-1.5 text-[10px] text-muted-foreground">{relativeTime(posts[0]!.createdAt)}</p>
+          </button>
+        ) : posts.length > 1 ? (
+          /* Multiple posts — cluster list + view details */
+          <>
+            <p className="text-sm font-medium">{posts.length} thoughts pinned here</p>
+            <PostClusterList posts={posts} limit={2} onSelect={onViewGroup} />
+            <Button size="sm" className="w-full rounded-xl" onClick={onViewGroup}>View all</Button>
+          </>
+        ) : (
+          /* No posts */
+          <p className="text-sm text-muted-foreground">No thoughts pinned here yet.</p>
+        )}
       </div>
       <span className="absolute bottom-[-7px] left-1/2 size-4 -translate-x-1/2 rotate-45 border-b border-r bg-background" />
       </motion.div>

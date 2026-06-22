@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import MapCanvas, { type MapViewport } from "./MapCanvas";
 import CreatePostModal from "@/features/posts/components/CreatePostModal";
+import { NavCreatePostModal } from "@/features/posts/components/NavCreatePostModal";
 import PostDetailModal from "@/features/posts/components/PostDetailModal";
 import { PostDiscoveryModal } from "@/features/posts/components/PostDiscoveryModal";
 import { GroupedPostsModal } from "@/features/posts/components/GroupedPostsModal";
@@ -55,6 +56,7 @@ export function MapExperience() {
   const [selectedPost, setSelectedPost] = useState<AnonymousPost | null>(null);
   const [flyTo, setFlyTo] = useState<FlyToTarget>(null);
   const [createOpen, setCreateOpen] = useState(false);
+  const [navCreateOpen, setNavCreateOpen] = useState(false);
   const [discoveryOpen, setDiscoveryOpen] = useState(false);
   const [groupOpen, setGroupOpen] = useState(false);
   const [viewport, setViewport] = useState<MapViewport>(INITIAL_VIEWPORT);
@@ -171,16 +173,63 @@ export function MapExperience() {
     <main className="relative h-dvh w-screen overflow-hidden bg-muted">
       <MapCanvas
         markers={mapMarkers}
-        selectedMarkerId={selectedPost ? null : selectedMarkerId}
+        selectedMarkerId={selectedPost || groupOpen ? null : selectedMarkerId}
         onMarkerAdd={addMarker}
-        onMarkerSelect={setSelectedMarkerId}
+        onMarkerSelect={(id) => {
+          if (!id) { setSelectedMarkerId(null); return; }
+          // Desktop: skip popup for pins with posts
+          if (window.innerWidth >= 1024) {
+            const marker = publicMarkers.find((m) => m.id === id);
+            if (marker && marker.posts.length === 1) {
+              setSelectedPost(marker.posts[0]!);
+              return;
+            }
+            if (marker && marker.posts.length > 1) {
+              setSelectedMarkerId(id);
+              setGroupOpen(true);
+              return;
+            }
+          }
+          setSelectedMarkerId(id);
+        }}
         onCreatePost={() => setCreateOpen(true)}
         onViewGroup={() => setGroupOpen(true)}
+        onSelectPost={(post) => { setSelectedMarkerId(null); setSelectedPost(post); }}
         onViewportChange={setViewport}
         flyTo={flyTo}
       />
-      <div className="pointer-events-none absolute inset-x-0 top-0 z-40 p-2.5 sm:p-5">
-        <div className="pointer-events-auto flex min-w-0 items-center gap-2 pr-[3.25rem] sm:max-w-xl sm:pr-0">
+      {/* Desktop navbar — unified top bar (lg+ only) */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-40 hidden p-4 lg:block">
+        <nav className="pointer-events-auto mx-auto flex max-w-7xl items-center gap-3 rounded-full border border-black/10 bg-background/95 px-4 py-2.5 shadow-2xl shadow-black/10 backdrop-blur-xl">
+          <a href="/" className="flex size-10 shrink-0 items-center justify-center rounded-xl">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/brand/sonder-logo.png" alt="Sonder" className="size-7 rounded-full object-cover" />
+          </a>
+          <div className="min-w-0 flex-1">
+            <MapSearchBar onPlaceSelect={selectPlace} center={viewport.center} />
+          </div>
+          <ThemeSettingsMenu />
+          <Button
+            variant="secondary"
+            size="icon"
+            className="size-10 rounded-full border border-black/10"
+            onClick={locate}
+            aria-label="Use my location"
+          >
+            <LocateFixed className="size-4" />
+          </Button>
+          <Button
+            className="rounded-full px-5"
+            onClick={() => setNavCreateOpen(true)}
+          >
+            <Plus className="size-4" /> Create a post
+          </Button>
+        </nav>
+      </div>
+
+      {/* Mobile floating controls (below lg) */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-40 p-2.5 lg:hidden">
+        <div className="pointer-events-auto flex min-w-0 items-center gap-2 pr-13 sm:max-w-xl sm:pr-0">
           <div className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-white/70 bg-background/95 text-primary shadow-lg backdrop-blur-xl sm:size-11 sm:rounded-2xl">
             <Compass className="size-5" />
           </div>
@@ -227,9 +276,9 @@ export function MapExperience() {
                   {selectedMarker.placeName ?? "Selected place"}
                 </p>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  {publicSelectedMarker
+                  {publicSelectedMarker && publicSelectedMarker.posts.length > 0
                     ? `${publicSelectedMarker.posts.length} thoughts pinned here`
-                    : "Leave a thought to create this pin."}
+                    : "No thoughts here yet."}
                 </p>
               </div>
               <Button
@@ -240,31 +289,36 @@ export function MapExperience() {
                 <X />
               </Button>
             </div>
-            {publicSelectedMarker && (
-              <div className="mt-3">
-                <PostClusterList
-                  posts={publicSelectedMarker.posts}
-                  limit={2}
-                  onSelect={() => setGroupOpen(true)}
-                />
+            {publicSelectedMarker && publicSelectedMarker.posts.length === 1 && (
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <Button variant="outline" className="rounded-xl" onClick={() => setCreateOpen(true)}>
+                  <Plus /> Add thought
+                </Button>
+                <Button className="rounded-xl" onClick={() => { setSelectedPost(publicSelectedMarker.posts[0]!); setSelectedMarkerId(null); }}>
+                  View thought
+                </Button>
               </div>
             )}
-            <div className="mt-3 grid grid-cols-2 gap-2">
-              <Button
-                variant="outline"
-                className="rounded-xl"
-                onClick={() => setCreateOpen(true)}
-              >
-                <Plus /> Leave thought
+            {publicSelectedMarker && publicSelectedMarker.posts.length > 1 && (
+              <>
+                <div className="mt-3">
+                  <PostClusterList posts={publicSelectedMarker.posts} limit={2} onSelect={() => setGroupOpen(true)} />
+                </div>
+                <div className="mt-2 grid grid-cols-2 gap-2">
+                  <Button variant="outline" className="rounded-xl" onClick={() => setCreateOpen(true)}>
+                    <Plus /> Add thought
+                  </Button>
+                  <Button className="rounded-xl" onClick={() => setGroupOpen(true)}>
+                    View all
+                  </Button>
+                </div>
+              </>
+            )}
+            {(!publicSelectedMarker || publicSelectedMarker.posts.length === 0) && (
+              <Button className="mt-3 w-full rounded-xl" onClick={() => setCreateOpen(true)}>
+                <Plus /> Create a post
               </Button>
-              <Button
-                className="rounded-xl"
-                onClick={() => setGroupOpen(true)}
-                disabled={!publicSelectedMarker}
-              >
-                View details
-              </Button>
-            </div>
+            )}
           </div>
         ) : (
           <div className="flex justify-end">
@@ -307,6 +361,24 @@ export function MapExperience() {
         <PostDetailModal
           post={selectedPost}
           onClose={() => setSelectedPost(null)}
+        />
+      )}
+      {navCreateOpen && (
+        <NavCreatePostModal
+          onClose={() => setNavCreateOpen(false)}
+          onSubmit={async (marker, draft) => {
+            // Use same logic as addPost but with the provided marker
+            const result = await createSupabasePost(marker, draft);
+            if (!result) throw new Error("Unable to submit thought.");
+            const post = { ...createPost(marker, draft), id: result.postId };
+            trackMyPost(result.postId);
+            setMarkers((current) =>
+              groupMarkersByLocation([
+                ...current,
+                { ...marker, posts: [post] },
+              ]),
+            );
+          }}
         />
       )}
     </main>

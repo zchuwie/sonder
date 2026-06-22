@@ -22,13 +22,6 @@ export async function GET() {
     (data ?? []) as PostRow[],
   );
 
-  // Replace signed URLs with proxy paths so client doesn't see raw storage URLs
-  for (const marker of markers) {
-    for (const post of marker.posts) {
-      if (post.imageUrl) post.imageUrl = `/api/post-image/${post.id}`;
-    }
-  }
-
   return NextResponse.json(markers, {
     headers: { "Cache-Control": "public, max-age=60" },
   });

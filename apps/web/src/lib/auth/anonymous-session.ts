@@ -2,7 +2,6 @@
 
 import { createClient } from "@/lib/supabase/browser";
 
-// ponytail: cache the session in-memory so repeated calls don't hit auth on every action.
 let cachedSession: Awaited<ReturnType<typeof ensureAnonymousSession>> = null;
 
 export async function ensureAnonymousSession() {

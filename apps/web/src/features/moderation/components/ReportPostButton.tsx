@@ -35,7 +35,11 @@ export function ReportPostButton({
   iconOnly?: boolean;
 }) {
   const [open, setOpen] = useState(false);
-  const [state, setState] = useState<"idle" | "loading" | "reported">("idle");
+  const [state, setState] = useState<"idle" | "loading" | "reported">(() => {
+    if (typeof window === "undefined") return "idle";
+    const reported = JSON.parse(localStorage.getItem("sonder:reported-posts") ?? "[]") as string[];
+    return reported.includes(postId) ? "reported" : "idle";
+  });
   const [reason, setReason] = useState("");
   const [details, setDetails] = useState("");
   const [error, setError] = useState("");
@@ -47,6 +51,9 @@ export function ReportPostButton({
     try {
       await reportRemotePost(postId, reason, details.trim() || undefined);
       setState("reported");
+      // ponytail: persist reported state in localStorage
+      const reported = JSON.parse(localStorage.getItem("sonder:reported-posts") ?? "[]") as string[];
+      if (!reported.includes(postId)) { reported.push(postId); localStorage.setItem("sonder:reported-posts", JSON.stringify(reported)); }
       setOpen(false);
     } catch (cause) {
       const message = await getFunctionErrorMessage(
@@ -55,6 +62,8 @@ export function ReportPostButton({
       );
       if (message === "You have already reported this post.") {
         setState("reported");
+        const reported = JSON.parse(localStorage.getItem("sonder:reported-posts") ?? "[]") as string[];
+        if (!reported.includes(postId)) { reported.push(postId); localStorage.setItem("sonder:reported-posts", JSON.stringify(reported)); }
         setOpen(false);
       } else {
         setState("idle");

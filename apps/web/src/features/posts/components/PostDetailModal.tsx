@@ -37,7 +37,7 @@ export default function PostDetailModal({
     <Dialog open onOpenChange={(open) => !open && onClose()}>
       <DialogContent
         overlayClassName="bg-transparent supports-backdrop-filter:backdrop-blur-none"
-        className="inset-x-2 bottom-2 top-auto flex max-h-[38dvh] w-auto max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-2xl border-black/10 bg-background/96 p-0 shadow-2xl backdrop-blur-xl sm:inset-x-auto sm:bottom-4 sm:right-4 sm:top-4 sm:max-h-none sm:w-[24rem] sm:rounded-3xl lg:w-108"
+        className="inset-x-2 bottom-2 top-auto flex max-h-[55dvh] w-auto max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-2xl border-black/10 bg-background/96 p-0 shadow-2xl backdrop-blur-xl sm:inset-x-auto sm:bottom-4 sm:right-4 sm:top-4 sm:max-h-none sm:w-[24rem] sm:rounded-3xl lg:w-108"
       >
         {/* Image / cover */}
         {post.imageUrl && !flagged ? (
@@ -70,7 +70,7 @@ export default function PostDetailModal({
             </DialogDescription>
           </DialogHeader>
 
-          <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-foreground/80 sm:mt-3 sm:line-clamp-none sm:text-[15px] sm:leading-7">
+          <p className="mt-2 text-sm leading-relaxed text-foreground/80 sm:mt-3 sm:text-[15px] sm:leading-7">
             {flagged ? "This post was flagged for review." : post.text}
           </p>
 

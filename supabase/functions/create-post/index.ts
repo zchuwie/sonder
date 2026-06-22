@@ -8,7 +8,6 @@ import {
   coordinate,
   groupKey,
   optionalString,
-  optionalUuid,
   requiredString,
 } from "../_shared/validation.ts";
 
@@ -27,30 +26,39 @@ Deno.serve(async (req) => {
     const body = requiredString(input.body, "body", 1000);
     const lat = coordinate(input.lat, "lat");
     const lng = coordinate(input.lng, "lng");
-    const uploadId = optionalUuid(input.uploadId, "uploadId");
+    const imagePath = typeof input.imagePath === "string" ? input.imagePath.slice(0, 500) : null;
+    if (imagePath && !imagePath.startsWith(`${user.id}/`)) {
+      return new Response("Forbidden", { status: 403 });
+    }
     const music = validateMusic(input.music);
 
-    const { data, error: insertError } = await createAdminClient()
-      .rpc("create_post_with_upload", {
-        p_title: title,
-        p_body: body,
-        p_lat: lat,
-        p_lng: lng,
-        p_place_name: optionalString(input.placeName, "placeName", 200),
-        p_group_key: groupKey(lat, lng),
-        p_music: music,
-        p_created_by: user.id,
-        p_upload_id: uploadId,
+    const admin = createAdminClient();
+    const { data: post, error: insertError } = await admin
+      .from("posts")
+      .insert({
+        title,
+        body,
+        lat,
+        lng,
+        place_name: optionalString(input.placeName, "placeName", 200),
+        group_key: groupKey(lat, lng),
+        image_path: imagePath,
+        music,
+        status: "pending",
+        created_by: user.id,
       })
+      .select("id, status")
       .single();
-    if (insertError?.message.includes("upload_unavailable")) {
-      throw new AppError(
-        "upload_expired",
-        "Image upload expired. Please upload it again.",
-      );
-    }
     if (insertError) throw insertError;
-    return json({ postId: data.post_id, status: data.post_status }, 201);
+
+    // Log submission event
+    await admin.from("moderation_events").insert({
+      post_id: post.id,
+      action: "submitted",
+      actor_id: user.id,
+    });
+
+    return json({ postId: post.id, status: post.status }, 201);
   } catch (cause) {
     return appError(cause, "Unable to create post.");
   }
