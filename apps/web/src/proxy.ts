@@ -1,7 +1,61 @@
-import type { NextRequest } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 
+// ponytail: in-memory cache with 30s TTL. Ceiling: single-instance only,
+// multi-instance (serverless) each have their own cache. Upgrade: use Edge Config or KV.
+let maintenanceCache: { value: boolean; expires: number } = { value: false, expires: 0 };
+
+async function isMaintenanceMode(): Promise<boolean> {
+  if (Date.now() < maintenanceCache.expires) return maintenanceCache.value;
+
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key =
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !key) return false;
+
+  try {
+    const res = await fetch(
+      `${url}/rest/v1/site_settings?key=eq.maintenance_mode&select=value`,
+      {
+        headers: {
+          apikey: key,
+          Authorization: `Bearer ${key}`,
+        },
+        next: { revalidate: 30 },
+      },
+    );
+    if (!res.ok) return false;
+    const rows = await res.json();
+    const enabled = rows?.[0]?.value === true;
+    maintenanceCache = { value: enabled, expires: Date.now() + 30_000 };
+    return enabled;
+  } catch {
+    return maintenanceCache.value; // fallback to last known state
+  }
+}
+
+const MAINTENANCE_PATH = "/maintenance";
+
 export async function proxy(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  // Never block the maintenance page itself or static assets
+  if (
+    pathname === MAINTENANCE_PATH ||
+    pathname.startsWith("/_next/") ||
+    pathname.startsWith("/favicon") ||
+    /\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js)$/.test(pathname)
+  ) {
+    return updateSession(request);
+  }
+
+  if (await isMaintenanceMode()) {
+    const maintenanceUrl = request.nextUrl.clone();
+    maintenanceUrl.pathname = MAINTENANCE_PATH;
+    return NextResponse.rewrite(maintenanceUrl);
+  }
+
   return updateSession(request);
 }
 
