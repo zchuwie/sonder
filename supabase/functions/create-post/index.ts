@@ -1,9 +1,10 @@
 import { handleOptions } from "../_shared/cors.ts";
-import { appError, json } from "../_shared/responses.ts";
+import { appError, json, error } from "../_shared/responses.ts";
 import { createAdminClient, requireUser } from "../_shared/supabase.ts";
 import { getIpHash } from "../_shared/request-identity.ts";
 import { enforceRateLimits } from "../_shared/rate-limit.ts";
 import { validateMusic } from "../_shared/validators.ts";
+import { verifyTurnstile } from "../_shared/turnstile.ts";
 import {
   coordinate,
   groupKey,
@@ -22,6 +23,14 @@ Deno.serve(async (req) => {
       { key: `create-post:ip:${ipHash}`, limit: 20, windowSeconds: 3600 },
     ]);
     const input = await req.json();
+
+    // Turnstile bot verification
+    const clientIp = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
+    const turnstile = await verifyTurnstile(input.turnstileToken, user.id, clientIp);
+    if (!turnstile.ok) {
+      return error(turnstile.error ?? "Bot verification failed.", 403);
+    }
+
     const title = requiredString(input.title, "title", 50);
     const body = requiredString(input.body, "body", 1000);
     const lat = coordinate(input.lat, "lat");

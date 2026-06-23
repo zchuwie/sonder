@@ -5,6 +5,21 @@ import { useEffect, useRef, useCallback, useState } from "react";
 const SCRIPT_URL = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
 const SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? "1x00000000000000000000AA";
 
+// ponytail: client-side token cache. Once user solves once, we reuse for 10 min.
+// Ceiling: page refresh clears it. That's fine — server also caches per user.
+const TOKEN_TTL_MS = 10 * 60 * 1000;
+let cachedToken: { value: string; expires: number } | null = null;
+
+function getCachedToken(): string | null {
+  if (cachedToken && Date.now() < cachedToken.expires) return cachedToken.value;
+  cachedToken = null;
+  return null;
+}
+
+function setCachedToken(token: string) {
+  cachedToken = { value: token, expires: Date.now() + TOKEN_TTL_MS };
+}
+
 let scriptPromise: Promise<void> | null = null;
 
 function loadScript(): Promise<void> {
@@ -34,25 +49,41 @@ export function TurnstileWidget({
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetId = useRef<string | null>(null);
   const [loadError, setLoadError] = useState(false);
+  const [usedCache, setUsedCache] = useState(false);
+
+  // If we have a cached token, emit it immediately without rendering the widget
+  useEffect(() => {
+    const cached = getCachedToken();
+    if (cached) {
+      onToken(cached);
+      setUsedCache(true);
+    }
+  }, [onToken]);
 
   const render = useCallback(() => {
     if (!containerRef.current || !window.turnstile) return;
-    // Remove previous widget if any
     if (widgetId.current !== null) {
       window.turnstile.remove(widgetId.current);
       widgetId.current = null;
     }
     widgetId.current = window.turnstile.render(containerRef.current, {
       sitekey: SITE_KEY,
-      callback: (token: string) => onToken(token),
+      callback: (token: string) => {
+        setCachedToken(token);
+        onToken(token);
+      },
       "error-callback": () => onError?.(),
-      "expired-callback": () => onToken(""), // treat expired as no token
+      "expired-callback": () => {
+        cachedToken = null;
+        onToken("");
+      },
       theme: "auto",
     });
   }, [onToken, onError]);
 
-  // Load script + render
+  // Load script + render (only if no cached token)
   useEffect(() => {
+    if (usedCache) return;
     let cancelled = false;
     loadScript()
       .then(() => { if (!cancelled) render(); })
@@ -64,12 +95,17 @@ export function TurnstileWidget({
         widgetId.current = null;
       }
     };
-  }, [render]);
+  }, [render, usedCache]);
 
-  // Reset when resetKey changes
+  // Reset when resetKey changes (submission failure)
   useEffect(() => {
-    if (resetKey !== undefined && resetKey > 0 && widgetId.current !== null && window.turnstile) {
-      window.turnstile.reset(widgetId.current);
+    if (resetKey !== undefined && resetKey > 0) {
+      // Invalidate cache on explicit reset
+      cachedToken = null;
+      setUsedCache(false);
+      if (widgetId.current !== null && window.turnstile) {
+        window.turnstile.reset(widgetId.current);
+      }
     }
   }, [resetKey]);
 
@@ -81,10 +117,12 @@ export function TurnstileWidget({
     );
   }
 
+  // Don't show widget if cached token was used
+  if (usedCache) return null;
+
   return <div ref={containerRef} className="my-2 flex justify-center [&>iframe]:rounded-xl" />;
 }
 
-// ponytail: Turnstile types are minimal; extend if Cloudflare adds methods we need.
 declare global {
   interface Window {
     turnstile?: {
