@@ -22,7 +22,7 @@ async function isMaintenanceMode(): Promise<boolean> {
           apikey: key,
           Authorization: `Bearer ${key}`,
         },
-        next: { revalidate: 30 },
+        cache: "no-store",
       },
     );
     if (!res.ok) return false;
