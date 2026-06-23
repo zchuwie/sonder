@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { toast } from "sonner";
 import { MapPin, ShieldCheck } from "lucide-react";
 import maplibregl from "maplibre-gl";
@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { PhotoAttachmentPicker } from "./PhotoAttachmentPicker";
 import { SongSearchPicker } from "./SongSearchPicker";
+import { TurnstileWidget } from "@/components/TurnstileWidget";
 import { MapSearchBar } from "@/features/map/components/MapSearchBar";
 import { reverseGeocode } from "@/features/map/client/reverse-geocode";
 import type { LocationPlaceDTO } from "@/features/map/lib/location-types";
@@ -45,8 +46,11 @@ export function NavCreatePostModal({
   const [music, setMusic] = useState<Music | undefined>();
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  const [turnstileToken, setTurnstileToken] = useState("");
+  const [turnstileReset, setTurnstileReset] = useState(0);
+  const handleToken = useCallback((token: string) => setTurnstileToken(token), []);
 
-  const canSubmit = Boolean(location && title.trim() && text.trim());
+  const canSubmit = Boolean(location && title.trim() && text.trim() && turnstileToken);
 
   // Init map after dialog renders (RAF ensures container is visible)
   useEffect(() => {
@@ -105,7 +109,7 @@ export function NavCreatePostModal({
         placeName: location.placeName,
         posts: [],
       };
-      await onSubmit(marker, { title: title.trim(), text: text.trim(), imageUrl, imageFile, music });
+      await onSubmit(marker, { title: title.trim(), text: text.trim(), imageUrl, imageFile, music, turnstileToken });
       toast.success("Thought submitted for review.");
       onClose();
     } catch (cause) {
@@ -113,6 +117,8 @@ export function NavCreatePostModal({
       setSubmitError(msg);
       toast.error("Something went wrong. Please try again.");
       setSubmitting(false);
+      setTurnstileToken("");
+      setTurnstileReset((n) => n + 1);
     }
   }
 
@@ -177,12 +183,15 @@ export function NavCreatePostModal({
           </div>
         </div>
 
-        <div className="flex items-center gap-2 border-t bg-background/95 px-5 py-3">
-          <p className="flex-1 text-xs text-muted-foreground">Reviewed before publication. Do not include private information, threats, or identifying details.</p>
-          <Button variant="ghost" className="rounded-xl" onClick={onClose} disabled={submitting}>Cancel</Button>
-          <Button className="rounded-xl px-5" disabled={!canSubmit || submitting} onClick={() => void submit()}>
-            {submitting ? "Submitting..." : "Submit for review"}
-          </Button>
+        <div className="flex flex-col items-center gap-2 border-t bg-background/95 px-5 py-3">
+          <TurnstileWidget onToken={handleToken} resetKey={turnstileReset} />
+          <div className="flex w-full items-center gap-2">
+            <p className="flex-1 text-xs text-muted-foreground">Reviewed before publication. Do not include private information, threats, or identifying details.</p>
+            <Button variant="ghost" className="rounded-xl" onClick={onClose} disabled={submitting}>Cancel</Button>
+            <Button className="rounded-xl px-5" disabled={!canSubmit || submitting} onClick={() => void submit()}>
+              {submitting ? "Submitting..." : "Submit for review"}
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

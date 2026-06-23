@@ -37,6 +37,7 @@ export async function createSupabasePost(marker: MarkerData, draft: PostDraft) {
       placeName: marker.placeName,
       imagePath,
       music: draft.music,
+      turnstileToken: draft.turnstileToken,
     },
   });
   if (error) {

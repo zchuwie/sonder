@@ -44,6 +44,7 @@ export type PostDraft = {
   imageUrl?: string;
   imageFile?: File;
   music?: Music;
+  turnstileToken?: string;
 };
 
 export type MarkerData = {

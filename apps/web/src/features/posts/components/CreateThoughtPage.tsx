@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { MapPin } from "lucide-react";
 import { toast } from "sonner";
@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { PhotoAttachmentPicker } from "./PhotoAttachmentPicker";
 import { SongSearchPicker } from "./SongSearchPicker";
+import { TurnstileWidget } from "@/components/TurnstileWidget";
 import { CreateMapPicker } from "@/features/map/components/CreateMapPicker";
 import { createSupabasePost } from "@/features/posts/client/use-create-post";
 import { getFunctionErrorMessage } from "@/lib/supabase/function-error";
@@ -24,8 +25,11 @@ export function CreateThoughtPage() {
   const [music, setMusic] = useState<Music | undefined>();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [turnstileToken, setTurnstileToken] = useState("");
+  const [turnstileReset, setTurnstileReset] = useState(0);
+  const handleToken = useCallback((token: string) => setTurnstileToken(token), []);
 
-  const canSubmit = Boolean(location && title.trim() && body.trim());
+  const canSubmit = Boolean(location && title.trim() && body.trim() && turnstileToken);
 
   async function submit() {
     if (!canSubmit || submitting || !location) return;
@@ -33,13 +37,15 @@ export function CreateThoughtPage() {
     setError("");
     try {
       const marker = { id: "create", lat: location.lat, lng: location.lng, placeName: location.placeName, posts: [] };
-      await createSupabasePost(marker, { title: title.trim(), text: body.trim(), imageUrl, imageFile, music });
+      await createSupabasePost(marker, { title: title.trim(), text: body.trim(), imageUrl, imageFile, music, turnstileToken });
       toast.success("Thought submitted for review.");
       router.push("/map");
     } catch (cause) {
       const msg = await getFunctionErrorMessage(cause, "Unable to submit. Please try again.");
       setError(msg);
       toast.error("Something went wrong.");
+      setTurnstileToken("");
+      setTurnstileReset((n) => n + 1);
     } finally {
       setSubmitting(false);
     }
@@ -101,6 +107,8 @@ export function CreateThoughtPage() {
           </section>
 
           {error && <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}
+
+          <TurnstileWidget onToken={handleToken} resetKey={turnstileReset} />
 
           <Button
             className="h-12 w-full rounded-xl text-base"

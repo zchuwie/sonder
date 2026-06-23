@@ -19,10 +19,39 @@ const manrope = Manrope({
   display: "swap",
 });
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl || "http://localhost:3000"),
   title: "Sonder",
   description:
     "Anonymous thoughts, memories, photos, and songs pinned to places.",
+  openGraph: {
+    title: "Sonder",
+    description:
+      "Anonymous thoughts, memories, photos, and songs pinned to places.",
+    siteName: "Sonder",
+    type: "website",
+    url: siteUrl,
+    images: [
+      {
+        url: "/brand/sonder-logo.png",
+        alt: "Sonder logo",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Sonder",
+    description:
+      "Anonymous thoughts, memories, photos, and songs pinned to places.",
+    images: [
+      {
+        url: "/brand/sonder-wordmark.png",
+        alt: "Sonder wordmark",
+      },
+    ],
+  },
 };
 
 export default function RootLayout({

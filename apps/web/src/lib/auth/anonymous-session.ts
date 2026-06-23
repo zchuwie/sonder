@@ -1,8 +1,9 @@
 "use client";
 
+import type { Session } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/browser";
 
-let cachedSession: Awaited<ReturnType<typeof ensureAnonymousSession>> = null;
+let cachedSession: Session | null = null;
 
 export async function ensureAnonymousSession() {
   if (cachedSession) return cachedSession;/*  */

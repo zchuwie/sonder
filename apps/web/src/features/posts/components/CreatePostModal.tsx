@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { toast } from "sonner";
 import { MapPin } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -17,6 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { MiniMapPreview } from "@/features/map/components/MiniMapPreview";
 import { PhotoAttachmentPicker } from "./PhotoAttachmentPicker";
 import { SongSearchPicker } from "./SongSearchPicker";
+import { TurnstileWidget } from "@/components/TurnstileWidget";
 import type { MarkerData, PostDraft } from "@/features/posts/lib/post-types";
 import { usePostDraftStore } from "@/features/posts/store/use-post-draft-store";
 
@@ -31,6 +32,9 @@ export default function CreatePostModal({
 }) {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  const [turnstileToken, setTurnstileToken] = useState("");
+  const [turnstileReset, setTurnstileReset] = useState(0);
+  const handleToken = useCallback((token: string) => setTurnstileToken(token), []);
   const title = usePostDraftStore((state) => state.title);
   const text = usePostDraftStore((state) => state.text);
   const imageUrl = usePostDraftStore((state) => state.imageUrl);
@@ -50,13 +54,13 @@ export default function CreatePostModal({
     prepareForLocation(marker);
   }, [marker, prepareForLocation]);
 
-  const canSubmit = Boolean(title.trim() && text.trim());
+  const canSubmit = Boolean(title.trim() && text.trim() && turnstileToken);
   const submit = async () => {
     if (!canSubmit || submitting) return;
     setSubmitting(true);
     setSubmitError("");
     try {
-      await onSubmit(getDraft());
+      await onSubmit({ ...getDraft(), turnstileToken });
       resetDraft();
       toast.success("Thought submitted for review.");
       onClose();
@@ -65,6 +69,8 @@ export default function CreatePostModal({
       setSubmitError(msg);
       toast.error("Something went wrong. Please try again.");
       setSubmitting(false);
+      setTurnstileToken("");
+      setTurnstileReset((n) => n + 1);
     }
   };
 
@@ -144,24 +150,27 @@ export default function CreatePostModal({
           </div>
         </div>
 
-        <div className="flex items-center justify-end gap-2 border-t bg-background/95 px-3 py-2 pb-[max(.5rem,env(safe-area-inset-bottom))] sm:px-5 sm:py-2.5">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="rounded-xl text-xs"
-            onClick={onClose}
-            disabled={submitting}
-          >
-            Cancel
-          </Button>
-          <Button
-            size="sm"
-            className="rounded-xl px-4 text-xs"
-            disabled={!canSubmit || submitting}
-            onClick={() => void submit()}
-          >
-            {submitting ? "Submitting..." : "Submit for review"}
-          </Button>
+        <div className="flex flex-col items-center gap-2 border-t bg-background/95 px-3 py-2 pb-[max(.5rem,env(safe-area-inset-bottom))] sm:px-5 sm:py-2.5">
+          <TurnstileWidget onToken={handleToken} resetKey={turnstileReset} />
+          <div className="flex w-full items-center justify-end gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="rounded-xl text-xs"
+              onClick={onClose}
+              disabled={submitting}
+            >
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              className="rounded-xl px-4 text-xs"
+              disabled={!canSubmit || submitting}
+              onClick={() => void submit()}
+            >
+              {submitting ? "Submitting..." : "Submit for review"}
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
