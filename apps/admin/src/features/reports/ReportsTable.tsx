@@ -59,6 +59,26 @@ export function ReportsTable() {
           ? a.reason.localeCompare(b.reason)
           : b.created_at.localeCompare(a.created_at)),
   [counts, date, posts, query, reasonFilter, reports, sort, status]);
+
+  // Group filtered reports by post — one row per post in the table
+  const grouped = useMemo(() => {
+    const map = new Map<string, { postId: string; reports: typeof visible; latestAt: string; openCount: number }>();
+    for (const r of visible) {
+      const entry = map.get(r.post_id);
+      if (entry) {
+        entry.reports.push(r);
+        if (r.created_at > entry.latestAt) entry.latestAt = r.created_at;
+        if (r.status === "open") entry.openCount++;
+      } else {
+        map.set(r.post_id, { postId: r.post_id, reports: [r], latestAt: r.created_at, openCount: r.status === "open" ? 1 : 0 });
+      }
+    }
+    let entries = [...map.values()];
+    if (sort === "count") entries.sort((a, b) => b.reports.length - a.reports.length);
+    else if (sort === "oldest") entries.sort((a, b) => a.latestAt.localeCompare(b.latestAt));
+    else entries.sort((a, b) => b.latestAt.localeCompare(a.latestAt));
+    return entries;
+  }, [visible, sort]);
   const selectedPost = selected ? posts.find((post) => post.id === selected.post_id) ?? null : null;
 
   async function archive() {
