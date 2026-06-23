@@ -10,7 +10,7 @@ import {
 } from "react";
 import { groupMarkersByLocation } from "@/features/posts/lib/post-utils";
 import type { MarkerData } from "@/features/posts/lib/post-types";
-import { usePosts } from "@/features/posts/client/use-posts";
+import { usePosts, type Bounds } from "@/features/posts/client/use-posts";
 
 const STORAGE_KEY = "sonder:moderation-markers";
 const MY_POSTS_KEY = "sonder:my-post-ids";
@@ -20,7 +20,8 @@ type ModerationContextValue = {
   setMarkers: React.Dispatch<React.SetStateAction<MarkerData[]>>;
   myPostIds: Set<string>;
   trackMyPost: (postId: string) => void;
-  refreshPosts: () => Promise<MarkerData[] | null>;
+  refreshPosts: (bounds?: Bounds) => Promise<MarkerData[] | null>;
+  onViewportChange: (bounds: Bounds) => void;
 };
 
 const ModerationContext = createContext<ModerationContextValue | null>(null);
@@ -29,7 +30,7 @@ export function ModerationProvider({ children }: { children: ReactNode }) {
   const [markers, setMarkers] = useState<MarkerData[]>([]);
   const [myPostIds, setMyPostIds] = useState<Set<string>>(new Set());
   const [hydrated, setHydrated] = useState(false);
-  const { remoteMarkers, refresh: refreshPosts } = usePosts();
+  const { remoteMarkers, refresh: refreshPosts, debouncedRefresh } = usePosts();
 
   useEffect(() => {
     try {
@@ -83,8 +84,15 @@ export function ModerationProvider({ children }: { children: ReactNode }) {
     }
   }, [remoteMarkers]);
 
+  const onViewportChange = useCallback(
+    (bounds: Bounds) => {
+      debouncedRefresh(bounds);
+    },
+    [debouncedRefresh],
+  );
+
   return (
-    <ModerationContext.Provider value={{ markers, setMarkers, myPostIds, trackMyPost, refreshPosts }}>
+    <ModerationContext.Provider value={{ markers, setMarkers, myPostIds, trackMyPost, refreshPosts, onViewportChange }}>
       {children}
     </ModerationContext.Provider>
   );

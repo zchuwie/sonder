@@ -51,7 +51,7 @@ const INITIAL_VIEWPORT: MapViewport = {
 };
 
 export function MapExperience() {
-  const { markers, setMarkers, trackMyPost, refreshPosts } = useModeration();
+  const { markers, setMarkers, trackMyPost, refreshPosts, onViewportChange: onBoundsChange } = useModeration();
   useActivityPulse(refreshPosts);
   const [selectedMarkerId, setSelectedMarkerId] = useState<string | null>(null);
   const [selectedPost, setSelectedPost] = useState<AnonymousPost | null>(null);
@@ -196,7 +196,7 @@ export function MapExperience() {
         onCreatePost={() => setCreateOpen(true)}
         onViewGroup={() => setGroupOpen(true)}
         onSelectPost={(post) => { setSelectedMarkerId(null); setSelectedPost(post); }}
-        onViewportChange={setViewport}
+        onViewportChange={(vp) => { setViewport(vp); onBoundsChange(vp.bounds); }}
         flyTo={flyTo}
       />
       {/* Desktop navbar — unified top bar (lg+ only) */}
