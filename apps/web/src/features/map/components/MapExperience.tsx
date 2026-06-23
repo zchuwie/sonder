@@ -37,6 +37,7 @@ import { createSupabasePost } from "@/features/posts/client/use-create-post";
 import { getFunctionErrorMessage } from "@/lib/supabase/function-error";
 import { reverseGeocode } from "@/features/map/client/reverse-geocode";
 import { useActivityPulse } from "@/features/activity/use-activity-pulse";
+import Link from "next/link";
 
 type FlyToTarget = {
   lat: number;
@@ -230,9 +231,9 @@ export function MapExperience() {
       {/* Mobile floating controls (below lg) */}
       <div className="pointer-events-none absolute inset-x-0 top-0 z-40 p-2.5 lg:hidden">
         <div className="pointer-events-auto flex min-w-0 items-center gap-2 pr-13 sm:max-w-xl sm:pr-0">
-          <div className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-white/70 bg-background/95 text-primary shadow-lg backdrop-blur-xl sm:size-11 sm:rounded-2xl">
-            <Compass className="size-5" />
-          </div>
+          <Link href="/" className="flex size-10 shrink-0 items-center justify-center rounded-xl">
+            <img src="/brand/sonder-logo.png" alt="Sonder" className="size-7 rounded-full object-cover" />
+          </Link>
           <MapSearchBar onPlaceSelect={selectPlace} center={viewport.center} />
         </div>
         <div className="pointer-events-none absolute right-2.5 top-2.5 z-40 flex flex-col items-end gap-2 sm:right-5 sm:top-5 sm:gap-3">
@@ -302,7 +303,7 @@ export function MapExperience() {
             {publicSelectedMarker && publicSelectedMarker.posts.length > 1 && (
               <>
                 <div className="mt-3">
-                  <PostClusterList posts={publicSelectedMarker.posts} limit={2} onSelect={() => setGroupOpen(true)} />
+                  <PostClusterList posts={publicSelectedMarker.posts} limit={2} onSelect={(post) => { setSelectedPost(post); setSelectedMarkerId(null); }} />
                 </div>
                 <div className="mt-2 grid grid-cols-2 gap-2">
                   <Button variant="outline" className="rounded-xl" onClick={() => setCreateOpen(true)}>

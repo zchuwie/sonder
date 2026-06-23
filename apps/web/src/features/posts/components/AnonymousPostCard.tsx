@@ -1,6 +1,6 @@
 "use client";
 
-import { Clock3, Leaf, ShieldCheck, TriangleAlert } from "lucide-react";
+import { Clock3, Leaf, Music2, ShieldCheck, TriangleAlert } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -66,6 +66,12 @@ export function AnonymousPostCard({
           <p className={cn("mt-2 line-clamp-2 text-sm leading-6 text-muted-foreground", flagged && "text-muted-foreground")}>
             {flagged ? "This post was flagged for review." : post.text || "An anonymous moment was left here."}
           </p>
+          {post.music && !flagged && (
+            <p className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Music2 className="size-3 shrink-0" />
+              <span className="truncate">{post.music.title} — {post.music.artist}</span>
+            </p>
+          )}
         </div>
         <div className="mt-auto flex items-center justify-between gap-3 border-t border-primary/10 pt-3 text-xs text-muted-foreground sm:pt-4">
           <span className="truncate">{post.placeName ?? "Pinned nearby"}</span>

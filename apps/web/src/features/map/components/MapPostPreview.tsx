@@ -61,12 +61,14 @@ export function MapPostPreview({
           /* Multiple posts — cluster list + view details */
           <>
             <p className="text-sm font-medium">{posts.length} thoughts pinned here</p>
-            <PostClusterList posts={posts} limit={2} onSelect={onViewGroup} />
+            <PostClusterList posts={posts} limit={2} onSelect={(post) => onSelectPost?.(post)} />
             <Button size="sm" className="w-full rounded-xl" onClick={onViewGroup}>View all</Button>
           </>
         ) : (
           /* No posts */
-          <p className="text-sm text-muted-foreground">No thoughts pinned here yet.</p>
+          <>
+            <p className="text-sm text-muted-foreground">No thoughts pinned here yet.</p>
+          </>
         )}
       </div>
       <span className="absolute bottom-[-7px] left-1/2 size-4 -translate-x-1/2 rotate-45 border-b border-r bg-background" />

@@ -403,7 +403,7 @@ export default function MapCanvas({
     if (!map.current) return;
 
     const searchPins = markers.filter(
-      (m) => m.source === "search" && m.posts.length > 0,
+      (m) => m.source === "search",
     );
     const currentIds = new Set(searchMarkersRef.current.keys());
     const newIds = new Set(searchPins.map((m) => m.id));

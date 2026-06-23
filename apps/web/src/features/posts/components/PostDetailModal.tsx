@@ -34,10 +34,10 @@ export default function PostDetailModal({
   const flagged = post.moderationStatus === "flagged";
 
   return (
-    <Dialog open onOpenChange={(open) => !open && onClose()}>
+    <Dialog open modal={false} onOpenChange={(open) => !open && onClose()}>
       <DialogContent
-        overlayClassName="bg-transparent supports-backdrop-filter:backdrop-blur-none"
-        className="inset-x-2 bottom-2 top-auto flex max-h-[55dvh] w-auto max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-2xl border-black/10 bg-background/96 p-0 shadow-2xl backdrop-blur-xl sm:inset-x-auto sm:bottom-4 sm:right-4 sm:top-4 sm:max-h-none sm:w-[24rem] sm:rounded-3xl lg:w-108"
+        overlayClassName="bg-transparent pointer-events-none supports-backdrop-filter:backdrop-blur-none"
+        className="pointer-events-auto inset-x-2 bottom-2 top-auto flex max-h-[55dvh] w-auto max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-2xl border-black/10 bg-background/96 p-0 shadow-2xl backdrop-blur-xl sm:inset-x-auto sm:bottom-4 sm:right-4 sm:top-4 sm:max-h-none sm:w-[24rem] sm:rounded-3xl lg:w-108"
       >
         {/* Image / cover */}
         {post.imageUrl && !flagged ? (
