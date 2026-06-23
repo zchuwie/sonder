@@ -148,7 +148,7 @@ export function LandingPage() {
               <Music2 />
             </div>
             <h2 className="mt-16 max-w-lg font-serif text-5xl leading-[1.04] tracking-[-0.04em] sm:text-6xl">
-              Add a song when words are not enough.
+              Add a song, or even photos when words are not enough.
             </h2>
             <p className="mt-6 max-w-md text-sm leading-7 text-[#657067]">
               Search for a track, attach it to a thought, and let the place
