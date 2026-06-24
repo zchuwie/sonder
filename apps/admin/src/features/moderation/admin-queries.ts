@@ -1,9 +1,8 @@
 "use client";
 
 import { createClient } from "@/lib/supabase/browser";
+import type { DateRange } from "@/lib/admin-list-utils";
 import type { AuditRow, PostRow, ReportRow } from "./types";
-
-type DateRange = "all" | "today" | "7d" | "30d";
 type PostListOptions = {
   page?: number;
   pageSize?: number;
@@ -37,7 +36,7 @@ function rangeFor(page = 1, pageSize = 25) {
 }
 
 function since(range: DateRange = "all") {
-  if (range === "all") return "";
+  if (range === "all" || range === "custom") return "";
   const date = new Date();
   if (range === "today") date.setHours(0, 0, 0, 0);
   else date.setDate(date.getDate() - (range === "7d" ? 7 : 30));
