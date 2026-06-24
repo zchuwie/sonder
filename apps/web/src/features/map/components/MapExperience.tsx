@@ -178,8 +178,8 @@ export function MapExperience() {
         onMarkerAdd={addMarker}
         onMarkerSelect={(id) => {
           if (!id) { setSelectedMarkerId(null); return; }
-          // Desktop: skip popup for pins with posts
-          if (window.innerWidth >= 1024) {
+          // Desktop/tablet: skip popup for pins with posts
+          if (window.innerWidth >= 768) {
             const marker = publicMarkers.find((m) => m.id === id);
             if (marker && marker.posts.length === 1) {
               setSelectedPost(marker.posts[0]!);
@@ -199,8 +199,8 @@ export function MapExperience() {
         onViewportChange={(vp) => { setViewport(vp); onBoundsChange(vp.bounds); }}
         flyTo={flyTo}
       />
-      {/* Desktop navbar — unified top bar (lg+ only) */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 z-40 hidden p-4 lg:block">
+      {/* Desktop navbar — unified top bar (md+) */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-40 hidden p-4 md:block">
         <nav className="pointer-events-auto mx-auto flex max-w-7xl items-center gap-3 rounded-full border border-black/10 bg-background/95 px-4 py-2.5 shadow-2xl shadow-black/10 backdrop-blur-xl">
           <a href="/" className="flex size-10 shrink-0 items-center justify-center rounded-xl">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -228,8 +228,8 @@ export function MapExperience() {
         </nav>
       </div>
 
-      {/* Mobile floating controls (below lg) */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 z-40 p-2.5 lg:hidden">
+      {/* Mobile floating controls (below md) */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-40 p-2.5 md:hidden">
         <div className="pointer-events-auto flex min-w-0 items-center gap-2 pr-13 sm:max-w-xl sm:pr-0">
           <Link href="/" className="flex size-10 shrink-0 items-center justify-center rounded-xl">
             <img src="/brand/sonder-logo.png" alt="Sonder" className="size-7 rounded-full object-cover" />

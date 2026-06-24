@@ -335,29 +335,10 @@ export default function MapCanvas({
       });
     });
 
-    // Right-click → add pin (mobile/tablet only, desktop uses navbar modal)
+    // Right-click → add pin (mobile only, tablet+ uses navbar)
     map.current.on("contextmenu", (e) => {
       e.preventDefault();
-      onMarkerAddRef.current({
-        id: crypto.randomUUID?.() ?? `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`,
-        lat: e.lngLat.lat,
-        lng: e.lngLat.lng,
-        posts: [],
-      });
-    });
-
-    // Click empty area → add pin (tablet + desktop, ≥640px)
-    map.current.on("click", (e) => {
-      if (window.innerWidth < 640) return; // mobile uses long-press
-      if (!map.current) return;
-      // Don't add pin if clicking on existing features
-      const features = map.current.queryRenderedFeatures(e.point, {
-        layers: ["unclustered-point", "clusters"],
-      });
-      if (features.length > 0) return;
-      // Check if click hit a search marker element
-      const target = e.originalEvent.target as HTMLElement | null;
-      if (target?.closest?.(".sonder-pin-marker")) return;
+      if (window.innerWidth >= 768) return;
 
       onMarkerAddRef.current({
         id: crypto.randomUUID?.() ?? `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`,
