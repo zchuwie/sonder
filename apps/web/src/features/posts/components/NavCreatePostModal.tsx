@@ -50,8 +50,6 @@ export function NavCreatePostModal({
   const [turnstileReset, setTurnstileReset] = useState(0);
   const handleToken = useCallback((token: string) => setTurnstileToken(token), []);
 
-  const canSubmit = Boolean(location && title.trim() && text.trim() && turnstileToken);
-
   // Init map after dialog renders (RAF ensures container is visible)
   useEffect(() => {
     const frame = requestAnimationFrame(() => {
@@ -98,7 +96,9 @@ export function NavCreatePostModal({
   }
 
   async function submit() {
-    if (!canSubmit || submitting || !location) return;
+    if (!turnstileToken || submitting) return;
+    if (!location) { toast.error("Pin a location on the map first."); return; }
+    if (!title.trim()) { toast.error("Give your thought a title."); return; }
     setSubmitting(true);
     setSubmitError("");
     try {
@@ -160,12 +160,15 @@ export function NavCreatePostModal({
             </div>
             <div className="space-y-4">
               <div>
-                <label htmlFor="nav-title" className="mb-1.5 block text-sm font-medium">Title <span className="text-primary">*</span></label>
-                <Input id="nav-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Give this thought a short title" maxLength={50} className="h-10 rounded-2xl bg-muted/25 px-4" />
+                <div className="mb-1.5 flex items-center justify-between">
+                  <label htmlFor="nav-title" className="text-sm font-medium">Title <span className="text-primary">*</span></label>
+                  <span className="text-[10px] text-muted-foreground">{title.length}/75</span>
+                </div>
+                <Input id="nav-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Give this thought a short title" maxLength={75} className="h-10 rounded-2xl bg-muted/25 px-4" />
               </div>
               <div>
                 <div className="mb-1.5 flex items-center justify-between">
-                  <label htmlFor="nav-thought" className="text-sm font-medium">Your thought <span className="text-primary">*</span></label>
+                  <label htmlFor="nav-thought" className="text-sm font-medium">Your thought <span className="font-normal text-muted-foreground">(optional)</span></label>
                   <span className="text-[10px] text-muted-foreground">{text.length}/500</span>
                 </div>
                 <Textarea id="nav-thought" value={text} onChange={(e) => setText(e.target.value)} placeholder="A memory, confession, or quiet thought..." maxLength={500} rows={4} className="rounded-2xl bg-muted/25 px-4 py-3 leading-6" />
@@ -188,7 +191,7 @@ export function NavCreatePostModal({
           <div className="flex w-full items-center gap-2">
             <p className="flex-1 text-xs text-muted-foreground">Reviewed before publication. Do not include private information, threats, or identifying details.</p>
             <Button variant="ghost" className="rounded-xl" onClick={onClose} disabled={submitting}>Cancel</Button>
-            <Button className="rounded-xl px-5" disabled={!canSubmit || submitting} onClick={() => void submit()}>
+            <Button className="rounded-xl px-5" disabled={!turnstileToken || submitting} onClick={() => void submit()}>
               {submitting ? "Submitting..." : "Submit for review"}
             </Button>
           </div>

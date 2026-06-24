@@ -31,8 +31,8 @@ Deno.serve(async (req) => {
       return error(turnstile.error ?? "Bot verification failed.", 403);
     }
 
-    const title = requiredString(input.title, "title", 50);
-    const body = requiredString(input.body, "body", 1000);
+    const title = requiredString(input.title, "title", 75);
+    const body = optionalString(input.body, "body", 1000);
     const lat = coordinate(input.lat, "lat");
     const lng = coordinate(input.lng, "lng");
     const imagePath = typeof input.imagePath === "string" ? input.imagePath.slice(0, 500) : null;

@@ -29,10 +29,10 @@ export function CreateThoughtPage() {
   const [turnstileReset, setTurnstileReset] = useState(0);
   const handleToken = useCallback((token: string) => setTurnstileToken(token), []);
 
-  const canSubmit = Boolean(location && title.trim() && body.trim() && turnstileToken);
-
   async function submit() {
-    if (!canSubmit || submitting || !location) return;
+    if (!turnstileToken || submitting) return;
+    if (!location) { toast.error("Pin a location on the map first."); return; }
+    if (!title.trim()) { toast.error("Give your thought a title."); return; }
     setSubmitting(true);
     setError("");
     try {
@@ -65,15 +65,18 @@ export function CreateThoughtPage() {
         {/* Left column — form fields */}
         <div className="space-y-5">
           <section>
-            <label htmlFor="title" className="mb-2 block text-sm font-medium">
-              Title <span className="text-primary">*</span>
-            </label>
+            <div className="mb-2 flex items-center justify-between">
+              <label htmlFor="title" className="text-sm font-medium">
+                Title <span className="text-primary">*</span>
+              </label>
+              <span className="text-[11px] text-muted-foreground">{title.length}/75</span>
+            </div>
             <Input
               id="title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="A short title for your thought"
-              maxLength={50}
+              maxLength={75}
               className="rounded-xl"
             />
           </section>
@@ -81,7 +84,7 @@ export function CreateThoughtPage() {
           <section>
             <div className="mb-2 flex items-center justify-between">
               <label htmlFor="body" className="text-sm font-medium">
-                Your thought <span className="text-primary">*</span>
+                Your thought <span className="font-normal text-muted-foreground">(optional)</span>
               </label>
               <span className="text-[11px] text-muted-foreground">{body.length}/500</span>
             </div>
@@ -112,7 +115,7 @@ export function CreateThoughtPage() {
 
           <Button
             className="h-12 w-full rounded-xl text-base"
-            disabled={!canSubmit || submitting}
+            disabled={!turnstileToken || submitting}
             onClick={() => void submit()}
           >
             {submitting ? "Submitting..." : "Submit for review"}

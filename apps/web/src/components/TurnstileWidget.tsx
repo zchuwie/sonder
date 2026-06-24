@@ -49,14 +49,14 @@ export function TurnstileWidget({
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetId = useRef<string | null>(null);
   const [loadError, setLoadError] = useState(false);
-  const [usedCache, setUsedCache] = useState(false);
+  const [usedCache, setUsedCache] = useState(() => !!getCachedToken());
 
-  // If we have a cached token, emit it immediately without rendering the widget
+  // If we have a cached token, emit it on mount
   useEffect(() => {
     const cached = getCachedToken();
     if (cached) {
-      onToken(cached);
       setUsedCache(true);
+      onToken(cached);
     }
   }, [onToken]);
 

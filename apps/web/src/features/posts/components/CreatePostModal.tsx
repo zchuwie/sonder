@@ -54,9 +54,9 @@ export default function CreatePostModal({
     prepareForLocation(marker);
   }, [marker, prepareForLocation]);
 
-  const canSubmit = Boolean(title.trim() && text.trim() && turnstileToken);
   const submit = async () => {
-    if (!canSubmit || submitting) return;
+    if (!turnstileToken || submitting) return;
+    if (!title.trim()) { toast.error("Give your thought a title."); return; }
     setSubmitting(true);
     setSubmitError("");
     try {
@@ -94,22 +94,27 @@ export default function CreatePostModal({
           </div>
           <div className="min-h-0 space-y-3 overflow-y-auto p-3.5 sm:p-4 md:p-5">
             <div className="space-y-1.5">
-              <label htmlFor="title" className="text-xs font-medium">
-                Title <span className="text-primary">*</span>
-              </label>
+              <div className="flex items-center justify-between">
+                <label htmlFor="title" className="text-xs font-medium">
+                  Title <span className="text-primary">*</span>
+                </label>
+                <span className="text-[10px] text-muted-foreground">
+                  {title.length}/75
+                </span>
+              </div>
               <Input
                 id="title"
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
                 placeholder="Give this thought a short title"
-                maxLength={50}
+                maxLength={75}
                 className="h-9 rounded-xl bg-muted/25 px-3 text-sm"
               />
             </div>
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
                 <label htmlFor="thought" className="text-xs font-medium">
-                  Your thought <span className="text-primary">*</span>
+                  Your thought <span className="font-normal text-muted-foreground">(optional)</span>
                 </label>
                 <span className="text-[10px] text-muted-foreground">
                   {text.length}/500
@@ -165,7 +170,7 @@ export default function CreatePostModal({
             <Button
               size="sm"
               className="rounded-xl px-4 text-xs"
-              disabled={!canSubmit || submitting}
+              disabled={!turnstileToken || submitting}
               onClick={() => void submit()}
             >
               {submitting ? "Submitting..." : "Submit for review"}
