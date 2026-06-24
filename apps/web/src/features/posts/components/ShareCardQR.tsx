@@ -3,27 +3,27 @@
 import { useMemo } from "react";
 import qrcode from "qrcode-generator";
 
-export function ShareCardQR({ url, size = 100 }: { url: string; size?: number }) {
-  const svg = useMemo(() => {
+export function ShareCardQR({ url, size = 90 }: { url: string; size?: number }) {
+  const path = useMemo(() => {
     const qr = qrcode(0, "M");
     qr.addData(url);
     qr.make();
-    const modules = qr.getModuleCount();
-    const cellSize = size / modules;
-    let path = "";
-    for (let row = 0; row < modules; row++) {
-      for (let col = 0; col < modules; col++) {
-        if (qr.isDark(row, col)) {
-          path += `M${col * cellSize},${row * cellSize}h${cellSize}v${cellSize}h-${cellSize}z`;
+    const n = qr.getModuleCount();
+    const cell = size / n;
+    let d = "";
+    for (let r = 0; r < n; r++) {
+      for (let c = 0; c < n; c++) {
+        if (qr.isDark(r, c)) {
+          d += `M${c * cell},${r * cell}h${cell}v${cell}h-${cell}z`;
         }
       }
     }
-    return path;
+    return d;
   }, [url, size]);
 
   return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="rounded-lg bg-[#f5f1e8] p-1.5">
-      <path d={svg} fill="#0f1c14" />
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+      <path d={path} fill="#111" />
     </svg>
   );
 }
