@@ -5,20 +5,9 @@ import { useEffect, useRef, useCallback, useState } from "react";
 const SCRIPT_URL = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
 const SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? "1x00000000000000000000AA";
 
-// ponytail: client-side token cache. Once user solves once, we reuse for 10 min.
-// Ceiling: page refresh clears it. That's fine — server also caches per user.
-const TOKEN_TTL_MS = 10 * 60 * 1000;
-let cachedToken: { value: string; expires: number } | null = null;
-
-function getCachedToken(): string | null {
-  if (cachedToken && Date.now() < cachedToken.expires) return cachedToken.value;
-  cachedToken = null;
-  return null;
-}
-
-function setCachedToken(token: string) {
-  cachedToken = { value: token, expires: Date.now() + TOKEN_TTL_MS };
-}
+// ponytail: no client-side token cache. Every submission gets a fresh token.
+// Turnstile tokens are single-use on the server. Caching caused P0-3 (anon rotation bypass).
+// UX cost: widget renders every time (~300ms invisible solve for humans). Acceptable.
 
 let scriptPromise: Promise<void> | null = null;
 
@@ -49,16 +38,6 @@ export function TurnstileWidget({
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetId = useRef<string | null>(null);
   const [loadError, setLoadError] = useState(false);
-  const [usedCache, setUsedCache] = useState(() => !!getCachedToken());
-
-  // If we have a cached token, emit it on mount
-  useEffect(() => {
-    const cached = getCachedToken();
-    if (cached) {
-      setUsedCache(true);
-      onToken(cached);
-    }
-  }, [onToken]);
 
   const render = useCallback(() => {
     if (!containerRef.current || !window.turnstile) return;
@@ -68,22 +47,14 @@ export function TurnstileWidget({
     }
     widgetId.current = window.turnstile.render(containerRef.current, {
       sitekey: SITE_KEY,
-      callback: (token: string) => {
-        setCachedToken(token);
-        onToken(token);
-      },
+      callback: (token: string) => { onToken(token); },
       "error-callback": () => onError?.(),
-      "expired-callback": () => {
-        cachedToken = null;
-        onToken("");
-      },
+      "expired-callback": () => { onToken(""); },
       theme: "auto",
     });
   }, [onToken, onError]);
 
-  // Load script + render (only if no cached token)
   useEffect(() => {
-    if (usedCache) return;
     let cancelled = false;
     loadScript()
       .then(() => { if (!cancelled) render(); })
@@ -95,14 +66,11 @@ export function TurnstileWidget({
         widgetId.current = null;
       }
     };
-  }, [render, usedCache]);
+  }, [render]);
 
-  // Reset when resetKey changes (submission failure)
+  // Reset when resetKey changes (submission failure or re-render)
   useEffect(() => {
     if (resetKey !== undefined && resetKey > 0) {
-      // Invalidate cache on explicit reset
-      cachedToken = null;
-      setUsedCache(false);
       if (widgetId.current !== null && window.turnstile) {
         window.turnstile.reset(widgetId.current);
       }
@@ -116,9 +84,6 @@ export function TurnstileWidget({
       </p>
     );
   }
-
-  // Don't show widget if cached token was used
-  if (usedCache) return null;
 
   return <div ref={containerRef} className="my-2 flex justify-center [&>iframe]:rounded-xl" />;
 }
