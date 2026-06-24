@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Clock3, Download, Send } from "lucide-react";
+import { Check, ChevronDown, ChevronUp, Clock3, Download, Send } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -33,22 +33,24 @@ export default function PostDetailModal({
   const [copied, setCopied] = useState(false);
   const [confirmShare, setConfirmShare] = useState(false);
   const [showCard, setShowCard] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const flagged = post.moderationStatus === "flagged";
+
   return (
     <>
       <Dialog open modal={false} onOpenChange={(open) => { if (!open && !showCard) onClose(); }}>
         <DialogContent
           overlayClassName="bg-transparent pointer-events-none supports-backdrop-filter:backdrop-blur-none"
-          className="pointer-events-auto inset-x-2 bottom-2 top-auto flex max-h-[55dvh] w-auto max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-2xl border-black/10 bg-background/96 p-0 shadow-2xl backdrop-blur-xl sm:inset-x-auto sm:bottom-4 sm:right-4 sm:top-4 sm:max-h-none sm:w-[24rem] sm:rounded-3xl lg:w-108"
+          className={`pointer-events-auto inset-x-2 bottom-2 top-auto flex w-auto max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-2xl border-black/10 bg-background/96 p-0 shadow-2xl backdrop-blur-xl sm:inset-x-auto sm:bottom-4 sm:right-4 sm:top-4 sm:max-h-none sm:w-[24rem] sm:rounded-3xl lg:w-108 ${expanded ? "max-h-[90dvh]" : "max-h-[55dvh]"}`}
         >
           {/* Image / cover */}
           {post.imageUrl && !flagged ? (
-            <div className="relative h-28 w-full overflow-hidden rounded-t-2xl sm:aspect-video sm:h-auto sm:rounded-t-3xl">
+            <div className="relative h-28 w-full shrink-0 overflow-hidden rounded-t-2xl sm:aspect-video sm:h-auto sm:rounded-t-3xl">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={post.imageUrl} alt="" className="size-full object-cover" />
             </div>
           ) : post.music?.coverUrl && !flagged ? (
-            <div className="relative h-28 w-full overflow-hidden rounded-t-2xl bg-gradient-to-br from-primary/20 via-muted to-background sm:aspect-video sm:h-auto sm:rounded-t-3xl">
+            <div className="relative h-28 w-full shrink-0 overflow-hidden rounded-t-2xl bg-linear-to-br from-primary/20 via-muted to-background sm:aspect-video sm:h-auto sm:rounded-t-3xl">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={post.music.coverUrl} alt="" className="size-full scale-110 object-cover opacity-30 blur-xl" />
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -56,7 +58,7 @@ export default function PostDetailModal({
             </div>
           ) : null}
 
-          {/* Content */}
+          {/* Scrollable content */}
           <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-3.5 sm:p-6">
             <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground sm:text-xs">
               <Clock3 className="size-3" /> {relativeTime(post.createdAt)}
@@ -72,54 +74,67 @@ export default function PostDetailModal({
             </p>
             {post.music && !flagged && <div className="mt-4"><MusicPreviewCard music={post.music} /></div>}
 
-            {post.moderationStatus === "approved" && (
-              <div className="mt-auto flex items-center justify-between border-t border-border/50 pt-4">
-                <ReportPostButton postId={post.id} iconOnly />
-                <div className="flex items-center gap-2">
-                  {/* Share card download */}
-                  <button
-                    type="button"
-                    aria-label="Download share card"
-                    className="grid size-9 place-items-center rounded-full border border-border text-muted-foreground transition-all duration-200 hover:scale-110 hover:border-primary/30 hover:bg-primary/5 hover:text-primary"
-                    onClick={(e) => { e.stopPropagation(); setShowCard(true); }}
-                  >
-                    <Download className="size-4" />
-                  </button>
-                  {/* Copy link */}
-                  {confirmShare ? (
-                    <>
-                      <span className="text-[11px] text-muted-foreground">Copy link?</span>
-                      <button
-                        type="button"
-                        aria-label="Confirm copy link"
-                        className="grid size-9 place-items-center rounded-full bg-primary text-primary-foreground transition-all duration-200 hover:scale-110"
-                        onClick={async () => {
-                          await navigator.clipboard?.writeText(buildShareUrl(post));
-                          setCopied(true);
-                          setConfirmShare(false);
-                          setTimeout(() => setCopied(false), 1800);
-                        }}
-                      >
-                        <Check className="size-4" />
-                      </button>
-                    </>
-                  ) : (
-                    <button
-                      type="button"
-                      aria-label={copied ? "Link copied" : "Share post"}
-                      className={`grid size-9 place-items-center rounded-full border border-border text-muted-foreground transition-all duration-200 hover:scale-110 hover:border-primary/30 hover:bg-primary/5 hover:text-primary ${copied ? "border-primary/40 text-primary" : ""}`}
-                      onClick={() => setConfirmShare(true)}
-                    >
-                      {copied ? <Check className="size-4" /> : <Send className="size-4" />}
-                    </button>
-                  )}
-                </div>
-              </div>
-            )}
             {post.moderationStatus === "pending" && (
-              <p className="mt-auto pt-4 text-center text-xs text-muted-foreground">Waiting for approval</p>
+              <p className="mt-4 text-center text-xs text-muted-foreground">Waiting for approval</p>
             )}
           </div>
+
+          {/* Fixed bottom action bar */}
+          {post.moderationStatus === "approved" && (
+            <div className="flex shrink-0 items-center justify-between border-t border-border/50 bg-background/95 px-3.5 py-2.5 backdrop-blur-sm sm:px-6 sm:py-3">
+              <div className="flex items-center gap-2">
+                <ReportPostButton postId={post.id} iconOnly />
+                {/* Expand/collapse toggle — mobile only */}
+                <button
+                  type="button"
+                  aria-label={expanded ? "Collapse" : "Expand"}
+                  className="grid size-9 place-items-center rounded-full border border-border text-muted-foreground transition-all duration-200 hover:border-primary/30 hover:bg-primary/5 hover:text-primary sm:hidden"
+                  onClick={() => setExpanded(!expanded)}
+                >
+                  {expanded ? <ChevronDown className="size-4" /> : <ChevronUp className="size-4" />}
+                </button>
+              </div>
+              <div className="flex items-center gap-2">
+                {/* Share card download */}
+                <button
+                  type="button"
+                  aria-label="Download share card"
+                  className="grid size-9 place-items-center rounded-full border border-border text-muted-foreground transition-all duration-200 hover:scale-110 hover:border-primary/30 hover:bg-primary/5 hover:text-primary"
+                  onClick={(e) => { e.stopPropagation(); setShowCard(true); }}
+                >
+                  <Download className="size-4" />
+                </button>
+                {/* Copy link */}
+                {confirmShare ? (
+                  <>
+                    <span className="text-[11px] text-muted-foreground">Copy link?</span>
+                    <button
+                      type="button"
+                      aria-label="Confirm copy link"
+                      className="grid size-9 place-items-center rounded-full bg-primary text-primary-foreground transition-all duration-200 hover:scale-110"
+                      onClick={async () => {
+                        await navigator.clipboard?.writeText(buildShareUrl(post));
+                        setCopied(true);
+                        setConfirmShare(false);
+                        setTimeout(() => setCopied(false), 1800);
+                      }}
+                    >
+                      <Check className="size-4" />
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    type="button"
+                    aria-label={copied ? "Link copied" : "Share post"}
+                    className={`grid size-9 place-items-center rounded-full border border-border text-muted-foreground transition-all duration-200 hover:scale-110 hover:border-primary/30 hover:bg-primary/5 hover:text-primary ${copied ? "border-primary/40 text-primary" : ""}`}
+                    onClick={() => setConfirmShare(true)}
+                  >
+                    {copied ? <Check className="size-4" /> : <Send className="size-4" />}
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
 

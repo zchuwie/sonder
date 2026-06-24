@@ -4,23 +4,6 @@ import { forwardRef } from "react";
 import type { AnonymousPost } from "@/features/posts/lib/post-types";
 import { ShareCardQR } from "./ShareCardQR";
 
-/**
- * Share card: 1080×1350 portrait
- *
- * Layer order (bottom to top):
- *  1. Full-bleed map image
- *  2. Dark scrim over entire canvas (~72% opacity) so map reads as texture
- *  3. CORNER decorative quote marks — bleed off-crop (OUTSIDE content area)
- *  4. "Sonder." brand — top-right
- *  5. Rounded glass content panel (semi-transparent, ~55% opacity)
- *     — location header
- *     — title (Gilda, large)
- *     — body (Manrope)
- *     — song card (if present)
- *  6. Map pin — centered on canvas, sits ON TOP of the glass panel at ~mid-card
- *  7. Footer row: bottom-left (nothing/empty space under closing quote) | bottom-right QR
- */
-
 export type CardTheme = {
   label: string;
   scrim: string;
@@ -115,56 +98,68 @@ export const CARD_THEMES: Record<string, CardTheme> = {
   },
 };
 
-// Scale body font for readability at all lengths, keeping social-share legibility
 function bodyFontSize(len: number): number {
-  if (len <= 60)  return 44;
-  if (len <= 120) return 40;
-  if (len <= 220) return 36;
-  if (len <= 340) return 32;
+  if (len <= 60) return 42;
+  if (len <= 120) return 38;
+  if (len <= 220) return 34;
+  if (len <= 340) return 30;
   if (len <= 460) return 28;
   return 26;
 }
 
-const OPEN_PATH  = "M0 52V32.5C0 14.55 11.2 3.47 28 0l2.8 8.4C18.2 12.6 14 20.8 14 28h14v24H0Zm36 0V32.5C36 14.55 47.2 3.47 64 0l2.8 8.4C54.2 12.6 50 20.8 50 28h14v24H36Z";
+const OPEN_PATH = "M0 52V32.5C0 14.55 11.2 3.47 28 0l2.8 8.4C18.2 12.6 14 20.8 14 28h14v24H0Zm36 0V32.5C36 14.55 47.2 3.47 64 0l2.8 8.4C54.2 12.6 50 20.8 50 28h14v24H36Z";
 const CLOSE_PATH = "M64 0v19.5C64 37.45 52.8 48.53 36 52l-2.8-8.4C45.8 39.4 50 31.2 50 24H36V0h28Zm-36 0v19.5C28 37.45 16.8 48.53 0 52l-2.8-8.4C9.8 39.4 14 31.2 14 24H0V0h28Z";
 
-// Quote mark rendered size — large, matching inspo scale
-const QW = 190, QH = 154;
+const QW = 160, QH = 130;
 
-type Props = { post: AnonymousPost; mapSnapshot?: string; themeKey?: string };
+type Props = {
+  post: AnonymousPost;
+  mapSnapshot?: string;
+  themeKey?: string;
+  fullPlaceName?: string;
+};
 
+/**
+ * Dynamic-height share card (width fixed at 1080).
+ * Layout: map area (420px) → glass panel (grows with content) → footer (QR + image).
+ * The card grows taller when content is long — no clipping, no cramping.
+ */
 export const ShareCard = forwardRef<HTMLDivElement, Props>(
-  function ShareCard({ post, mapSnapshot, themeKey = "paper" }, ref) {
+  function ShareCard({ post, mapSnapshot, themeKey = "paper", fullPlaceName }, ref) {
     const theme = (CARD_THEMES[themeKey] ?? CARD_THEMES.paper)!;
     const shareUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/p/${post.id}`;
-    const hasBody  = !!post.text?.trim();
-    const hasSong  = !!post.music;
-    const body     = hasBody ? post.text.trim() : "";
+    const hasBody = !!post.text?.trim();
+    const hasSong = !!post.music;
+    const hasImage = !!post.imageUrl;
+    const body = hasBody ? post.text.trim() : "";
+    const locationLabel = fullPlaceName || post.placeName || "Unknown location";
 
     return (
       <div
         ref={ref}
         style={{
-          width: 1080, height: 1350,
+          width: 1080,
           position: "relative",
-          borderRadius: 40, overflow: "hidden",
+          borderRadius: 40,
+          overflow: "hidden",
           fontFamily: "var(--font-manrope), system-ui, sans-serif",
           background: "#0a1a0c",
+          display: "flex",
+          flexDirection: "column",
         }}
       >
-        {/* ── LAYER 1: Full-bleed map ── */}
+        {/* ── FULL-BLEED MAP BACKGROUND (covers entire card) ── */}
         {mapSnapshot && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={mapSnapshot} alt="" aria-hidden="true"
+          <img
+            src={mapSnapshot} alt="" aria-hidden="true"
             style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", display: "block" }}
           />
         )}
-
-        {/* ── LAYER 2: Full-canvas dark scrim ── */}
         <div style={{ position: "absolute", inset: 0, background: theme.scrim }} />
 
-        {/* ── LAYER 2b: Grain / paper texture ── */}
-        <svg aria-hidden="true" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", opacity: 0.06, pointerEvents: "none" }}>
+        {/* Grain texture */}
+        <svg aria-hidden="true" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", opacity: 0.05, pointerEvents: "none" }}>
           <filter id="sc-grain">
             <feTurbulence type="fractalNoise" baseFrequency="0.68" numOctaves="4" stitchTiles="stitch" />
             <feColorMatrix type="saturate" values="0" />
@@ -172,119 +167,102 @@ export const ShareCard = forwardRef<HTMLDivElement, Props>(
           <rect width="100%" height="100%" filter="url(#sc-grain)" />
         </svg>
 
-        {/* ── LAYER 3: Corner quote marks — OUTSIDE glass panel, bleeding off canvas ── */}
-        {/* Top-left opening quote — bleeds off top-left */}
-        <svg
-          aria-hidden="true"
-          width={QW} height={QH}
-          viewBox="0 0 64 52" fill="none"
-          style={{
-            position: "absolute",
-            top: -24, left: -18,
-            opacity: 0.90,
-            pointerEvents: "none",
-          }}
-        >
-          <path d={OPEN_PATH} fill={theme.quoteColor} />
-        </svg>
-
-        {/* Bottom-right closing quote — bleeds off bottom-right */}
-        <svg
-          aria-hidden="true"
-          width={QW} height={QH}
-          viewBox="0 0 64 52" fill="none"
-          style={{
-            position: "absolute",
-            bottom: -24, right: -18,
-            opacity: 0.90,
-            pointerEvents: "none",
-          }}
-        >
-          <path d={CLOSE_PATH} fill={theme.quoteColor} />
-        </svg>
-
-        {/* ── LAYER 4: "Sonder." brand top-right ── */}
-        <div style={{
-          position: "absolute", top: 52, right: 64,
-          fontFamily: "var(--font-gilda), serif",
-          fontSize: 52, letterSpacing: "-0.02em",
-          color: theme.text, opacity: 0.85,
-        }}>
-          Sonder<span style={{ color: theme.accent }}>.</span>
-        </div>
-
-        {/* ── LAYER 5: Map pin — in the exposed map area above the panel ── */}
-        <div style={{
-          position: "absolute",
-          top: 160, left: "50%",
-          transform: "translateX(-50%)",
-          zIndex: 10,
-          pointerEvents: "none",
-          filter: `drop-shadow(0 0 16px ${theme.pinColor}cc)`,
-        }}>
-          <svg width="44" height="56" viewBox="0 0 56 70" fill="none">
-            {/* Pulse ring */}
-            <circle cx="28" cy="28" r="26" stroke={theme.pinColor} strokeWidth="2" opacity="0.30" />
-            {/* Pin body */}
-            <path d="M28 0C12.54 0 0 12.54 0 28c0 21 28 42 28 42S56 49 56 28C56 12.54 43.46 0 28 0z" fill={theme.pinColor}/>
-            {/* Inner dot */}
-            <circle cx="28" cy="28" r="10" fill={theme.accentText} opacity="0.92"/>
+        {/* ── MAP AREA — visible map with pin ── */}
+        <div style={{ position: "relative", width: "100%", height: 340, flexShrink: 0, zIndex: 1 }}>
+          {/* Opening quote */}
+          <svg aria-hidden="true" width={QW} height={QH} viewBox="0 0 64 52" fill="none"
+            style={{ position: "absolute", top: -14, left: -10, opacity: 0.85, pointerEvents: "none" }}>
+            <path d={OPEN_PATH} fill={theme.quoteColor} />
           </svg>
+
+          {/* Sonder brand */}
+          <div style={{
+            position: "absolute", top: 44, right: 56,
+            fontFamily: "var(--font-gilda), serif",
+            fontSize: 48, letterSpacing: "-0.02em",
+            color: theme.text, opacity: 0.85,
+          }}>
+            Sonder<span style={{ color: theme.accent }}>.</span>
+          </div>
+
+          {/* Map pin — centered in map area */}
+          <div style={{
+            position: "absolute",
+            top: "55%", left: "50%",
+            transform: "translate(-50%, -50%)",
+            pointerEvents: "none",
+            filter: `drop-shadow(0 0 14px ${theme.pinColor}cc)`,
+          }}>
+            <svg width="48" height="60" viewBox="0 0 56 70" fill="none">
+              <circle cx="28" cy="28" r="26" stroke={theme.pinColor} strokeWidth="2" opacity="0.30" />
+              <path d="M28 0C12.54 0 0 12.54 0 28c0 21 28 42 28 42S56 49 56 28C56 12.54 43.46 0 28 0z" fill={theme.pinColor} />
+              <circle cx="28" cy="28" r="10" fill={theme.accentText} opacity="0.92" />
+            </svg>
+          </div>
         </div>
 
-        {/* ── LAYER 6: Glass content panel ── */}
+        {/* ── GLASS CONTENT PANEL — grows naturally with content ── */}
         <div style={{
-          position: "absolute",
-          top: 240, left: 60, right: 60, bottom: 112,
+          position: "relative",
+          margin: "-28px 48px 0",
           background: theme.panel,
           border: `1.5px solid ${theme.panelBorder}`,
           borderRadius: 28,
-          display: "flex", flexDirection: "column",
-          padding: "48px 60px",
-          gap: 0,
-          overflow: "hidden",
+          padding: "44px 56px",
+          display: "flex",
+          flexDirection: "column",
+          zIndex: 2,
         }}>
-
           {/* Location */}
           <div style={{ marginBottom: 8 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill={theme.accent} style={{ flexShrink: 0 }}>
-                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 110-5 2.5 2.5 0 010 5z"/>
+                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 110-5 2.5 2.5 0 010 5z" />
               </svg>
-              <span style={{ fontSize: 26, fontWeight: 600, color: theme.accent, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                {post.placeName ?? "Unknown location"}
+              <span style={{ fontSize: 24, fontWeight: 600, color: theme.accent, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {locationLabel}
               </span>
             </div>
-            <p style={{ fontFamily: "monospace", fontSize: 18, color: theme.textMuted, margin: "8px 0 0", letterSpacing: "0.06em" }}>
+            <p style={{ fontFamily: "monospace", fontSize: 16, color: theme.textMuted, margin: "6px 0 0", letterSpacing: "0.06em" }}>
               {post.lat.toFixed(5)}, {post.lng.toFixed(5)}
             </p>
           </div>
 
           {/* Divider */}
-          <div style={{ height: 1, background: theme.divider, margin: "20px 0 28px" }} />
+          <div style={{ height: 1, background: theme.divider, margin: "18px 0 24px" }} />
 
-          {/* Title */}
+          {/* Title — clamped to 3 lines for social-media-friendly size */}
           <h1 style={{
             fontFamily: "var(--font-gilda), serif",
-            fontSize: 80, lineHeight: 1.06, letterSpacing: "-0.03em",
-            color: theme.text, margin: "0 0 32px",
+            fontSize: 72, lineHeight: 1.1, letterSpacing: "-0.03em",
+            color: theme.text, margin: "0 0 24px", wordBreak: "break-word",
             display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden",
-            flexShrink: 0,
           }}>
             {post.title}
           </h1>
 
-          {/* Body */}
+          {/* Body — clamped to keep card compact */}
           {hasBody && (
             <p style={{
               fontFamily: "var(--font-manrope), sans-serif",
-              fontSize: bodyFontSize(body.length), lineHeight: 1.68,
-              color: theme.text, margin: "0 0 32px",
-              display: "-webkit-box", WebkitLineClamp: 7, WebkitBoxOrient: "vertical", overflow: "hidden",
-              flexShrink: 0,
+              fontSize: bodyFontSize(body.length), lineHeight: 1.65,
+              color: theme.text, margin: "0 0 24px", wordBreak: "break-word",
+              display: "-webkit-box", WebkitLineClamp: 8, WebkitBoxOrient: "vertical", overflow: "hidden",
             }}>
               {body}
             </p>
+          )}
+
+          {/* Image — capped height */}
+          {hasImage && (
+            <div style={{
+              marginBottom: 24,
+              borderRadius: 16, overflow: "hidden",
+              boxShadow: "0 6px 24px rgba(0,0,0,0.12)",
+            }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={post.imageUrl!} alt="" style={{ width: "100%", height: "auto", maxHeight: 360, objectFit: "cover", display: "block" }} />
+            </div>
           )}
 
           {/* Song card */}
@@ -294,43 +272,52 @@ export const ShareCard = forwardRef<HTMLDivElement, Props>(
               background: theme.songBg,
               border: `1px solid ${theme.songBorder}`,
               borderRadius: 18, padding: "18px 22px",
-              flexShrink: 0,
             }}>
               {post.music.coverUrl ? (
-                <div style={{ width: 70, height: 70, flexShrink: 0, borderRadius: 10, overflow: "hidden" }}>
+                <div style={{ width: 64, height: 64, flexShrink: 0, borderRadius: 10, overflow: "hidden" }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={post.music.coverUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 </div>
               ) : (
-                <div style={{ width: 70, height: 70, flexShrink: 0, borderRadius: 10, background: theme.songBg, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <svg width="30" height="30" viewBox="0 0 24 24" fill={theme.textMuted}><path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z"/></svg>
+                <div style={{ width: 64, height: 64, flexShrink: 0, borderRadius: 10, background: theme.songBg, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill={theme.textMuted}><path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z" /></svg>
                 </div>
               )}
               <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ fontSize: 26, fontWeight: 700, color: theme.text, margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{post.music.title}</p>
-                <p style={{ fontSize: 20, color: theme.textMuted, margin: "6px 0 0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{post.music.artist}</p>
+                <p style={{ fontSize: 24, fontWeight: 700, color: theme.text, margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{post.music.title}</p>
+                <p style={{ fontSize: 18, color: theme.textMuted, margin: "4px 0 0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{post.music.artist}</p>
               </div>
-              <div style={{ width: 54, height: 54, flexShrink: 0, borderRadius: "50%", background: theme.accent, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: `0 0 20px ${theme.accent}66` }}>
-                <svg width="22" height="22" viewBox="0 0 24 24" fill={theme.accentText}><path d="M8 5v14l11-7z"/></svg>
+              <div style={{ width: 50, height: 50, flexShrink: 0, borderRadius: "50%", background: theme.accent, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: `0 0 16px ${theme.accent}66` }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill={theme.accentText}><path d="M8 5v14l11-7z" /></svg>
               </div>
             </div>
           )}
-
-          <div style={{ flex: 1 }} />
         </div>
 
-        {/* ── LAYER 7: QR — bottom-right, outside glass ── */}
+        {/* ── FOOTER — QR right-aligned, closing quote behind it ── */}
         <div style={{
-          position: "absolute", bottom: 52, right: 64,
-          display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 10,
-          zIndex: 5,
+          position: "relative",
+          display: "flex",
+          alignItems: "flex-end",
+          justifyContent: "flex-end",
+          padding: "32px 56px 44px",
+          zIndex: 2,
         }}>
-          <div style={{ background: "#ffffff", borderRadius: 12, padding: 12 }}>
-            <ShareCardQR url={shareUrl} size={96} />
+          {/* Closing quote — bottom-right, behind QR */}
+          <svg aria-hidden="true" width={QW} height={QH} viewBox="0 0 64 52" fill="none"
+            style={{ position: "absolute", bottom: 10, right: 24, opacity: 0.85, pointerEvents: "none" }}>
+            <path d={CLOSE_PATH} fill={theme.quoteColor} />
+          </svg>
+
+          {/* QR — sits above the quote */}
+          <div style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8 }}>
+            <div style={{ background: "#ffffff", borderRadius: 12, padding: 10, boxShadow: "0 4px 16px rgba(0,0,0,0.10)" }}>
+              <ShareCardQR url={shareUrl} size={96} />
+            </div>
+            <p style={{ fontFamily: "var(--font-manrope), sans-serif", fontSize: 13, color: theme.textMuted, margin: 0, letterSpacing: "0.04em" }}>
+              Scan to open confession
+            </p>
           </div>
-          <p style={{ fontFamily: "var(--font-manrope), sans-serif", fontSize: 14, color: theme.textMuted, margin: 0, letterSpacing: "0.04em" }}>
-            Scan to open confession
-          </p>
         </div>
       </div>
     );

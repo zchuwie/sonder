@@ -11,16 +11,16 @@ import type { AnonymousPost } from "@/features/posts/lib/post-types";
 function useTileSnapshot(lat: number, lng: number) {
   const [snap, setSnap] = useState<string | undefined>();
   useEffect(() => {
-    const z = 16; // zoom 16 — street-level, shows the area clearly
+    const z = 16;
     const x = Math.floor(((lng + 180) / 360) * 2 ** z);
     const latR = (lat * Math.PI) / 180;
-    const y = Math.floor((1 - Math.log(Math.tan(latR) + 1 / Math.cos(latR)) / Math.PI) / 2 * 2 ** z);
+    const y = Math.floor(((1 - Math.log(Math.tan(latR) + 1 / Math.cos(latR)) / Math.PI) / 2) * 2 ** z);
     const canvas = document.createElement("canvas");
     canvas.width = 768; canvas.height = 768;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
     const subs = ["a", "b", "c"];
-    let done = 0; let i = 0;
+    let done = 0, i = 0;
     for (let dy = -1; dy <= 1; dy++) {
       for (let dx = -1; dx <= 1; dx++) {
         const sub = subs[i++ % 3];
@@ -41,22 +41,48 @@ export function ShareCardModal({ post, onClose }: { post: AnonymousPost; onClose
   const [themeKey, setThemeKey] = useState("paper");
   const [exporting, setExporting] = useState(false);
   const [preview, setPreview] = useState<string | undefined>();
+  const [fullPlaceName, setFullPlaceName] = useState<string | undefined>();
   const mapSnapshot = useTileSnapshot(post.lat, post.lng);
 
-  // Re-render preview whenever theme or map changes
+  // Reverse geocode for full location label
+  useEffect(() => {
+    const ctrl = new AbortController();
+    fetch(
+      `https://nominatim.openstreetmap.org/reverse?lat=${post.lat}&lon=${post.lng}&format=json&zoom=16&addressdetails=1`,
+      { signal: ctrl.signal, headers: { "Accept-Language": "en" } },
+    )
+      .then((r) => r.json())
+      .then((data) => {
+        const a = data?.address;
+        if (!a) return;
+        const parts = [
+          a.road || a.pedestrian || a.neighbourhood || post.placeName,
+          a.city || a.town || a.village || a.municipality || a.county,
+          a.country,
+        ].filter(Boolean);
+        if (parts.length > 0) setFullPlaceName(parts.join(", "));
+      })
+      .catch(() => { /* ignore */ });
+    return () => ctrl.abort();
+  }, [post.lat, post.lng, post.placeName]);
+
+  // Render preview — dynamic height from actual card element
   useEffect(() => {
     if (!mapSnapshot || !cardRef.current) return;
     setPreview(undefined);
     const t = setTimeout(async () => {
       if (!cardRef.current) return;
+      const w = 1080;
+      const h = cardRef.current.offsetHeight || 1350;
       try {
-        await toPng(cardRef.current, { width: 1080, height: 1350, pixelRatio: 1, cacheBust: true });
-        const url = await toPng(cardRef.current, { width: 1080, height: 1350, pixelRatio: 1, cacheBust: true });
+        // Double render for font loading
+        await toPng(cardRef.current, { width: w, height: h, pixelRatio: 1, cacheBust: true });
+        const url = await toPng(cardRef.current, { width: w, height: h, pixelRatio: 1, cacheBust: true });
         setPreview(url);
       } catch { /* silently skip */ }
-    }, 200);
+    }, 300);
     return () => clearTimeout(t);
-  }, [mapSnapshot, themeKey]);
+  }, [mapSnapshot, themeKey, fullPlaceName]);
 
   // Close on Escape
   useEffect(() => {
@@ -69,8 +95,10 @@ export function ShareCardModal({ post, onClose }: { post: AnonymousPost; onClose
     if (!cardRef.current) return;
     setExporting(true);
     try {
-      await toPng(cardRef.current, { width: 1080, height: 1350, pixelRatio: 1, cacheBust: true });
-      const dataUrl = await toPng(cardRef.current, { width: 1080, height: 1350, pixelRatio: 1, cacheBust: true });
+      const w = 1080;
+      const h = cardRef.current.offsetHeight || 1350;
+      await toPng(cardRef.current, { width: w, height: h, pixelRatio: 1, cacheBust: true });
+      const dataUrl = await toPng(cardRef.current, { width: w, height: h, pixelRatio: 1, cacheBust: true });
       const blob = await (await fetch(dataUrl)).blob();
       const blobUrl = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -141,12 +169,12 @@ export function ShareCardModal({ post, onClose }: { post: AnonymousPost; onClose
         </div>
 
         {/* Preview */}
-        <div style={{ flex: 1, overflowY: "auto", borderRadius: 12, background: "rgba(0,0,0,0.04)", minHeight: 320 }}>
+        <div style={{ flex: 1, overflowY: "auto", borderRadius: 12, background: "rgba(0,0,0,0.04)", minHeight: 280 }}>
           {preview ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={preview} alt="Share card preview" style={{ width: "100%", borderRadius: 12, display: "block" }} />
           ) : (
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", aspectRatio: "1080/1350", gap: 10, opacity: 0.5, fontSize: 14 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: 400, gap: 10, opacity: 0.5, fontSize: 14 }}>
               <span style={{ width: 16, height: 16, borderRadius: "50%", border: "2px solid currentColor", borderTopColor: "transparent", animation: "spin 0.8s linear infinite", display: "inline-block" }} />
               Generating…
             </div>
@@ -164,9 +192,9 @@ export function ShareCardModal({ post, onClose }: { post: AnonymousPost; onClose
         </Button>
       </div>
 
-      {/* Offscreen card */}
+      {/* Offscreen card — full size for measurement */}
       <div aria-hidden style={{ position: "fixed", left: "-9999px", top: 0, zIndex: -1, pointerEvents: "none" }}>
-        <ShareCard ref={cardRef} post={post} mapSnapshot={mapSnapshot} themeKey={themeKey} />
+        <ShareCard ref={cardRef} post={post} mapSnapshot={mapSnapshot} themeKey={themeKey} fullPlaceName={fullPlaceName} />
       </div>
     </>
   );
