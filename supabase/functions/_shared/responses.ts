@@ -1,22 +1,26 @@
-import { corsHeaders } from "./cors.ts";
+import { getCorsHeaders, corsHeaders } from "./cors.ts";
 import { AppError } from "./app-error.ts";
 
+// ponytail: pass `req` to get origin-restricted CORS. Without it, falls back to wildcard
+// (only safe for responses where handleOptions already validated the preflight).
 export function json(
   data: unknown,
   status = 200,
   headers: HeadersInit = {},
+  req?: Request,
 ): Response {
+  const cors = req ? getCorsHeaders(req) : corsHeaders;
   return new Response(JSON.stringify(data), {
     status,
-    headers: { ...corsHeaders, "Content-Type": "application/json", ...headers },
+    headers: { ...cors, "Content-Type": "application/json", ...headers },
   });
 }
 
-export function error(message: string, status = 400): Response {
-  return json({ error: message }, status);
+export function error(message: string, status = 400, req?: Request): Response {
+  return json({ error: message }, status, {}, req);
 }
 
-export function appError(cause: unknown, fallback: string): Response {
+export function appError(cause: unknown, fallback: string, req?: Request): Response {
   if (cause instanceof AppError) {
     const rate = cause.details as
       | { limit?: number; remaining?: number; resetAt?: number }
@@ -35,8 +39,9 @@ export function appError(cause: unknown, fallback: string): Response {
       { error: cause.code, message: cause.message, ...cause.details },
       cause.status,
       headers,
+      req,
     );
   }
   console.error(fallback, cause);
-  return json({ error: "request_failed", message: fallback }, 500);
+  return json({ error: "request_failed", message: fallback }, 500, {}, req);
 }

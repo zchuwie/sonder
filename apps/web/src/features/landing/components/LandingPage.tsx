@@ -142,7 +142,7 @@ export function LandingPage() {
         <div className="mx-auto grid max-w-7xl gap-16 lg:grid-cols-2">
           <ScrollReveal
             direction="left"
-            className="rounded-[2.5rem] bg-[#e6eadc] p-8 sm:p-12"
+            className="rounded-[2.5rem] bg-[#e6eadc] p-8 text-[#101713] sm:p-12"
           >
             <div className="flex size-14 items-center justify-center rounded-full bg-[#2f4439] text-white">
               <Music2 />

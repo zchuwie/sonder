@@ -28,7 +28,7 @@ Deno.serve(async (req) => {
     const clientIp = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
     const turnstile = await verifyTurnstile(input.turnstileToken, user.id, clientIp);
     if (!turnstile.ok) {
-      return error(turnstile.error ?? "Bot verification failed.", 403);
+      return error(turnstile.error ?? "Bot verification failed.", 403, req);
     }
 
     const title = requiredString(input.title, "title", 75);
