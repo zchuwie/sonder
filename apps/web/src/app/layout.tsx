@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { Gilda_Display, Manrope } from "next/font/google";
 import "./globals.css";
 import "maplibre-gl/dist/maplibre-gl.css";
@@ -72,6 +73,12 @@ export default function RootLayout({
       className={`${gilda.variable} ${manrope.variable}`}
     >
       <body className={manrope.variable}>
+        <Script
+          defer
+          src="https://cloud.umami.is/script.js"
+          data-website-id="89640016-d715-488a-ad0b-5ca6ff2184dc"
+          strategy="afterInteractive"
+        />
         <ThemeProvider>
           <ModerationProvider>{children}</ModerationProvider>
           <Toaster
