@@ -32,79 +32,97 @@ export type CardTheme = {
   accent: string;
   accentText: string;
   pinColor: string;
+  divider: string;
+  songBg: string;
+  songBorder: string;
 };
 
 export const CARD_THEMES: Record<string, CardTheme> = {
+  paper: {
+    label: "Paper",
+    scrim: "rgba(243,237,228,0.38)",
+    panel: "rgba(248,244,237,0.94)",
+    panelBorder: "rgba(0,0,0,0.08)",
+    text: "#2a2722",
+    textMuted: "rgba(42,39,34,0.55)",
+    quoteColor: "#b9c39f",
+    accent: "#5f7d3f",
+    accentText: "#ffffff",
+    pinColor: "#5f7d3f",
+    divider: "rgba(0,0,0,0.10)",
+    songBg: "rgba(0,0,0,0.04)",
+    songBorder: "rgba(0,0,0,0.08)",
+  },
   forest: {
     label: "Forest",
-    scrim: "rgba(8,20,10,0.72)",
-    panel: "rgba(12,26,14,0.58)",
+    scrim: "rgba(12,28,14,0.80)",
+    panel: "rgba(16,32,18,0.62)",
     panelBorder: "rgba(255,255,255,0.10)",
-    text: "#f0ede4",
-    textMuted: "rgba(240,237,228,0.60)",
+    text: "#eef0e6",
+    textMuted: "rgba(238,240,230,0.60)",
     quoteColor: "#a8ba63",
     accent: "#a8ba63",
     accentText: "#0f1c14",
     pinColor: "#a8ba63",
+    divider: "rgba(255,255,255,0.12)",
+    songBg: "rgba(255,255,255,0.08)",
+    songBorder: "rgba(255,255,255,0.11)",
   },
-  sand: {
-    label: "Sand",
-    scrim: "rgba(20,12,2,0.74)",
-    panel: "rgba(26,16,4,0.58)",
-    panelBorder: "rgba(255,255,255,0.09)",
-    text: "#f5f0e4",
-    textMuted: "rgba(245,240,228,0.58)",
-    quoteColor: "#c9a84c",
-    accent: "#c9a84c",
-    accentText: "#1a1000",
-    pinColor: "#c9a84c",
+  ink: {
+    label: "Ink",
+    scrim: "rgba(20,22,38,0.82)",
+    panel: "rgba(26,28,46,0.64)",
+    panelBorder: "rgba(255,255,255,0.10)",
+    text: "#e8e9f2",
+    textMuted: "rgba(232,233,242,0.58)",
+    quoteColor: "#8fa0d8",
+    accent: "#8fa0d8",
+    accentText: "#15172a",
+    pinColor: "#8fa0d8",
+    divider: "rgba(255,255,255,0.12)",
+    songBg: "rgba(255,255,255,0.08)",
+    songBorder: "rgba(255,255,255,0.11)",
   },
-  noir: {
-    label: "Noir",
-    scrim: "rgba(0,0,0,0.76)",
-    panel: "rgba(8,8,8,0.60)",
-    panelBorder: "rgba(255,255,255,0.09)",
-    text: "#f2f2f2",
-    textMuted: "rgba(242,242,242,0.55)",
-    quoteColor: "#d0d0d0",
-    accent: "#d0d0d0",
-    accentText: "#111",
-    pinColor: "#e0e0e0",
+  blush: {
+    label: "Blush",
+    scrim: "rgba(247,238,240,0.38)",
+    panel: "rgba(250,243,245,0.94)",
+    panelBorder: "rgba(0,0,0,0.07)",
+    text: "#3a2c30",
+    textMuted: "rgba(58,44,48,0.55)",
+    quoteColor: "#d9b9c2",
+    accent: "#b06b7d",
+    accentText: "#ffffff",
+    pinColor: "#b06b7d",
+    divider: "rgba(0,0,0,0.09)",
+    songBg: "rgba(0,0,0,0.035)",
+    songBorder: "rgba(0,0,0,0.07)",
   },
-  wine: {
-    label: "Wine",
-    scrim: "rgba(16,4,6,0.76)",
-    panel: "rgba(22,6,8,0.60)",
-    panelBorder: "rgba(255,255,255,0.09)",
-    text: "#f5edee",
-    textMuted: "rgba(245,237,238,0.58)",
-    quoteColor: "#c06070",
-    accent: "#c06070",
-    accentText: "#fff",
-    pinColor: "#c06070",
-  },
-  slate: {
-    label: "Slate",
-    scrim: "rgba(8,10,22,0.76)",
-    panel: "rgba(12,14,30,0.60)",
-    panelBorder: "rgba(255,255,255,0.09)",
-    text: "#ebebf5",
-    textMuted: "rgba(235,235,245,0.55)",
-    quoteColor: "#7a9cd8",
-    accent: "#7a9cd8",
-    accentText: "#fff",
-    pinColor: "#7a9cd8",
+  sage: {
+    label: "Sage",
+    scrim: "rgba(233,240,233,0.38)",
+    panel: "rgba(240,245,240,0.94)",
+    panelBorder: "rgba(0,0,0,0.07)",
+    text: "#283028",
+    textMuted: "rgba(40,48,40,0.55)",
+    quoteColor: "#b4cbb4",
+    accent: "#5f7d3f",
+    accentText: "#ffffff",
+    pinColor: "#5f7d3f",
+    divider: "rgba(0,0,0,0.09)",
+    songBg: "rgba(0,0,0,0.035)",
+    songBorder: "rgba(0,0,0,0.07)",
   },
 };
 
 // Scale body font for readability at all lengths, keeping social-share legibility
 function bodyFontSize(len: number): number {
-  if (len <= 60)  return 38;
-  if (len <= 120) return 34;
-  if (len <= 220) return 30;
-  if (len <= 340) return 26;
-  if (len <= 460) return 24;
-  return 22;
+  if (len <= 60)  return 44;
+  if (len <= 120) return 40;
+  if (len <= 220) return 36;
+  if (len <= 340) return 32;
+  if (len <= 460) return 28;
+  return 26;
 }
 
 const OPEN_PATH  = "M0 52V32.5C0 14.55 11.2 3.47 28 0l2.8 8.4C18.2 12.6 14 20.8 14 28h14v24H0Zm36 0V32.5C36 14.55 47.2 3.47 64 0l2.8 8.4C54.2 12.6 50 20.8 50 28h14v24H36Z";
@@ -116,8 +134,8 @@ const QW = 190, QH = 154;
 type Props = { post: AnonymousPost; mapSnapshot?: string; themeKey?: string };
 
 export const ShareCard = forwardRef<HTMLDivElement, Props>(
-  function ShareCard({ post, mapSnapshot, themeKey = "forest" }, ref) {
-    const theme = (CARD_THEMES[themeKey] ?? CARD_THEMES.forest)!;
+  function ShareCard({ post, mapSnapshot, themeKey = "paper" }, ref) {
+    const theme = (CARD_THEMES[themeKey] ?? CARD_THEMES.paper)!;
     const shareUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/p/${post.id}`;
     const hasBody  = !!post.text?.trim();
     const hasSong  = !!post.music;
@@ -144,6 +162,15 @@ export const ShareCard = forwardRef<HTMLDivElement, Props>(
 
         {/* ── LAYER 2: Full-canvas dark scrim ── */}
         <div style={{ position: "absolute", inset: 0, background: theme.scrim }} />
+
+        {/* ── LAYER 2b: Grain / paper texture ── */}
+        <svg aria-hidden="true" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", opacity: 0.06, pointerEvents: "none" }}>
+          <filter id="sc-grain">
+            <feTurbulence type="fractalNoise" baseFrequency="0.68" numOctaves="4" stitchTiles="stitch" />
+            <feColorMatrix type="saturate" values="0" />
+          </filter>
+          <rect width="100%" height="100%" filter="url(#sc-grain)" />
+        </svg>
 
         {/* ── LAYER 3: Corner quote marks — OUTSIDE glass panel, bleeding off canvas ── */}
         {/* Top-left opening quote — bleeds off top-left */}
@@ -178,24 +205,24 @@ export const ShareCard = forwardRef<HTMLDivElement, Props>(
 
         {/* ── LAYER 4: "Sonder." brand top-right ── */}
         <div style={{
-          position: "absolute", top: 56, right: 64,
+          position: "absolute", top: 52, right: 64,
           fontFamily: "var(--font-gilda), serif",
-          fontSize: 30, letterSpacing: "-0.02em",
-          color: theme.text, opacity: 0.80,
+          fontSize: 52, letterSpacing: "-0.02em",
+          color: theme.text, opacity: 0.85,
         }}>
           Sonder<span style={{ color: theme.accent }}>.</span>
         </div>
 
-        {/* ── LAYER 5: Map pin — centered on canvas, above scrim ── */}
+        {/* ── LAYER 5: Map pin — in the exposed map area above the panel ── */}
         <div style={{
           position: "absolute",
-          top: "50%", left: "50%",
-          transform: "translate(-50%, -50%)",
+          top: 160, left: "50%",
+          transform: "translateX(-50%)",
           zIndex: 10,
           pointerEvents: "none",
-          filter: `drop-shadow(0 0 20px ${theme.pinColor}cc)`,
+          filter: `drop-shadow(0 0 16px ${theme.pinColor}cc)`,
         }}>
-          <svg width="56" height="70" viewBox="0 0 56 70" fill="none">
+          <svg width="44" height="56" viewBox="0 0 56 70" fill="none">
             {/* Pulse ring */}
             <circle cx="28" cy="28" r="26" stroke={theme.pinColor} strokeWidth="2" opacity="0.30" />
             {/* Pin body */}
@@ -208,7 +235,7 @@ export const ShareCard = forwardRef<HTMLDivElement, Props>(
         {/* ── LAYER 6: Glass content panel ── */}
         <div style={{
           position: "absolute",
-          top: 112, left: 60, right: 60, bottom: 112,
+          top: 240, left: 60, right: 60, bottom: 112,
           background: theme.panel,
           border: `1.5px solid ${theme.panelBorder}`,
           borderRadius: 28,
@@ -234,7 +261,7 @@ export const ShareCard = forwardRef<HTMLDivElement, Props>(
           </div>
 
           {/* Divider */}
-          <div style={{ height: 1, background: "rgba(255,255,255,0.12)", margin: "20px 0 28px" }} />
+          <div style={{ height: 1, background: theme.divider, margin: "20px 0 28px" }} />
 
           {/* Title */}
           <h1 style={{
@@ -264,8 +291,8 @@ export const ShareCard = forwardRef<HTMLDivElement, Props>(
           {hasSong && post.music && (
             <div style={{
               display: "flex", alignItems: "center", gap: 20,
-              background: "rgba(255,255,255,0.08)",
-              border: "1px solid rgba(255,255,255,0.11)",
+              background: theme.songBg,
+              border: `1px solid ${theme.songBorder}`,
               borderRadius: 18, padding: "18px 22px",
               flexShrink: 0,
             }}>
@@ -275,7 +302,7 @@ export const ShareCard = forwardRef<HTMLDivElement, Props>(
                   <img src={post.music.coverUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 </div>
               ) : (
-                <div style={{ width: 70, height: 70, flexShrink: 0, borderRadius: 10, background: "rgba(255,255,255,0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <div style={{ width: 70, height: 70, flexShrink: 0, borderRadius: 10, background: theme.songBg, display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <svg width="30" height="30" viewBox="0 0 24 24" fill={theme.textMuted}><path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z"/></svg>
                 </div>
               )}
@@ -301,7 +328,7 @@ export const ShareCard = forwardRef<HTMLDivElement, Props>(
           <div style={{ background: "#ffffff", borderRadius: 12, padding: 12 }}>
             <ShareCardQR url={shareUrl} size={96} />
           </div>
-          <p style={{ fontFamily: "var(--font-manrope), sans-serif", fontSize: 14, color: "rgba(255,255,255,0.50)", margin: 0, letterSpacing: "0.04em" }}>
+          <p style={{ fontFamily: "var(--font-manrope), sans-serif", fontSize: 14, color: theme.textMuted, margin: 0, letterSpacing: "0.04em" }}>
             Scan to open confession
           </p>
         </div>

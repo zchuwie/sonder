@@ -38,7 +38,7 @@ function useTileSnapshot(lat: number, lng: number) {
 
 export function ShareCardModal({ post, onClose }: { post: AnonymousPost; onClose: () => void }) {
   const cardRef = useRef<HTMLDivElement>(null);
-  const [themeKey, setThemeKey] = useState("forest");
+  const [themeKey, setThemeKey] = useState("paper");
   const [exporting, setExporting] = useState(false);
   const [preview, setPreview] = useState<string | undefined>();
   const mapSnapshot = useTileSnapshot(post.lat, post.lng);
