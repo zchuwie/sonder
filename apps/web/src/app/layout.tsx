@@ -19,10 +19,16 @@ const manrope = Manrope({
   display: "swap",
 });
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "";
+
+function ensureProtocol(url: string): string {
+  if (!url) return "http://localhost:3000";
+  return url.startsWith("http") ? url : `https://${url}`;
+}
+
+const siteUrl = ensureProtocol(process.env.NEXT_PUBLIC_SITE_URL ?? "");
 
 export const metadata: Metadata = {
-  metadataBase: new URL(siteUrl || "http://localhost:3000"),
+  metadataBase: new URL(siteUrl),
   title: "Sonder",
   description:
     "Anonymous thoughts, memories, photos, and songs pinned to places.",
