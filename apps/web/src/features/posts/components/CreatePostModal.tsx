@@ -76,7 +76,7 @@ export default function CreatePostModal({
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="grid h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-none grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden rounded-2xl border-primary/15 bg-background/97 p-0 shadow-[0_30px_90px_rgba(18,70,35,.26)] backdrop-blur-xl md:h-[min(760px,calc(100dvh-2rem))] md:w-full md:max-w-4xl md:rounded-[30px]">
+      <DialogContent className="grid h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-none grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden rounded-2xl border-primary/15 bg-background/97 p-0 shadow-[0_30px_90px_rgba(18,70,35,.26)] backdrop-blur-xl md:h-[calc(100dvh-3rem)] md:w-[calc(100vw-4rem)] md:max-w-[1280px] md:rounded-[30px]">
         <DialogHeader className="border-b px-4 py-3 pr-12 text-left sm:px-5 sm:py-4 md:px-6">
           <DialogTitle className="text-lg">
             Leave an anonymous thought
@@ -88,7 +88,7 @@ export default function CreatePostModal({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid min-h-0 grid-rows-[150px_minmax(0,1fr)] overflow-hidden md:grid-cols-[.78fr_1.22fr] md:grid-rows-1">
+        <div className="grid min-h-0 grid-rows-[200px_minmax(0,1fr)] overflow-hidden md:grid-cols-[1fr_1.1fr] md:grid-rows-1">
           <div className="min-h-0 border-b md:border-b-0 md:border-r">
             <MiniMapPreview marker={marker} />
           </div>
@@ -108,7 +108,7 @@ export default function CreatePostModal({
                 onChange={(event) => setTitle(event.target.value)}
                 placeholder="Give this thought a short title"
                 maxLength={75}
-                className="h-9 rounded-xl bg-muted/25 px-3 text-sm"
+                className="h-10 rounded-xl bg-muted/25 px-3.5 text-base"
               />
             </div>
             <div className="space-y-1.5">
@@ -126,7 +126,7 @@ export default function CreatePostModal({
                 onChange={(event) => setText(event.target.value)}
                 placeholder="A memory, confession, or quiet thought..."
                 maxLength={500}
-                className="min-h-20 rounded-xl bg-muted/25 px-3 py-2.5 text-sm leading-6"
+                className="min-h-28 rounded-xl bg-muted/25 px-3.5 py-3 text-base leading-7"
               />
             </div>
             <div className="space-y-2.5">
