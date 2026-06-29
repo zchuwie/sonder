@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+# Block non-public routes
+Disallow: /api/
+Disallow: /maintenance
+
+Sitemap: https://sonderconfessions.vercel.app/sitemap.xml
