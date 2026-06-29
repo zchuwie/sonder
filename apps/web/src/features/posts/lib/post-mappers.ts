@@ -1,5 +1,5 @@
 import type { Database, Json } from "@/lib/supabase/database.types";
-import { fetchSignedPostImageUrl } from "@/lib/storage/image-url";
+import { fetchSignedPostImageUrls } from "@/lib/storage/image-url";
 import type { AnonymousPost, MarkerData, Music } from "./post-types";
 import { groupMarkersByLocation } from "./post-utils";
 
@@ -33,16 +33,17 @@ export function rowToPost(row: PostRow, imageUrl?: string): AnonymousPost {
 export async function rowsToMarkersWithSignedImages(
   rows: PostRow[],
 ): Promise<MarkerData[]> {
-  const posts = await Promise.all(
-    rows.map(async (row) => {
-      if (!row.image_path) return rowToPost(row);
-      try {
-        return rowToPost(row, await fetchSignedPostImageUrl(row.id));
-      } catch {
-        return rowToPost(row);
-      }
-    }),
-  );
+  // ponytail: batch-resolve all image URLs in one pass instead of N serial calls
+  const postsWithImages = rows.filter((r) => r.image_path);
+  const signedUrls = postsWithImages.length > 0
+    ? await fetchSignedPostImageUrls(postsWithImages.map((r) => r.id))
+    : new Map<string, string>();
+
+  const posts = rows.map((row) => {
+    const imageUrl = row.image_path ? signedUrls.get(row.id) : undefined;
+    return rowToPost(row, imageUrl);
+  });
+
   return groupMarkersByLocation(
     posts.map((post) => ({
       id: `${post.lat.toFixed(4)},${post.lng.toFixed(4)}`,

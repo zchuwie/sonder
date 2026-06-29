@@ -122,16 +122,15 @@ export function getNearbyVisiblePosts(
       const distance = distanceInKm(center, post);
       return {
         ...post,
+        _d: distance,
         distanceLabel:
           distance < 1
             ? `${Math.max(1, Math.round(distance * 1000))} m away`
             : `${distance.toFixed(1)} km away`,
       };
     })
-    .sort(
-      (a, b) =>
-        distanceInKm(center, a) - distanceInKm(center, b),
-    );
+    .sort((a, b) => a._d - b._d)
+    .map(({ _d, ...post }) => post);
 }
 
 export function getPublicMarkers(markers: MarkerData[]): MarkerData[] {

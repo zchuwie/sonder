@@ -72,6 +72,11 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${gilda.variable} ${manrope.variable}`}
     >
+      <head>
+        <link rel="preconnect" href="https://tiles.openfreemap.org" />
+        <link rel="preconnect" href={process.env.NEXT_PUBLIC_SUPABASE_URL ?? ""} />
+        <link rel="dns-prefetch" href="https://photon.komoot.io" />
+      </head>
       <body className={manrope.variable}>
         <Script
           defer
