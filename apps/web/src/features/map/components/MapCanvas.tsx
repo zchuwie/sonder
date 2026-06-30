@@ -25,6 +25,7 @@ type FlyToTarget = {
   lng: number;
   zoom?: number;
   frameRightPanel?: boolean;
+  panelSide?: 'left' | 'right';
 } | null;
 export type MapViewport = {
   center: { lat: number; lng: number };
@@ -454,20 +455,25 @@ export default function MapCanvas({
   useEffect(() => {
     if (!flyTo || !map.current) return;
     const compact = window.innerWidth < 640;
+    const PANEL = 460; // ~26rem panel + gap
     const options: Parameters<typeof map.current.flyTo>[0] = {
       center: [flyTo.lng, flyTo.lat],
       zoom: flyTo.zoom ?? 15,
       speed: 1.4,
       curve: 1.5,
+      padding: flyTo.frameRightPanel
+        ? {
+            top: compact ? 12 : 24,
+            bottom: compact ? 300 : 24,
+            left: compact ? 10 : 24,
+            right: compact ? 10 : 460,
+          }
+        : flyTo.panelSide === 'left'
+        ? { top: 120, bottom: 80, left: compact ? 20 : PANEL, right: compact ? 20 : 60 }
+        : flyTo.panelSide === 'right'
+        ? { top: 120, bottom: 80, left: compact ? 20 : 60, right: compact ? 20 : PANEL }
+        : { top: compact ? 100 : 220, bottom: compact ? 80 : 80, left: compact ? 20 : 80, right: compact ? 20 : 80 },
     };
-    if (flyTo.frameRightPanel) {
-      options.padding = {
-        top: compact ? 12 : 24,
-        bottom: compact ? 300 : 24,
-        left: compact ? 10 : 24,
-        right: compact ? 10 : 460,
-      };
-    }
     map.current.flyTo(options);
   }, [flyTo]);
 

@@ -44,6 +44,7 @@ type FlyToTarget = {
   lng: number;
   zoom?: number;
   frameRightPanel?: boolean;
+  panelSide?: 'left' | 'right';
 } | null;
 const INITIAL_VIEWPORT: MapViewport = {
   center: { lat: 14.5995, lng: 120.9842 },
@@ -55,6 +56,7 @@ export function MapExperience() {
   useActivityPulse(refreshPosts);
   const [selectedMarkerId, setSelectedMarkerId] = useState<string | null>(null);
   const [selectedPost, setSelectedPost] = useState<AnonymousPost | null>(null);
+  const [panelSide, setPanelSide] = useState<'left' | 'right'>('right');
   const [flyTo, setFlyTo] = useState<FlyToTarget>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [navCreateOpen, setNavCreateOpen] = useState(false);
@@ -178,20 +180,23 @@ export function MapExperience() {
         onMarkerAdd={addMarker}
         onMarkerSelect={(id) => {
           if (!id) { setSelectedMarkerId(null); return; }
-          // Desktop/tablet: skip popup for pins with posts
-          if (window.innerWidth >= 768) {
-            const marker = publicMarkers.find((m) => m.id === id);
-            if (marker && marker.posts.length === 1) {
-              setSelectedPost(marker.posts[0]!);
-              return;
-            }
-            if (marker && marker.posts.length > 1) {
-              setSelectedMarkerId(id);
-              setGroupOpen(true);
-              return;
-            }
+          const marker = publicMarkers.find((m) => m.id === id);
+          // Pin right of viewport center → modal goes left (and vice versa)
+          const side: 'left' | 'right' =
+            marker && marker.lng > viewport.center.lng ? 'left' : 'right';
+          setPanelSide(side);
+          if (marker) setFlyTo({ lat: marker.lat, lng: marker.lng, zoom: 15.5, panelSide: side });
+          // Single post → open PostDetailModal directly after fly starts
+          if (marker && marker.posts.length === 1) {
+            setTimeout(() => setSelectedPost(marker.posts[0]!), 350);
+            return;
           }
+          // Multi-post → MapPostPreview near pin (desktop) or bottom sheet (mobile)
           setSelectedMarkerId(id);
+          // Desktop multi-post: also open group picker
+          if (marker && marker.posts.length > 1 && window.innerWidth >= 768) {
+            setGroupOpen(true);
+          }
         }}
         onCreatePost={() => setCreateOpen(true)}
         onViewGroup={() => setGroupOpen(true)}
@@ -361,6 +366,7 @@ export function MapExperience() {
       {selectedPost && (
         <PostDetailModal
           post={selectedPost}
+          panelSide={panelSide}
           onClose={() => setSelectedPost(null)}
         />
       )}

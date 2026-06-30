@@ -26,22 +26,27 @@ export function buildShareUrl(post: AnonymousPost): string {
 export default function PostDetailModal({
   post,
   onClose,
+  panelSide = 'right',
 }: {
   post: AnonymousPost;
   onClose: () => void;
+  panelSide?: 'left' | 'right';
 }) {
   const [copied, setCopied] = useState(false);
   const [confirmShare, setConfirmShare] = useState(false);
   const [showCard, setShowCard] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const flagged = post.moderationStatus === "flagged";
+  const smPos = panelSide === 'left'
+    ? 'sm:left-20 sm:right-auto sm:top-1/2 sm:-translate-y-1/2 sm:bottom-auto'
+    : 'sm:right-20 sm:left-auto sm:top-1/2 sm:-translate-y-1/2 sm:bottom-auto';
 
   return (
     <>
       <Dialog open modal={false} onOpenChange={(open) => { if (!open && !showCard) onClose(); }}>
         <DialogContent
           overlayClassName="bg-transparent pointer-events-none supports-backdrop-filter:backdrop-blur-none"
-          className={`pointer-events-auto inset-x-2 bottom-2 top-auto flex w-auto max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-2xl border-black/10 bg-background/96 p-0 shadow-2xl backdrop-blur-xl sm:inset-x-auto sm:bottom-4 sm:right-4 sm:top-4 sm:max-h-none sm:w-[24rem] sm:rounded-3xl lg:w-108 ${expanded ? "max-h-[90dvh]" : "max-h-[55dvh]"}`}
+          className={`pointer-events-auto inset-x-2 bottom-2 top-auto flex w-auto max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-2xl border-black/10 bg-background/96 p-0 shadow-2xl backdrop-blur-xl sm:inset-x-auto sm:w-[26rem] sm:rounded-3xl sm:max-h-[78dvh] ${smPos} ${expanded ? "max-h-[90dvh]" : "max-h-[55dvh]"}`}
         >
           {/* Image / cover */}
           {post.imageUrl && !flagged ? (
