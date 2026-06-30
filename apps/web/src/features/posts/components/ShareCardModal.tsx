@@ -10,11 +10,20 @@ import type { AnonymousPost } from "@/features/posts/lib/post-types";
 
 function useTileSnapshot(lat: number, lng: number) {
   const [snap, setSnap] = useState<string | undefined>();
+  const [pinOffset, setPinOffset] = useState<{ x: number; y: number } | undefined>();
+
   useEffect(() => {
     const z = 16;
-    const x = Math.floor(((lng + 180) / 360) * 2 ** z);
+    const scale = 2 ** z;
+    const cx = Math.floor(((lng + 180) / 360) * scale);
     const latR = (lat * Math.PI) / 180;
-    const y = Math.floor(((1 - Math.log(Math.tan(latR) + 1 / Math.cos(latR)) / Math.PI) / 2) * 2 ** z);
+    const cy = Math.floor(((1 - Math.log(Math.tan(latR) + 1 / Math.cos(latR)) / Math.PI) / 2) * scale);
+
+    // Exact pixel of (lat,lng) within the 768×768 canvas (top-left tile = cx-1,cy-1)
+    const exactX = ((lng + 180) / 360) * scale;
+    const exactY = ((1 - Math.log(Math.tan(latR) + 1 / Math.cos(latR)) / Math.PI) / 2) * scale;
+    setPinOffset({ x: (exactX - (cx - 1)) * 256, y: (exactY - (cy - 1)) * 256 });
+
     const canvas = document.createElement("canvas");
     canvas.width = 768; canvas.height = 768;
     const ctx = canvas.getContext("2d");
@@ -26,14 +35,14 @@ function useTileSnapshot(lat: number, lng: number) {
         const sub = subs[i++ % 3];
         const img = new Image();
         img.crossOrigin = "anonymous";
-        img.src = `https://${sub}.tile.openstreetmap.org/${z}/${x + dx}/${y + dy}.png`;
+        img.src = `https://${sub}.tile.openstreetmap.org/${z}/${cx + dx}/${cy + dy}.png`;
         const px = (dx + 1) * 256, py = (dy + 1) * 256;
         img.onload = () => { ctx.drawImage(img, px, py, 256, 256); if (++done === 9) setSnap(canvas.toDataURL()); };
         img.onerror = () => { ctx.fillStyle = "#c8d0c0"; ctx.fillRect(px, py, 256, 256); if (++done === 9) setSnap(canvas.toDataURL()); };
       }
     }
   }, [lat, lng]);
-  return snap;
+  return { snap, pinOffset };
 }
 
 export function ShareCardModal({ post, onClose }: { post: AnonymousPost; onClose: () => void }) {
@@ -42,7 +51,7 @@ export function ShareCardModal({ post, onClose }: { post: AnonymousPost; onClose
   const [exporting, setExporting] = useState(false);
   const [preview, setPreview] = useState<string | undefined>();
   const [fullPlaceName, setFullPlaceName] = useState<string | undefined>();
-  const mapSnapshot = useTileSnapshot(post.lat, post.lng);
+  const { snap: mapSnapshot, pinOffset } = useTileSnapshot(post.lat, post.lng);
 
   // Reverse geocode for full location label
   useEffect(() => {
@@ -68,7 +77,7 @@ export function ShareCardModal({ post, onClose }: { post: AnonymousPost; onClose
 
   // Render preview — dynamic height from actual card element
   useEffect(() => {
-    if (!mapSnapshot || !cardRef.current) return;
+    if (!mapSnapshot || !pinOffset || !cardRef.current) return;
     setPreview(undefined);
     const t = setTimeout(async () => {
       if (!cardRef.current) return;
@@ -82,7 +91,7 @@ export function ShareCardModal({ post, onClose }: { post: AnonymousPost; onClose
       } catch { /* silently skip */ }
     }, 300);
     return () => clearTimeout(t);
-  }, [mapSnapshot, themeKey, fullPlaceName]);
+  }, [mapSnapshot, pinOffset, themeKey, fullPlaceName]);
 
   // Close on Escape
   useEffect(() => {
@@ -194,7 +203,7 @@ export function ShareCardModal({ post, onClose }: { post: AnonymousPost; onClose
 
       {/* Offscreen card — full size for measurement */}
       <div aria-hidden style={{ position: "fixed", left: "-9999px", top: 0, zIndex: -1, pointerEvents: "none" }}>
-        <ShareCard ref={cardRef} post={post} mapSnapshot={mapSnapshot} themeKey={themeKey} fullPlaceName={fullPlaceName} />
+        <ShareCard ref={cardRef} post={post} mapSnapshot={mapSnapshot} pinOffset={pinOffset} themeKey={themeKey} fullPlaceName={fullPlaceName} />
       </div>
     </>
   );

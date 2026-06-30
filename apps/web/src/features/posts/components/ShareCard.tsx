@@ -115,6 +115,7 @@ const QW = 160, QH = 130;
 type Props = {
   post: AnonymousPost;
   mapSnapshot?: string;
+  pinOffset?: { x: number; y: number };
   themeKey?: string;
   fullPlaceName?: string;
 };
@@ -125,7 +126,7 @@ type Props = {
  * The card grows taller when content is long — no clipping, no cramping.
  */
 export const ShareCard = forwardRef<HTMLDivElement, Props>(
-  function ShareCard({ post, mapSnapshot, themeKey = "paper", fullPlaceName }, ref) {
+  function ShareCard({ post, mapSnapshot, pinOffset, themeKey = "paper", fullPlaceName }, ref) {
     const theme = (CARD_THEMES[themeKey] ?? CARD_THEMES.paper)!;
     const shareUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/p/${post.id}`;
     const hasBody = !!post.text?.trim();
@@ -143,19 +144,21 @@ export const ShareCard = forwardRef<HTMLDivElement, Props>(
           borderRadius: 40,
           overflow: "hidden",
           fontFamily: "var(--font-manrope), system-ui, sans-serif",
-          background: "#0a1a0c",
+          // Map background: scale canvas to card width (1080), shift so pin pixel
+          // lands at centre of the 340px map strip (y=170) and card centre (x=540).
+          background: mapSnapshot
+            ? `url(${mapSnapshot}) #0a1a0c`
+            : "#0a1a0c",
+          backgroundSize: mapSnapshot ? "1080px 1080px" : undefined,
+          backgroundPosition: mapSnapshot
+            ? `${540 - (pinOffset?.x ?? 384) * (1080 / 768)}px ${170 - (pinOffset?.y ?? 384) * (1080 / 768)}px`
+            : undefined,
+          backgroundRepeat: "no-repeat",
           display: "flex",
           flexDirection: "column",
         }}
       >
-        {/* ── FULL-BLEED MAP BACKGROUND (covers entire card) ── */}
-        {mapSnapshot && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={mapSnapshot} alt="" aria-hidden="true"
-            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-          />
-        )}
+
         <div style={{ position: "absolute", inset: 0, background: theme.scrim }} />
 
         {/* Grain texture */}
@@ -185,11 +188,11 @@ export const ShareCard = forwardRef<HTMLDivElement, Props>(
             Sonder<span style={{ color: theme.accent }}>.</span>
           </div>
 
-          {/* Map pin — centered in map area */}
+          {/* Map pin — centred in map area (exactly where the location is) */}
           <div style={{
             position: "absolute",
-            top: "55%", left: "50%",
-            transform: "translate(-50%, -50%)",
+            top: "50%", left: "50%",
+            transform: "translate(-50%, -100%)",
             pointerEvents: "none",
             filter: `drop-shadow(0 0 14px ${theme.pinColor}cc)`,
           }}>
