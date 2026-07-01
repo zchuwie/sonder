@@ -62,6 +62,16 @@ export const metadata: Metadata = {
   verification: {
     google: "K3RVd-Nr_F69nHTvk6DjP6UkkaiW4XMQZ1AQvYcQONo",
   },
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Sonder",
+  },
+};
+
+export const viewport = {
+  themeColor: "#ffffff",
 };
 
 export default function RootLayout({

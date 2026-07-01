@@ -1,0 +1,36 @@
+{
+  "name": "Sonder",
+  "short_name": "Sonder",
+  "description": "Anonymous thoughts on a map",
+  "start_url": "/",
+  "id": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "any",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "/brand/sonder-logo.png",
+      "sizes": "192x192 512x512 2160x2160",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/brand/sonder-logo.png",
+      "sizes": "2160x2160",
+      "type": "image/png",
+      "form_factor": "wide"
+    },
+    {
+      "src": "/brand/sonder-logo.png",
+      "sizes": "2160x2160",
+      "type": "image/png"
+    }
+  ]
+}
