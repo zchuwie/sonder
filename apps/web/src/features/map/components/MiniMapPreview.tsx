@@ -79,22 +79,12 @@ export function MiniMapPreview({
           aria-label="OpenFreeMap location preview"
         />
 
-        <div className="absolute inset-x-2 bottom-2 rounded-xl bg-background/90 p-2 shadow-lg backdrop-blur-md md:inset-x-3 md:bottom-3 md:rounded-2xl md:p-3">
-          <p className="flex items-center gap-1.5 truncate text-xs font-semibold md:text-sm">
-            <MapPin className="size-3.5 shrink-0 text-primary md:size-4" />{" "}
-            {currentLocation.placeName ?? "Selected place"}
-          </p>
-          <p className="mt-0.5 font-mono text-[9px] text-muted-foreground md:mt-1 md:text-[10px]">
-            {currentLocation.lat.toFixed(4)}, {currentLocation.lng.toFixed(4)}
-          </p>
-        </div>
-
         {/* Fullscreen expand button — mobile only */}
         <button
           type="button"
           aria-label="Open full-screen map"
           onClick={() => setShowFullScreen(true)}
-          className="absolute left-3 top-3 z-20 flex items-center gap-1.5 rounded-lg border border-border/60 bg-background px-3 py-2 text-sm font-medium text-foreground shadow-lg transition hover:scale-105 hover:shadow-xl md:hidden"
+          className="absolute bottom-3 right-3 z-20 flex items-center gap-1.5 rounded-lg border border-border/60 bg-background px-3 py-2 text-sm font-medium text-foreground shadow-lg transition hover:scale-105 hover:shadow-xl md:hidden"
         >
           <Expand className="size-4" />
           Expand
@@ -114,6 +104,7 @@ export function MiniMapPreview({
         <FullScreenMapPicker
           initialLat={currentLocation.lat}
           initialLng={currentLocation.lng}
+          initialPlaceName={currentLocation.placeName}
           onDone={handleFullScreenDone}
           onClose={() => setShowFullScreen(false)}
         />

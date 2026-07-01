@@ -13,11 +13,13 @@ type PickedLocation = { lat: number; lng: number; placeName?: string };
 export function FullScreenMapPicker({
   initialLat,
   initialLng,
+  initialPlaceName,
   onDone,
   onClose,
 }: {
   initialLat: number;
   initialLng: number;
+  initialPlaceName?: string;
   onDone: (location: PickedLocation) => void;
   onClose: () => void;
 }) {
@@ -25,7 +27,11 @@ export function FullScreenMapPicker({
   const mapRef = useRef<Map | null>(null);
   const markerRef = useRef<Marker | null>(null);
   const { resolvedTheme } = useTheme();
-  const [pinned, setPinned] = useState<PickedLocation | null>(null);
+  const [pinned, setPinned] = useState<PickedLocation | null>({
+    lat: initialLat,
+    lng: initialLng,
+    placeName: initialPlaceName,
+  });
 
   useEffect(() => {
     if (!container.current || mapRef.current) return;
@@ -53,8 +59,6 @@ export function FullScreenMapPicker({
         markerRef.current = new Marker({ color: "#137818", scale: 1.3, draggable: true })
           .setLngLat([initialLng, initialLat])
           .addTo(instance);
-
-        setPinned({ lat: initialLat, lng: initialLng });
 
         markerRef.current.on("dragend", async () => {
           const lngLat = markerRef.current!.getLngLat();
@@ -96,7 +100,7 @@ export function FullScreenMapPicker({
     if (markerRef.current && mapRef.current) {
       markerRef.current.setLngLat([initialLng, initialLat]);
       mapRef.current.flyTo({ center: [initialLng, initialLat], zoom: 15, duration: 400 });
-      setPinned({ lat: initialLat, lng: initialLng });
+      setPinned({ lat: initialLat, lng: initialLng, placeName: initialPlaceName });
     }
   };
 

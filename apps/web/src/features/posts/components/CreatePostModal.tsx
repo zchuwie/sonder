@@ -53,6 +53,9 @@ export default function CreatePostModal({
   const getDraft = usePostDraftStore((state) => state.getDraft);
   const resetDraft = usePostDraftStore((state) => state.reset);
 
+  const draftLocation = usePostDraftStore((state) => state.location);
+  const displayLocation = draftLocation ?? marker;
+
   useEffect(() => {
     prepareForLocation(marker);
   }, [marker, prepareForLocation]);
@@ -84,16 +87,26 @@ export default function CreatePostModal({
           <DialogTitle className="text-lg">
             Leave an anonymous thought
           </DialogTitle>
-          <DialogDescription className="flex items-center gap-1.5">
-            <MapPin className="size-3.5" />{" "}
-            {marker.placeName ??
-              `${marker.lat.toFixed(4)}, ${marker.lng.toFixed(4)}`}
+          <DialogDescription className="flex flex-col gap-0.5">
+            <span className="flex items-center gap-1.5 font-medium text-foreground">
+              <MapPin className="size-3.5 text-primary" />{" "}
+              {displayLocation.placeName ?? "Selected Location"}
+            </span>
+            <span className="ml-5 font-mono text-[10px] text-muted-foreground">
+              {displayLocation.lat.toFixed(5)}, {displayLocation.lng.toFixed(5)}
+            </span>
           </DialogDescription>
         </DialogHeader>
 
         <div className="grid min-h-0 grid-rows-[200px_minmax(0,1fr)] overflow-hidden md:grid-cols-[1fr_1.1fr] md:grid-rows-1">
           <div className="min-h-0 border-b md:border-b-0 md:border-r">
-            <MiniMapPreview marker={marker} previewImage={imageUrl} />
+            <MiniMapPreview
+              marker={displayLocation as MarkerData}
+              previewImage={imageUrl}
+              onLocationChange={(loc) => {
+                usePostDraftStore.setState({ location: { ...displayLocation, ...loc, id: displayLocation.id } });
+              }}
+            />
           </div>
           <div className="min-h-0 space-y-3 overflow-y-auto p-3.5 sm:p-4 md:p-5">
             {isPreview ? (
@@ -108,9 +121,9 @@ export default function CreatePostModal({
                     text,
                     imageUrl,
                     music,
-                    lat: marker.lat,
-                    lng: marker.lng,
-                    placeName: marker.placeName,
+                    lat: displayLocation.lat,
+                    lng: displayLocation.lng,
+                    placeName: displayLocation.placeName,
                     moderationStatus: "pending",
                     createdAt: new Date().toISOString(),
                     likes: 0,
