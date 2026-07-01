@@ -18,7 +18,9 @@ import { MiniMapPreview } from "@/features/map/components/MiniMapPreview";
 import { PhotoAttachmentPicker } from "./PhotoAttachmentPicker";
 import { SongSearchPicker } from "./SongSearchPicker";
 import { TurnstileWidget } from "@/components/TurnstileWidget";
-import type { MarkerData, PostDraft } from "@/features/posts/lib/post-types";
+import { AnonymousPostCard } from "./AnonymousPostCard";
+import type { MarkerData, PostDraft, AnonymousPost } from "@/features/posts/lib/post-types";
+import { getPostType } from "@/features/posts/lib/post-utils";
 import { usePostDraftStore } from "@/features/posts/store/use-post-draft-store";
 
 export default function CreatePostModal({
@@ -31,6 +33,7 @@ export default function CreatePostModal({
   onSubmit: (draft: PostDraft) => Promise<void>;
 }) {
   const [submitting, setSubmitting] = useState(false);
+  const [isPreview, setIsPreview] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [turnstileToken, setTurnstileToken] = useState("");
   const [turnstileReset, setTurnstileReset] = useState(0);
@@ -90,63 +93,89 @@ export default function CreatePostModal({
 
         <div className="grid min-h-0 grid-rows-[200px_minmax(0,1fr)] overflow-hidden md:grid-cols-[1fr_1.1fr] md:grid-rows-1">
           <div className="min-h-0 border-b md:border-b-0 md:border-r">
-            <MiniMapPreview marker={marker} />
+            <MiniMapPreview marker={marker} previewImage={imageUrl} />
           </div>
           <div className="min-h-0 space-y-3 overflow-y-auto p-3.5 sm:p-4 md:p-5">
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <label htmlFor="title" className="text-xs font-medium">
-                  Title <span className="text-primary">*</span>
-                </label>
-                <span className="text-[10px] text-muted-foreground">
-                  {title.length}/75
-                </span>
-              </div>
-              <Input
-                id="title"
-                value={title}
-                onChange={(event) => setTitle(event.target.value)}
-                placeholder="Give this thought a short title"
-                maxLength={75}
-                className="h-10 rounded-xl bg-muted/25 px-3.5 text-base"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <label htmlFor="thought" className="text-xs font-medium">
-                  Your thought <span className="font-normal text-muted-foreground">(optional)</span>
-                </label>
-                <span className="text-[10px] text-muted-foreground">
-                  {text.length}/500
-                </span>
-              </div>
-              <Textarea
-                id="thought"
-                value={text}
-                onChange={(event) => setText(event.target.value)}
-                placeholder="A memory, confession, or quiet thought..."
-                maxLength={500}
-                className="min-h-28 rounded-xl bg-muted/25 px-3.5 py-3 text-base leading-7"
-              />
-            </div>
-            <div className="space-y-2.5">
-              <div>
-                <p className="text-xs font-medium">
-                  Photo <span className="font-normal text-muted-foreground">(optional)</span>
-                </p>
-                <PhotoAttachmentPicker
-                  value={imageUrl}
-                  onChange={setImageUrl}
-                  onFileChange={setImageFile}
+            {isPreview ? (
+              <div className="mx-auto w-full max-w-sm">
+                <p className="mb-4 text-center text-sm font-medium text-muted-foreground">Preview your thought</p>
+                <AnonymousPostCard
+                  post={{
+                    id: "preview",
+                    userId: "preview",
+                    title,
+                    type: getPostType({ title, text, imageUrl, music }),
+                    text,
+                    imageUrl,
+                    music,
+                    lat: marker.lat,
+                    lng: marker.lng,
+                    placeName: marker.placeName,
+                    moderationStatus: "pending",
+                    createdAt: new Date().toISOString(),
+                    likes: 0,
+                    reports: 0,
+                  } as AnonymousPost}
                 />
               </div>
-              <div>
-                <p className="text-xs font-medium">
-                  Song <span className="font-normal text-muted-foreground">(optional)</span>
-                </p>
-                <SongSearchPicker value={music} onChange={setMusic} />
-              </div>
-            </div>
+            ) : (
+              <>
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <label htmlFor="title" className="text-xs font-medium">
+                      Title <span className="text-primary">*</span>
+                    </label>
+                    <span className="text-[10px] text-muted-foreground">
+                      {title.length}/75
+                    </span>
+                  </div>
+                  <Input
+                    id="title"
+                    value={title}
+                    onChange={(event) => setTitle(event.target.value)}
+                    placeholder="Give this thought a short title"
+                    maxLength={75}
+                    className="h-10 rounded-xl bg-muted/25 px-3.5 text-base"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <label htmlFor="thought" className="text-xs font-medium">
+                      Your thought <span className="font-normal text-muted-foreground">(optional)</span>
+                    </label>
+                    <span className="text-[10px] text-muted-foreground">
+                      {text.length}/500
+                    </span>
+                  </div>
+                  <Textarea
+                    id="thought"
+                    value={text}
+                    onChange={(event) => setText(event.target.value)}
+                    placeholder="A memory, confession, or quiet thought..."
+                    maxLength={500}
+                    className="min-h-28 rounded-xl bg-muted/25 px-3.5 py-3 text-base leading-7"
+                  />
+                </div>
+                <div className="space-y-2.5">
+                  <div>
+                    <p className="text-xs font-medium">
+                      Photo <span className="font-normal text-muted-foreground">(optional)</span>
+                    </p>
+                    <PhotoAttachmentPicker
+                      value={imageUrl}
+                      onChange={setImageUrl}
+                      onFileChange={setImageFile}
+                    />
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium">
+                      Song <span className="font-normal text-muted-foreground">(optional)</span>
+                    </p>
+                    <SongSearchPicker value={music} onChange={setMusic} />
+                  </div>
+                </div>
+              </>
+            )}
             {submitError && (
               <Alert variant="destructive">
                 <AlertDescription>{submitError}</AlertDescription>
@@ -158,23 +187,49 @@ export default function CreatePostModal({
         <div className="flex flex-col items-center gap-2 border-t bg-background/95 px-3 py-2 pb-[max(.5rem,env(safe-area-inset-bottom))] sm:px-5 sm:py-2.5">
           <TurnstileWidget onToken={handleToken} resetKey={turnstileReset} />
           <div className="flex w-full items-center justify-end gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="rounded-xl text-xs"
-              onClick={onClose}
-              disabled={submitting}
-            >
-              Cancel
-            </Button>
-            <Button
-              size="sm"
-              className="rounded-xl px-4 text-xs"
-              disabled={!turnstileToken || submitting}
-              onClick={() => void submit()}
-            >
-              {submitting ? "Submitting..." : "Submit for review"}
-            </Button>
+            {!isPreview ? (
+              <>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="rounded-xl text-xs"
+                  onClick={onClose}
+                  disabled={submitting}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  size="sm"
+                  className="rounded-xl px-4 text-xs"
+                  onClick={() => {
+                    if (!title.trim()) { toast.error("Give your thought a title."); return; }
+                    setIsPreview(true);
+                  }}
+                >
+                  Next: Preview
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="rounded-xl text-xs"
+                  onClick={() => setIsPreview(false)}
+                  disabled={submitting}
+                >
+                  Edit
+                </Button>
+                <Button
+                  size="sm"
+                  className="rounded-xl px-4 text-xs"
+                  disabled={!turnstileToken || submitting}
+                  onClick={() => void submit()}
+                >
+                  {submitting ? "Submitting..." : "Submit"}
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </DialogContent>

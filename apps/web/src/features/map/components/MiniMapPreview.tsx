@@ -11,9 +11,11 @@ import type { MarkerData } from "@/features/posts/lib/post-types";
 export function MiniMapPreview({
   marker,
   onLocationChange,
+  previewImage,
 }: {
   marker: MarkerData;
   onLocationChange?: (loc: { lat: number; lng: number; placeName?: string }) => void;
+  previewImage?: string;
 }) {
   const container = useRef<HTMLDivElement>(null);
   const map = useRef<Map | null>(null);
@@ -34,7 +36,18 @@ export function MiniMapPreview({
     });
     map.current.on("load", () => {
       if (!map.current) return;
-      pin.current = new Marker({ color: "#137818", scale: 1.2 })
+      
+      let el: HTMLElement | undefined;
+      if (previewImage) {
+        el = document.createElement("div");
+        el.className = "size-8 rounded-lg border-2 border-white bg-black overflow-hidden shadow-md";
+        const img = document.createElement("img");
+        img.src = previewImage;
+        img.className = "size-full object-cover";
+        el.appendChild(img);
+      }
+
+      pin.current = new Marker(el ? { element: el } : { color: "#137818", scale: 1.2 })
         .setLngLat([currentLocation.lng, currentLocation.lat])
         .addTo(map.current);
     });
@@ -44,7 +57,7 @@ export function MiniMapPreview({
       map.current?.remove();
       map.current = null;
     };
-  }, [currentLocation.lat, currentLocation.lng, resolvedTheme]);
+  }, [currentLocation.lat, currentLocation.lng, resolvedTheme, previewImage]);
 
   const handleFullScreenDone = (loc: { lat: number; lng: number; placeName?: string }) => {
     setCurrentLocation(loc);
