@@ -7,7 +7,6 @@ import { relativeTime } from "@/features/posts/lib/post-utils";
 import type { AnonymousPost } from "@/features/posts/lib/post-types";
 import { MusicPreviewCard } from "./MusicPreviewCard";
 import { SharedPostMap } from "@/features/map/components/SharedPostMap";
-import { ReportPostButton } from "@/features/moderation/components/ReportPostButton";
 
 export function PublicPostView({ post }: { post: AnonymousPost }) {
   return (
@@ -92,7 +91,6 @@ export function PublicPostView({ post }: { post: AnonymousPost }) {
             </span>
           </div>
           <div className="grid grid-cols-1 gap-2 border-t pt-3 sm:flex sm:flex-wrap">
-            <ReportPostButton postId={post.id} className="w-full sm:w-auto" />
             <Button asChild className="w-full rounded-xl sm:ml-auto sm:w-auto">
               <Link href="/map">Explore map</Link>
             </Button>
