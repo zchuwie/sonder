@@ -78,7 +78,12 @@ export function ModerationProvider({ children }: { children: ReactNode }) {
                   !remotePostIds.has(post.id),
               ),
             }))
-            .filter((marker) => marker.posts.length > 0),
+            .filter(
+              (marker) =>
+                marker.posts.length > 0 ||
+                marker.source === "search" ||
+                marker.source === "manual",
+            ),
         ]),
       );
     }

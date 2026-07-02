@@ -117,19 +117,25 @@ export function MapSearchBar({ onPlaceSelect, center }: Props) {
   });
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const justSelected = useRef(false);
 
   useEffect(() => setRecent(loadRecent()), []);
   useEffect(() => {
+    if (justSelected.current) { justSelected.current = false; return; }
     if (query.trim().length >= 2) setOpen(true);
     setPage(1);
     setActiveIndex(-1);
   }, [query]);
   useEffect(() => {
-    const close = (event: MouseEvent) => {
+    const close = (event: MouseEvent | TouchEvent) => {
       if (!containerRef.current?.contains(event.target as Node)) setOpen(false);
     };
     document.addEventListener("mousedown", close);
-    return () => document.removeEventListener("mousedown", close);
+    document.addEventListener("touchstart", close as EventListener);
+    return () => {
+      document.removeEventListener("mousedown", close);
+      document.removeEventListener("touchstart", close as EventListener);
+    };
   }, []);
 
   const showRecent = !query.trim() && recent.length > 0;
@@ -143,6 +149,7 @@ export function MapSearchBar({ onPlaceSelect, center }: Props) {
     setRecent(loadRecent());
     setQuery(place.name);
     setOpen(false);
+    justSelected.current = true;
     inputRef.current?.blur();
   };
 
@@ -182,6 +189,7 @@ export function MapSearchBar({ onPlaceSelect, center }: Props) {
           onChange={(event) => setQuery(event.target.value)}
           onKeyDown={onKeyDown}
           onFocus={() => {
+            if (justSelected.current) return;
             if (displayList.length || query.trim().length >= 2) setOpen(true);
           }}
           placeholder="Search barangays, landmarks, or cities..."
