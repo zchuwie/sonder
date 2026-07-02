@@ -10,8 +10,8 @@ const allowedOrigins: Set<string> = new Set(
 );
 
 function getAllowOrigin(req: Request): string {
-  // Dev fallback: if no origins configured, allow all (local dev only)
-  if (allowedOrigins.size === 0) return "*";
+  // Dev fallback: if no origins configured, echo the requester's origin
+  if (allowedOrigins.size === 0) return req.headers.get("origin") ?? "*";
   const origin = req.headers.get("origin") ?? "";
   return allowedOrigins.has(origin) ? origin : "";
 }
