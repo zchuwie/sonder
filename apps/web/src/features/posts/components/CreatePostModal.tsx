@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { toast } from "sonner";
 import { MapPin } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -33,6 +33,7 @@ export default function CreatePostModal({
   onSubmit: (draft: PostDraft) => Promise<void>;
 }) {
   const [submitting, setSubmitting] = useState(false);
+  const inFlight = useRef(false);
   const [isPreview, setIsPreview] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [turnstileToken, setTurnstileToken] = useState("");
@@ -61,8 +62,9 @@ export default function CreatePostModal({
   }, [marker, prepareForLocation]);
 
   const submit = async () => {
-    if (!turnstileToken || submitting) return;
+    if (!turnstileToken || inFlight.current) return;
     if (!title.trim()) { toast.error("Give your thought a title."); return; }
+    inFlight.current = true;
     setSubmitting(true);
     setSubmitError("");
     try {
@@ -74,9 +76,11 @@ export default function CreatePostModal({
       const msg = cause instanceof Error ? cause.message : "Unable to submit thought.";
       setSubmitError(msg);
       toast.error("Something went wrong. Please try again.");
-      setSubmitting(false);
       setTurnstileToken("");
       setTurnstileReset((n) => n + 1);
+    } finally {
+      inFlight.current = false;
+      setSubmitting(false);
     }
   };
 

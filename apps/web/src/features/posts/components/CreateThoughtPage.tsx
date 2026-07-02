@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { MapPin } from "lucide-react";
 import { toast } from "sonner";
@@ -24,15 +24,17 @@ export function CreateThoughtPage() {
   const [imageFile, setImageFile] = useState<File | undefined>();
   const [music, setMusic] = useState<Music | undefined>();
   const [submitting, setSubmitting] = useState(false);
+  const inFlight = useRef(false);
   const [error, setError] = useState("");
   const [turnstileToken, setTurnstileToken] = useState("");
   const [turnstileReset, setTurnstileReset] = useState(0);
   const handleToken = useCallback((token: string) => setTurnstileToken(token), []);
 
   async function submit() {
-    if (!turnstileToken || submitting) return;
+    if (!turnstileToken || inFlight.current) return;
     if (!location) { toast.error("Pin a location on the map first."); return; }
     if (!title.trim()) { toast.error("Give your thought a title."); return; }
+    inFlight.current = true;
     setSubmitting(true);
     setError("");
     try {
@@ -47,6 +49,7 @@ export function CreateThoughtPage() {
       setTurnstileToken("");
       setTurnstileReset((n) => n + 1);
     } finally {
+      inFlight.current = false;
       setSubmitting(false);
     }
   }
