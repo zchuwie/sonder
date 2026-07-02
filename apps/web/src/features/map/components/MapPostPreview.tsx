@@ -58,11 +58,12 @@ export function MapPostPreview({
             <p className="mt-1.5 text-[10px] text-muted-foreground">{relativeTime(posts[0]!.createdAt)}</p>
           </button>
         ) : posts.length > 1 ? (
-          /* Multiple posts — cluster list + view details */
+          /* Multiple posts — scrollable list */
           <>
             <p className="text-sm font-medium">{posts.length} thoughts pinned here</p>
-            <PostClusterList posts={posts} limit={2} onSelect={(post) => onSelectPost?.(post)} />
-            <Button size="sm" className="w-full rounded-xl" onClick={onViewGroup}>View all</Button>
+            <div className="max-h-[220px] overflow-y-auto pr-1 pb-1 -mr-1">
+              <PostClusterList posts={posts} limit={posts.length} onSelect={(post) => onSelectPost?.(post)} />
+            </div>
           </>
         ) : (
           /* No posts */

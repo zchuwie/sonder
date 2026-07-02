@@ -193,10 +193,6 @@ export function MapExperience() {
           }
           // Multi-post → MapPostPreview near pin (desktop) or bottom sheet (mobile)
           setSelectedMarkerId(id);
-          // Desktop multi-post: also open group picker
-          if (marker && marker.posts.length > 1 && window.innerWidth >= 768) {
-            setGroupOpen(true);
-          }
         }}
         onCreatePost={() => setCreateOpen(true)}
         onViewGroup={() => setGroupOpen(true)}
