@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { searchLocalPlaces, searchPlaces } from "../lib/place-search";
+import { RateLimitedError } from "../lib/search-providers/nominatim";
 import type {
   PlaceSearchResult,
 } from "../lib/place-search-types";
@@ -22,6 +23,7 @@ export function usePlaceSearch({
   const [results, setResults] = useState<PlaceSearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  const [rateLimited, setRateLimited] = useState(false);
 
   useEffect(() => {
     const trimmed = query.trim();
@@ -34,9 +36,11 @@ export function usePlaceSearch({
       setResults([]);
       setLoading(false);
       setHasSearched(false);
+      setRateLimited(false);
       return;
     }
 
+    setRateLimited(false);
     const local = searchLocalPlaces(trimmed, center);
     setResults(local);
     setLoading(true);
@@ -44,6 +48,9 @@ export function usePlaceSearch({
     const timer = setTimeout(() => {
       void searchPlaces(trimmed, center, controller.signal)
         .then(setResults)
+        .catch((err) => {
+          if (err instanceof RateLimitedError) setRateLimited(true);
+        })
         .finally(() => {
           if (!controller.signal.aborted) {
             setLoading(false);
@@ -58,5 +65,5 @@ export function usePlaceSearch({
     };
   }, [query, centerLat, centerLng]);
 
-  return { results, loading, hasSearched };
+  return { results, loading, hasSearched, rateLimited };
 }

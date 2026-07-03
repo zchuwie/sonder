@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { checkRateLimit } from "@/lib/rate-limit";
 import type { MusicSearchResult } from "@/features/music/lib/music-types";
 
 type DeezerTrack = {
@@ -30,6 +31,9 @@ function normalizeTrack(track: DeezerTrack): MusicSearchResult {
 }
 
 export async function GET(request: NextRequest) {
+  const limited = await checkRateLimit(request, "music-search", 30, 60);
+  if (limited) return limited;
+
   const query = request.nextUrl.searchParams.get("q")?.trim().slice(0, 100) ?? "";
   const suggestions =
     request.nextUrl.searchParams.get("mode") === "suggestions" || !query;

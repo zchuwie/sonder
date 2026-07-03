@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { checkRateLimit } from "@/lib/rate-limit";
 import type { PlaceSearchResult } from "@/features/map/lib/place-search-types";
 
 type NominatimResult = {
@@ -17,6 +18,9 @@ type NominatimResult = {
 export const revalidate = 300;
 
 export async function GET(request: NextRequest) {
+  const limited = await checkRateLimit(request, "places-search", 20, 60);
+  if (limited) return limited;
+
   const query = request.nextUrl.searchParams.get("q")?.trim();
   if (!query || query.length < 2) return NextResponse.json([]);
 

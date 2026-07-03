@@ -110,7 +110,7 @@ export function MapSearchBar({ onPlaceSelect, center }: Props) {
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
   const [page, setPage] = useState(1);
-  const { results, loading, hasSearched } = usePlaceSearch({
+  const { results, loading, hasSearched, rateLimited } = usePlaceSearch({
     query,
     centerLat: center?.lat,
     centerLng: center?.lng,
@@ -232,10 +232,21 @@ export function MapSearchBar({ onPlaceSelect, center }: Props) {
             )}
             {!showRecent && hasSearched && !loading && results.length === 0 && (
               <div className="px-4 py-8 text-center">
-                <p className="text-sm font-medium">No places found</p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Try another name or pin anywhere on the map.
-                </p>
+                {rateLimited ? (
+                  <>
+                    <p className="text-sm font-medium">Too many requests</p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Try again in a moment.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-sm font-medium">No places found</p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Try another name or pin anywhere on the map.
+                    </p>
+                  </>
+                )}
               </div>
             )}
             <ul role="listbox" className="max-h-[min(56dvh,18rem)] overflow-y-auto">

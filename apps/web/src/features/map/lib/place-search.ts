@@ -1,6 +1,6 @@
 import { localPlaceAliases } from "./local-place-aliases";
 import { normalizeSearchText, rankSearchResults } from "./search-fuzzy";
-import { searchNominatim } from "./search-providers/nominatim";
+import { searchNominatim, RateLimitedError } from "./search-providers/nominatim";
 import { searchPhoton } from "./search-providers/photon";
 import type { PlaceSearchResult, SearchCenter } from "./place-search-types";
 
@@ -39,7 +39,10 @@ export async function searchPlaces(
   const photon = await searchPhoton(query, center, signal).catch(() => []);
   const nominatim =
     photon.length < 3
-      ? await searchNominatim(query, center, signal).catch(() => [])
+      ? await searchNominatim(query, center, signal).catch((err) => {
+          if (err instanceof RateLimitedError) throw err; // propagate 429
+          return [];
+        })
       : [];
   const results = rankSearchResults([...local, ...photon, ...nominatim], query, center);
   searchCache.set(key, { timestamp: Date.now(), results });

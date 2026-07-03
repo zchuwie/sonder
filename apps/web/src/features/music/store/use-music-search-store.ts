@@ -10,6 +10,7 @@ export type MusicSearchCacheEntry = {
   timestamp: number;
   loading: boolean;
   error: boolean;
+  rateLimited: boolean;
 };
 
 type MusicSearchStore = {
@@ -17,7 +18,7 @@ type MusicSearchStore = {
   getFreshEntry: (key: string, now?: number) => MusicSearchCacheEntry | null;
   beginSearch: (key: string) => void;
   completeSearch: (key: string, results: MusicSearchResult[]) => void;
-  failSearch: (key: string) => void;
+  failSearch: (key: string, rateLimited?: boolean) => void;
   clearExpired: (now?: number) => void;
   clearCache: () => void;
 };
@@ -56,6 +57,7 @@ export const useMusicSearchStore = create<MusicSearchStore>((set, get) => ({
           timestamp: state.cache[key]?.timestamp ?? 0,
           loading: true,
           error: false,
+          rateLimited: false,
         },
       },
     })),
@@ -68,10 +70,11 @@ export const useMusicSearchStore = create<MusicSearchStore>((set, get) => ({
           timestamp: Date.now(),
           loading: false,
           error: false,
+          rateLimited: false,
         },
       }),
     })),
-  failSearch: (key) =>
+  failSearch: (key, rateLimited = false) =>
     set((state) => ({
       cache: {
         ...state.cache,
@@ -80,6 +83,7 @@ export const useMusicSearchStore = create<MusicSearchStore>((set, get) => ({
           timestamp: state.cache[key]?.timestamp ?? 0,
           loading: false,
           error: true,
+          rateLimited,
         },
       },
     })),

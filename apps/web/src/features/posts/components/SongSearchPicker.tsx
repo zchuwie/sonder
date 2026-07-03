@@ -23,7 +23,7 @@ export function SongSearchPicker({
   onChange: (music?: Music) => void;
 }) {
   const [query, setQuery] = useState("");
-  const { results: deezerResults, loading, error } = useDeezerSearch(query);
+  const { results: deezerResults, loading, error, rateLimited } = useDeezerSearch(query);
   const results: SongSearchResult[] = deezerResults.map((song) => ({
         id: song.providerId,
         provider: "deezer",
@@ -108,7 +108,9 @@ export function SongSearchPicker({
           ) : error && !results.length ? (
             <div className="grid place-items-center gap-2 py-8 text-center text-xs text-muted-foreground">
               <Music2 className="size-5" />
-              Unable to load songs right now.
+              {rateLimited
+                ? "Too many requests — try again in a moment."
+                : "Unable to load songs right now."}
             </div>
           ) : results.length ? (
             results.map((song) => (

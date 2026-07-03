@@ -1,11 +1,15 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { checkRateLimit } from "@/lib/rate-limit";
 import {
   rowsToMarkersWithSignedImages,
   type PostRow,
 } from "@/features/posts/lib/post-mappers";
 
 export async function GET(request: NextRequest) {
+  const limited = await checkRateLimit(request, "posts", 30, 60);
+  if (limited) return limited;
+
   const supabase = await createClient();
   if (!supabase) return NextResponse.json([], { status: 503 });
 

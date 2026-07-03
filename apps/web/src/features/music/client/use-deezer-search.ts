@@ -14,14 +14,10 @@ async function requestMusic(query: string): Promise<MusicSearchResult[]> {
   const params = new URLSearchParams(
     query ? { q: query } : { mode: "suggestions" },
   );
-  try {
-    const response = await fetch(`/api/music/search?${params}`);
-    if (!response.ok) throw new Error("Website music search unavailable");
-    const payload = (await response.json()) as {
-      results?: MusicSearchResult[];
-    };
-    return payload.results ?? [];
-  } catch {
+  const response = await fetch(`/api/music/search?${params}`);
+  if (response.status === 429) throw Object.assign(new Error("rate_limited"), { rateLimited: true });
+  if (!response.ok) {
+    // Fallback to edge function on non-429 errors
     const supabase = createClient();
     if (!supabase) throw new Error("Music search unavailable");
     const { data, error } = await supabase.functions.invoke("deezer-search", {
@@ -30,6 +26,8 @@ async function requestMusic(query: string): Promise<MusicSearchResult[]> {
     if (error) throw error;
     return (data?.results ?? []) as MusicSearchResult[];
   }
+  const payload = (await response.json()) as { results?: MusicSearchResult[] };
+  return payload.results ?? [];
 }
 
 export function useDeezerSearch(query: string) {
@@ -58,7 +56,10 @@ export function useDeezerSearch(query: string) {
         .then((results) =>
           useMusicSearchStore.getState().completeSearch(key, results),
         )
-        .catch(() => useMusicSearchStore.getState().failSearch(key));
+        .catch((err: unknown) => {
+          const limited = typeof err === "object" && err !== null && "rateLimited" in err;
+          useMusicSearchStore.getState().failSearch(key, !!limited);
+        });
     }, trimmed ? 300 : 0);
 
     return () => clearTimeout(timer);
@@ -68,5 +69,6 @@ export function useDeezerSearch(query: string) {
     results: trimmed.length === 1 ? [] : (entry?.results ?? []),
     loading: trimmed.length === 1 ? false : (entry?.loading ?? true),
     error: trimmed.length === 1 ? false : (entry?.error ?? false),
+    rateLimited: trimmed.length === 1 ? false : (entry?.rateLimited ?? false),
   };
 }

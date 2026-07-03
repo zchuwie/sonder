@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { checkRateLimit } from "@/lib/rate-limit";
 import type { MusicSearchResult } from "@/features/music/lib/music-types";
 
 type DeezerTrack = {
@@ -38,11 +39,14 @@ export async function GET(
     return NextResponse.json({ error: "Invalid Deezer track ID" }, { status: 400 });
   }
 
+  const limited = await checkRateLimit(_request, "music-track", 60, 3600);
+  if (limited) return limited;
+
   try {
     const base = process.env.DEEZER_API_BASE_URL ?? "https://api.deezer.com";
     const response = await fetch(`${base}/track/${trackId}`, {
       headers: { Accept: "application/json" },
-      cache: "no-store",
+      next: { revalidate: 3600 },
     });
     if (!response.ok) throw new Error(`Deezer returned ${response.status}`);
     return NextResponse.json({ track: normalizeTrack(await response.json()) });
