@@ -3,7 +3,6 @@
 import { useMemo, useState } from "react";
 import {
   Compass,
-  LocateFixed,
   MapPin,
   Plus,
   X,
@@ -153,11 +152,6 @@ export function MapExperience() {
     if (selectedMarker?.posts.length === 0) setSelectedMarkerId(null);
   };
 
-  const locate = () =>
-    navigator.geolocation?.getCurrentPosition(({ coords }) =>
-      setFlyTo({ lat: coords.latitude, lng: coords.longitude, zoom: 15 }),
-    );
-
   const openPostOnMap = (post: AnonymousPost) => {
     const marker = publicMarkers.find((item) =>
       item.posts.some((markerPost) => markerPost.id === post.id),
@@ -211,15 +205,7 @@ export function MapExperience() {
             <MapSearchBar onPlaceSelect={selectPlace} center={viewport.center} />
           </div>
           <ThemeSettingsMenu />
-          <Button
-            variant="secondary"
-            size="icon"
-            className="size-10 rounded-full border border-black/10"
-            onClick={locate}
-            aria-label="Use my location"
-          >
-            <LocateFixed className="size-4" />
-          </Button>
+
           <Button
             className="rounded-full px-5"
             onClick={() => setNavCreateOpen(true)}
@@ -241,17 +227,7 @@ export function MapExperience() {
           <div className="pointer-events-auto">
             <ThemeSettingsMenu />
           </div>
-          <div className="pointer-events-auto">
-            <Button
-              variant="secondary"
-              size="icon"
-              className="size-11 rounded-full border border-black/10 bg-background/95 shadow-lg backdrop-blur-md transition-[transform,background-color,box-shadow] duration-200 hover:scale-[1.03] hover:bg-background hover:shadow-xl"
-              onClick={locate}
-              aria-label="Use my location"
-            >
-              <LocateFixed />
-            </Button>
-          </div>
+
         </div>
       </div>
       <div className="absolute bottom-16 right-5 z-30 hidden space-y-2 sm:block">
