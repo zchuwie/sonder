@@ -54,9 +54,9 @@ type HoverPreview = {
 function contentSummary(posts: MarkerData["posts"]) {
   const types = new Set<string>();
   for (const post of posts) {
-    if (post.imageUrl) types.add("Photos");
+    if (post.imageUrl || post.imagePath) types.add("Photos");
     if (post.music) types.add("Songs");
-    if (!post.imageUrl && !post.music) types.add("Text");
+    if (!post.imageUrl && !post.imagePath && !post.music) types.add("Text");
   }
   return types.size ? [...types].join(" + ") : "Text";
 }
@@ -170,7 +170,7 @@ export default function MapCanvas({
         promoteId: "id",
         cluster: true,
         clusterMaxZoom: 13,
-        clusterRadius: 50,
+        clusterRadius: 20,
       });
 
       map.current.addLayer({
@@ -255,6 +255,11 @@ export default function MapCanvas({
           .then((zoom) => {
             const coords = geometry.coordinates as [number, number];
             map.current!.easeTo({ center: coords, zoom });
+          })
+          .catch((err) => {
+            // Ignore missing cluster errors (happens if data syncs mid-click)
+            const coords = geometry.coordinates as [number, number];
+            map.current!.easeTo({ center: coords, zoom: map.current!.getZoom() + 2 });
           });
       });
 
@@ -469,10 +474,10 @@ export default function MapCanvas({
             right: compact ? 10 : 460,
           }
         : flyTo.panelSide === 'left'
-        ? { top: 120, bottom: 80, left: compact ? 20 : PANEL, right: compact ? 20 : 60 }
+        ? { top: 120, bottom: compact ? 380 : 80, left: compact ? 20 : PANEL, right: compact ? 20 : 60 }
         : flyTo.panelSide === 'right'
-        ? { top: 120, bottom: 80, left: compact ? 20 : 60, right: compact ? 20 : PANEL }
-        : { top: compact ? 100 : 220, bottom: compact ? 80 : 80, left: compact ? 20 : 80, right: compact ? 20 : 80 },
+        ? { top: 120, bottom: compact ? 380 : 80, left: compact ? 20 : 60, right: compact ? 20 : PANEL }
+        : { top: compact ? 100 : 220, bottom: compact ? 380 : 80, left: compact ? 20 : 80, right: compact ? 20 : 80 },
     };
     map.current.flyTo(options);
   }, [flyTo]);

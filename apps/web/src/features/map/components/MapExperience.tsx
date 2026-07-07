@@ -3,7 +3,6 @@
 import { useMemo, useState } from "react";
 import {
   Compass,
-  LocateFixed,
   MapPin,
   Plus,
   X,
@@ -153,11 +152,6 @@ export function MapExperience() {
     if (selectedMarker?.posts.length === 0) setSelectedMarkerId(null);
   };
 
-  const locate = () =>
-    navigator.geolocation?.getCurrentPosition(({ coords }) =>
-      setFlyTo({ lat: coords.latitude, lng: coords.longitude, zoom: 15 }),
-    );
-
   const openPostOnMap = (post: AnonymousPost) => {
     const marker = publicMarkers.find((item) =>
       item.posts.some((markerPost) => markerPost.id === post.id),
@@ -211,15 +205,7 @@ export function MapExperience() {
             <MapSearchBar onPlaceSelect={selectPlace} center={viewport.center} />
           </div>
           <ThemeSettingsMenu />
-          <Button
-            variant="secondary"
-            size="icon"
-            className="size-10 rounded-full border border-black/10"
-            onClick={locate}
-            aria-label="Use my location"
-          >
-            <LocateFixed className="size-4" />
-          </Button>
+
           <Button
             className="rounded-full px-5"
             onClick={() => setNavCreateOpen(true)}
@@ -241,17 +227,7 @@ export function MapExperience() {
           <div className="pointer-events-auto">
             <ThemeSettingsMenu />
           </div>
-          <div className="pointer-events-auto">
-            <Button
-              variant="secondary"
-              size="icon"
-              className="size-11 rounded-full border border-black/10 bg-background/95 shadow-lg backdrop-blur-md transition-[transform,background-color,box-shadow] duration-200 hover:scale-[1.03] hover:bg-background hover:shadow-xl"
-              onClick={locate}
-              aria-label="Use my location"
-            >
-              <LocateFixed />
-            </Button>
-          </div>
+
         </div>
       </div>
       <div className="absolute bottom-16 right-5 z-30 hidden space-y-2 sm:block">
@@ -268,8 +244,8 @@ export function MapExperience() {
       </div>
       <div className="absolute inset-x-2.5 bottom-0 z-30 pb-[max(.625rem,env(safe-area-inset-bottom))] sm:hidden">
         {selectedMarker && !selectedPost ? (
-          <div className="rounded-2xl border border-black/10 bg-background/95 p-3 shadow-2xl backdrop-blur-xl">
-            <div className="flex items-start gap-3">
+          <div className="flex max-h-[45dvh] flex-col rounded-2xl border border-black/10 bg-background/95 p-3 shadow-2xl backdrop-blur-xl">
+            <div className="flex shrink-0 items-start gap-3">
               <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
                 <MapPin className="size-5" />
               </div>
@@ -291,33 +267,29 @@ export function MapExperience() {
                 <X />
               </Button>
             </div>
-            {publicSelectedMarker && publicSelectedMarker.posts.length === 1 && (
-              <div className="mt-3 grid grid-cols-2 gap-2">
-                <Button variant="outline" className="rounded-xl" onClick={() => setCreateOpen(true)}>
-                  <Plus /> Add thought
-                </Button>
-                <Button className="rounded-xl" onClick={() => { setSelectedPost(publicSelectedMarker.posts[0]!); setSelectedMarkerId(null); }}>
-                  View thought
-                </Button>
-              </div>
-            )}
-            {publicSelectedMarker && publicSelectedMarker.posts.length > 1 && (
+            {publicSelectedMarker && publicSelectedMarker.posts.length > 0 && (
               <>
-                <div className="mt-3">
-                  <PostClusterList posts={publicSelectedMarker.posts} limit={2} onSelect={(post) => { setSelectedPost(post); setSelectedMarkerId(null); }} />
+                <div className="mt-3 min-h-0 flex-1 overflow-y-auto pb-2 pr-1">
+                  <PostClusterList posts={publicSelectedMarker.posts} limit={20} onSelect={(post) => { setSelectedPost(post); setSelectedMarkerId(null); }} />
+                  {publicSelectedMarker.posts.length > 20 && (
+                    <Button 
+                      variant="ghost" 
+                      className="mt-2 w-full text-xs text-muted-foreground" 
+                      onClick={() => setGroupOpen(true)}
+                    >
+                      View all {publicSelectedMarker.posts.length} posts
+                    </Button>
+                  )}
                 </div>
-                <div className="mt-2 grid grid-cols-2 gap-2">
-                  <Button variant="outline" className="rounded-xl" onClick={() => setCreateOpen(true)}>
+                <div className="mt-2">
+                  <Button variant="outline" className="w-full rounded-xl" onClick={() => setCreateOpen(true)}>
                     <Plus /> Add thought
-                  </Button>
-                  <Button className="rounded-xl" onClick={() => setGroupOpen(true)}>
-                    View all
                   </Button>
                 </div>
               </>
             )}
             {(!publicSelectedMarker || publicSelectedMarker.posts.length === 0) && (
-              <Button className="mt-3 w-full rounded-xl" onClick={() => setCreateOpen(true)}>
+              <Button className="mt-3 w-full shrink-0 rounded-xl" onClick={() => setCreateOpen(true)}>
                 <Plus /> Create a post
               </Button>
             )}

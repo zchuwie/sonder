@@ -3,9 +3,10 @@
 import { useCallback, useRef, useState } from "react";
 import { ensureAnonymousSession } from "@/lib/auth/anonymous-session";
 import { createClient } from "@/lib/supabase/browser";
-import { rowsToMarkersWithSignedImages } from "@/features/posts/lib/post-mappers";
+import { rowsToMarkers } from "@/features/posts/lib/post-mappers";
 import type { MarkerData } from "@/features/posts/lib/post-types";
 import type { PostRow } from "@/features/posts/lib/post-mappers";
+import { usePinStore } from "@/features/map/store/use-pin-store";
 
 export type Bounds = {
   north: number;
@@ -21,6 +22,7 @@ export function usePosts() {
   const [remoteMarkers, setRemoteMarkers] = useState<MarkerData[] | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastBoundsRef = useRef<Bounds | null>(null);
+  const addMarkers = usePinStore((state) => state.addMarkers);
 
   const fetchInBounds = useCallback(async (bounds: Bounds) => {
     const supabase = createClient();
@@ -35,15 +37,14 @@ export function usePosts() {
         lim: 200,
       });
       if (error) throw error;
-      const markers = await rowsToMarkersWithSignedImages(
-        (data ?? []) as PostRow[],
-      );
+      const markers = rowsToMarkers((data ?? []) as PostRow[]);
       setRemoteMarkers(markers);
+      addMarkers(markers);
       return markers;
     } catch {
       return null;
     }
-  }, []);
+  }, [addMarkers]);
 
   const refresh = useCallback(
     async (bounds?: Bounds) => {
