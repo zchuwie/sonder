@@ -42,6 +42,10 @@ export default function PostDetailModal({
   const [signedUrl, setSignedUrl] = useState<string | null>(post.imageUrl ?? null);
 
   useEffect(() => {
+    setSignedUrl(post.imageUrl ?? null);
+  }, [post.id, post.imageUrl]);
+
+  useEffect(() => {
     if (!signedUrl && post.imagePath) {
       void fetchSignedPostImageUrl(post.id).then(url => {
         if (url) setSignedUrl(url);

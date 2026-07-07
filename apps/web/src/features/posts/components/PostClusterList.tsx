@@ -16,8 +16,8 @@ export function PostClusterList({ posts, onSelect, limit = 3 }: { posts: Anonymo
       void fetchSignedPostImageUrls(toFetch).then(res => {
         setSignedUrls(prev => {
           const next = new Map(prev);
-          for (const [id, url] of res.entries()) {
-            next.set(id, url);
+          for (const id of toFetch) {
+            next.set(id, res.get(id) ?? "");
           }
           return next;
         });
