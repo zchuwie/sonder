@@ -271,6 +271,15 @@ export function MapExperience() {
               <>
                 <div className="mt-3 min-h-0 flex-1 overflow-y-auto pb-2 pr-1">
                   <PostClusterList posts={publicSelectedMarker.posts} limit={20} onSelect={(post) => { setSelectedPost(post); setSelectedMarkerId(null); }} />
+                  {publicSelectedMarker.posts.length > 20 && (
+                    <Button 
+                      variant="ghost" 
+                      className="mt-2 w-full text-xs text-muted-foreground" 
+                      onClick={() => setGroupOpen(true)}
+                    >
+                      View all {publicSelectedMarker.posts.length} posts
+                    </Button>
+                  )}
                 </div>
                 <div className="mt-2">
                   <Button variant="outline" className="w-full rounded-xl" onClick={() => setCreateOpen(true)}>
