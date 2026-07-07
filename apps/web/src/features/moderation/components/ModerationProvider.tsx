@@ -11,6 +11,7 @@ import {
 import { groupMarkersByLocation } from "@/features/posts/lib/post-utils";
 import type { MarkerData } from "@/features/posts/lib/post-types";
 import { usePosts, type Bounds } from "@/features/posts/client/use-posts";
+import { usePinStore } from "@/features/map/store/use-pin-store";
 
 const STORAGE_KEY = "sonder:moderation-markers";
 const MY_POSTS_KEY = "sonder:my-post-ids";
@@ -61,21 +62,34 @@ export function ModerationProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const zustandMarkers = usePinStore((state) => state.markers);
+
   useEffect(() => {
-    if (remoteMarkers) {
+    if (remoteMarkers || Object.keys(zustandMarkers).length > 0) {
       const remotePostIds = new Set(
-        remoteMarkers.flatMap((m) => m.posts.map((p) => p.id)),
+        remoteMarkers?.flatMap((m) => m.posts.map((p) => p.id)) ?? [],
       );
+      
+      // Deduplicate markers by combining them intelligently
+      const allMarkers = [...(remoteMarkers ?? [])];
+      for (const zm of Object.values(zustandMarkers)) {
+        if (!allMarkers.some(m => m.id === zm.id)) {
+          allMarkers.push(zm);
+        }
+      }
+
+      const allPostIds = new Set(
+        allMarkers.flatMap((m) => m.posts.map((p) => p.id))
+      );
+
       setMarkers((current) =>
         groupMarkersByLocation([
-          ...remoteMarkers,
+          ...allMarkers,
           ...current
             .map((marker) => ({
               ...marker,
               posts: marker.posts.filter(
-                (post) =>
-                  post.moderationStatus === "pending" &&
-                  !remotePostIds.has(post.id),
+                (post) => post && !allPostIds.has(post.id)
               ),
             }))
             .filter(
@@ -87,7 +101,7 @@ export function ModerationProvider({ children }: { children: ReactNode }) {
         ]),
       );
     }
-  }, [remoteMarkers]);
+  }, [remoteMarkers, zustandMarkers]);
 
   const onViewportChange = useCallback(
     (bounds: Bounds) => {

@@ -1,10 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { checkRateLimit } from "@/lib/rate-limit";
-import {
-  rowsToMarkersWithSignedImages,
-  type PostRow,
-} from "@/features/posts/lib/post-mappers";
+import { rowsToMarkers } from "@/features/posts/lib/post-mappers";
+import type { PostRow } from "@/features/posts/lib/post-mappers";
 
 export async function GET(request: NextRequest) {
   const limited = await checkRateLimit(request, "posts", 30, 60);
@@ -29,7 +27,7 @@ export async function GET(request: NextRequest) {
 
   if (error) return NextResponse.json([], { status: 500 });
 
-  const markers = await rowsToMarkersWithSignedImages(
+  const markers = rowsToMarkers(
     (data ?? []) as PostRow[],
   );
 

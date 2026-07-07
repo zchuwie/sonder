@@ -12,14 +12,15 @@ export function rowToPost(row: PostRow, imageUrl?: string): AnonymousPost {
     title: row.title,
     text: row.body,
     type:
-      imageUrl && music
+      (imageUrl || row.image_path) && music
         ? "mixed"
-        : imageUrl
+        : (imageUrl || row.image_path)
           ? "photo"
           : music
             ? "song"
             : "text",
     imageUrl,
+    imagePath: row.image_path ?? undefined,
     music: music ?? undefined,
     lat: row.lat,
     lng: row.lng,
@@ -30,19 +31,8 @@ export function rowToPost(row: PostRow, imageUrl?: string): AnonymousPost {
   };
 }
 
-export async function rowsToMarkersWithSignedImages(
-  rows: PostRow[],
-): Promise<MarkerData[]> {
-  // ponytail: batch-resolve all image URLs in one pass instead of N serial calls
-  const postsWithImages = rows.filter((r) => r.image_path);
-  const signedUrls = postsWithImages.length > 0
-    ? await fetchSignedPostImageUrls(postsWithImages.map((r) => r.id))
-    : new Map<string, string>();
-
-  const posts = rows.map((row) => {
-    const imageUrl = row.image_path ? signedUrls.get(row.id) : undefined;
-    return rowToPost(row, imageUrl);
-  });
+export function rowsToMarkers(rows: PostRow[]): MarkerData[] {
+  const posts = rows.map((row) => rowToPost(row));
 
   return groupMarkersByLocation(
     posts.map((post) => ({

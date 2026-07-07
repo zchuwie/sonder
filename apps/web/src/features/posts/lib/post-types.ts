@@ -28,6 +28,7 @@ export type AnonymousPost = {
   type: PostType;
   text: string;
   imageUrl?: string;
+  imagePath?: string;
   music?: Music;
   lat: number;
   lng: number;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Check, ChevronDown, ChevronUp, Clock3, Download, Send } from "lucide-react";
 import {
   Dialog,
@@ -10,10 +10,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { MusicPreviewCard } from "./MusicPreviewCard";
+import { Skeleton } from "@/components/ui/skeleton";
 import { ShareCardModal } from "./ShareCardModal";
 import { relativeTime } from "@/features/posts/lib/post-utils";
 import type { AnonymousPost } from "@/features/posts/lib/post-types";
 import { ReportPostButton } from "@/features/moderation/components/ReportPostButton";
+
+import { fetchSignedPostImageUrl } from "@/lib/storage/image-url";
 
 export function buildShareUrl(post: AnonymousPost): string {
   if (post.moderationStatus !== "approved") {
@@ -36,6 +39,16 @@ export default function PostDetailModal({
   const [confirmShare, setConfirmShare] = useState(false);
   const [showCard, setShowCard] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const [signedUrl, setSignedUrl] = useState<string | null>(post.imageUrl ?? null);
+
+  useEffect(() => {
+    if (!signedUrl && post.imagePath) {
+      void fetchSignedPostImageUrl(post.id).then(url => {
+        if (url) setSignedUrl(url);
+      });
+    }
+  }, [post.id, post.imagePath, signedUrl]);
+
   const flagged = post.moderationStatus === "flagged";
   const smPos = panelSide === 'left'
     ? 'sm:left-20 sm:right-auto sm:top-1/2 sm:-translate-y-1/2 sm:bottom-auto'
@@ -49,11 +62,13 @@ export default function PostDetailModal({
           className={`pointer-events-auto inset-x-2 bottom-2 top-auto flex w-auto max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-2xl border-black/10 bg-background/96 p-0 shadow-2xl backdrop-blur-xl sm:inset-x-auto sm:w-[26rem] sm:rounded-3xl sm:max-h-[78dvh] ${smPos} ${expanded ? "max-h-[90dvh]" : "max-h-[55dvh]"}`}
         >
           {/* Image / cover */}
-          {post.imageUrl && !flagged ? (
+          {signedUrl && !flagged ? (
             <div className="relative h-28 w-full shrink-0 overflow-hidden rounded-t-2xl sm:aspect-video sm:h-auto sm:rounded-t-3xl">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={post.imageUrl} alt="" className="size-full object-cover" />
+              <img src={signedUrl} alt="" className="size-full object-cover" />
             </div>
+          ) : post.imagePath && !signedUrl && !flagged ? (
+            <Skeleton className="h-28 w-full shrink-0 rounded-t-2xl sm:aspect-video sm:h-auto sm:rounded-t-3xl" />
           ) : post.music?.coverUrl && !flagged ? (
             <div className="relative h-28 w-full shrink-0 overflow-hidden rounded-t-2xl bg-linear-to-br from-primary/20 via-muted to-background sm:aspect-video sm:h-auto sm:rounded-t-3xl">
               {/* eslint-disable-next-line @next/next/no-img-element */}

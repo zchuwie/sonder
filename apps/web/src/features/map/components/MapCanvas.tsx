@@ -54,9 +54,9 @@ type HoverPreview = {
 function contentSummary(posts: MarkerData["posts"]) {
   const types = new Set<string>();
   for (const post of posts) {
-    if (post.imageUrl) types.add("Photos");
+    if (post.imageUrl || post.imagePath) types.add("Photos");
     if (post.music) types.add("Songs");
-    if (!post.imageUrl && !post.music) types.add("Text");
+    if (!post.imageUrl && !post.imagePath && !post.music) types.add("Text");
   }
   return types.size ? [...types].join(" + ") : "Text";
 }
@@ -255,6 +255,11 @@ export default function MapCanvas({
           .then((zoom) => {
             const coords = geometry.coordinates as [number, number];
             map.current!.easeTo({ center: coords, zoom });
+          })
+          .catch((err) => {
+            // Ignore missing cluster errors (happens if data syncs mid-click)
+            const coords = geometry.coordinates as [number, number];
+            map.current!.easeTo({ center: coords, zoom: map.current!.getZoom() + 2 });
           });
       });
 
