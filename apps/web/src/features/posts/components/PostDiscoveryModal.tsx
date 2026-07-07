@@ -5,7 +5,7 @@ import { MapPin, Search } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AnonymousPostCard } from "./AnonymousPostCard";
+import { PostClusterList } from "./PostClusterList";
 import type { AnonymousPost } from "@/features/posts/lib/post-types";
 
 export function PostDiscoveryModal({
@@ -21,6 +21,8 @@ export function PostDiscoveryModal({
 }) {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("all");
+  const [visibleCount, setVisibleCount] = useState(20);
+
   const filtered = useMemo(
     () =>
       posts.filter((post) => {
@@ -30,6 +32,13 @@ export function PostDiscoveryModal({
       }),
     [filter, posts, query],
   );
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const bottom = e.currentTarget.scrollHeight - e.currentTarget.scrollTop <= e.currentTarget.clientHeight + 400;
+    if (bottom && visibleCount < filtered.length) {
+      setVisibleCount((prev) => prev + 20);
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -43,9 +52,9 @@ export function PostDiscoveryModal({
         <div className="space-y-3 border-b px-4 py-3 sm:space-y-4 sm:px-6 sm:py-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search thoughts or places..." className="h-11 rounded-xl pl-9" />
+            <Input value={query} onChange={(event) => { setQuery(event.target.value); setVisibleCount(20); }} placeholder="Search thoughts or places..." className="h-11 rounded-xl pl-9" />
           </div>
-          <Tabs value={filter} onValueChange={setFilter}>
+          <Tabs value={filter} onValueChange={(val) => { setFilter(val); setVisibleCount(20); }}>
             <TabsList className="w-full rounded-xl">
               <TabsTrigger value="all">All</TabsTrigger>
               <TabsTrigger value="photo">Photos</TabsTrigger>
@@ -53,11 +62,11 @@ export function PostDiscoveryModal({
             </TabsList>
           </Tabs>
         </div>
-        <div className="grid max-h-[calc(100dvh-13.5rem)] gap-3 overflow-y-auto p-3 sm:max-h-[60vh] sm:grid-cols-2 sm:gap-5 sm:p-6">
-          {filtered.length ? filtered.map((post) => (
-            <AnonymousPostCard key={post.id} post={post} onClick={() => onSelectPost(post)} />
-          )) : (
-            <div className="col-span-full flex flex-col items-center gap-3 py-14 text-center text-muted-foreground">
+        <div className="max-h-[calc(100dvh-13.5rem)] overflow-y-auto p-3 sm:max-h-[60vh] sm:p-6" onScroll={handleScroll}>
+          {filtered.length ? (
+            <PostClusterList posts={filtered} limit={visibleCount} onSelect={(post) => onSelectPost(post)} />
+          ) : (
+            <div className="flex flex-col items-center gap-3 py-14 text-center text-muted-foreground">
               <MapPin className="size-8" />
               <p className="text-sm font-medium text-foreground">No thoughts match this search.</p>
               <p className="text-xs">Try another place or filter.</p>
