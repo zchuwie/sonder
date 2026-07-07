@@ -170,7 +170,7 @@ export default function MapCanvas({
         promoteId: "id",
         cluster: true,
         clusterMaxZoom: 13,
-        clusterRadius: 50,
+        clusterRadius: 20,
       });
 
       map.current.addLayer({
