@@ -268,8 +268,8 @@ export function MapExperience() {
       </div>
       <div className="absolute inset-x-2.5 bottom-0 z-30 pb-[max(.625rem,env(safe-area-inset-bottom))] sm:hidden">
         {selectedMarker && !selectedPost ? (
-          <div className="rounded-2xl border border-black/10 bg-background/95 p-3 shadow-2xl backdrop-blur-xl">
-            <div className="flex items-start gap-3">
+          <div className="flex h-[45dvh] flex-col rounded-2xl border border-black/10 bg-background/95 p-3 shadow-2xl backdrop-blur-xl">
+            <div className="flex shrink-0 items-start gap-3">
               <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
                 <MapPin className="size-5" />
               </div>
@@ -292,7 +292,7 @@ export function MapExperience() {
               </Button>
             </div>
             {publicSelectedMarker && publicSelectedMarker.posts.length === 1 && (
-              <div className="mt-3 grid grid-cols-2 gap-2">
+              <div className="mt-auto grid shrink-0 grid-cols-2 gap-1.5">
                 <Button variant="outline" className="rounded-xl" onClick={() => setCreateOpen(true)}>
                   <Plus /> Add thought
                 </Button>
@@ -303,10 +303,10 @@ export function MapExperience() {
             )}
             {publicSelectedMarker && publicSelectedMarker.posts.length > 1 && (
               <>
-                <div className="mt-3">
-                  <PostClusterList posts={publicSelectedMarker.posts} limit={2} onSelect={(post) => { setSelectedPost(post); setSelectedMarkerId(null); }} />
+                <div className="mt-3 min-h-0 flex-1 overflow-y-auto pb-2 pr-1">
+                  <PostClusterList posts={publicSelectedMarker.posts} limit={20} onSelect={(post) => { setSelectedPost(post); setSelectedMarkerId(null); }} />
                 </div>
-                <div className="mt-2 grid grid-cols-2 gap-2">
+                <div className="mt-2 grid shrink-0 grid-cols-2 gap-1.5">
                   <Button variant="outline" className="rounded-xl" onClick={() => setCreateOpen(true)}>
                     <Plus /> Add thought
                   </Button>
@@ -317,7 +317,7 @@ export function MapExperience() {
               </>
             )}
             {(!publicSelectedMarker || publicSelectedMarker.posts.length === 0) && (
-              <Button className="mt-3 w-full rounded-xl" onClick={() => setCreateOpen(true)}>
+              <Button className="mt-auto w-full shrink-0 rounded-xl" onClick={() => setCreateOpen(true)}>
                 <Plus /> Create a post
               </Button>
             )}

@@ -474,10 +474,10 @@ export default function MapCanvas({
             right: compact ? 10 : 460,
           }
         : flyTo.panelSide === 'left'
-        ? { top: 120, bottom: 80, left: compact ? 20 : PANEL, right: compact ? 20 : 60 }
+        ? { top: 120, bottom: compact ? 380 : 80, left: compact ? 20 : PANEL, right: compact ? 20 : 60 }
         : flyTo.panelSide === 'right'
-        ? { top: 120, bottom: 80, left: compact ? 20 : 60, right: compact ? 20 : PANEL }
-        : { top: compact ? 100 : 220, bottom: compact ? 80 : 80, left: compact ? 20 : 80, right: compact ? 20 : 80 },
+        ? { top: 120, bottom: compact ? 380 : 80, left: compact ? 20 : 60, right: compact ? 20 : PANEL }
+        : { top: compact ? 100 : 220, bottom: compact ? 380 : 80, left: compact ? 20 : 80, right: compact ? 20 : 80 },
     };
     map.current.flyTo(options);
   }, [flyTo]);
