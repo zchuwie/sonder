@@ -54,12 +54,15 @@ export function NavCreatePostModal({
   const [showFullMap, setShowFullMap] = useState(false);
   const handleToken = useCallback((token: string) => setTurnstileToken(token), []);
 
+  const locationRef = useRef(location);
+  useEffect(() => { locationRef.current = location; }, [location]);
+
   // Init map after dialog renders (RAF ensures container is visible)
   useEffect(() => {
     const frame = requestAnimationFrame(() => {
       if (!mapContainer.current || map.current) return;
-      const startLat = initialLocation?.lat ?? 14.5995;
-      const startLng = initialLocation?.lng ?? 120.9842;
+      const startLat = locationRef.current?.lat ?? initialLocation?.lat ?? 14.5995;
+      const startLng = locationRef.current?.lng ?? initialLocation?.lng ?? 120.9842;
       const m = new maplibregl.Map({
         container: mapContainer.current,
         style: getOpenFreeMapStyle(resolvedTheme),
@@ -84,8 +87,10 @@ export function NavCreatePostModal({
       cancelAnimationFrame(frame);
       map.current?.remove();
       map.current = null;
+      pin.current?.remove();
+      pin.current = null;
     };
-  }, [initialLocation, resolvedTheme]);
+  }, [resolvedTheme]); // Only re-init when theme changes
 
   function placePinMap(lat: number, lng: number, m: maplibregl.Map) {
     if (pin.current) pin.current.setLngLat([lng, lat]);

@@ -12,16 +12,31 @@ import { fetchSignedPostImageUrl } from "@/lib/storage/image-url";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export function PublicPostView({ post }: { post: AnonymousPost }) {
-  const [signedUrl, setSignedUrl] = useState<string | null>(post.imageUrl ?? null);
+  const [imgData, setImgData] = useState<{ id: string; url: string | null; attempted: boolean }>({
+    id: post.id,
+    url: post.imageUrl ?? null,
+    attempted: false,
+  });
   const flagged = post.moderationStatus === "flagged";
 
+  if (post.id !== imgData.id) {
+    setImgData({ id: post.id, url: post.imageUrl ?? null, attempted: false });
+  }
+
+  const signedUrl = imgData.url;
+
   useEffect(() => {
-    if (!signedUrl && post.imagePath) {
-      void fetchSignedPostImageUrl(post.id).then(url => {
-        if (url) setSignedUrl(url);
-      });
-    }
-  }, [post.id, post.imagePath, signedUrl]);
+    if (flagged || imgData.url || !post.imagePath || imgData.attempted) return;
+    let active = true;
+    void fetchSignedPostImageUrl(post.id).then((url) => {
+      if (active) {
+        setImgData({ id: post.id, url: url ?? null, attempted: true });
+      }
+    });
+    return () => {
+      active = false;
+    };
+  }, [post.id, post.imagePath, imgData.url, imgData.attempted, flagged]);
 
   return (
     <main className="relative h-dvh w-screen overflow-hidden bg-muted">
@@ -49,7 +64,7 @@ export function PublicPostView({ post }: { post: AnonymousPost }) {
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={signedUrl} alt="" className="size-full object-cover" />
             </div>
-          ) : post.imagePath && !signedUrl && !flagged ? (
+          ) : post.imagePath && !imgData.url && !imgData.attempted && !flagged ? (
             <Skeleton className="h-28 w-full shrink-0 rounded-t-2xl sm:aspect-video sm:h-auto sm:rounded-t-3xl" />
           ) : post.music?.coverUrl && !flagged ? (
             <div className="relative h-28 w-full shrink-0 overflow-hidden rounded-t-2xl bg-linear-to-br from-primary/20 via-muted to-background sm:aspect-video sm:h-auto sm:rounded-t-3xl">

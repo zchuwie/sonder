@@ -110,7 +110,7 @@ export function MapSearchBar({ onPlaceSelect, center, initialQuery, disableRecen
   const [query, setQuery] = useState(initialQuery ?? "");
   
   useEffect(() => {
-    if (initialQuery !== undefined) {
+    if (initialQuery !== undefined && document.activeElement !== inputRef.current) {
       setQuery(initialQuery);
     }
   }, [initialQuery]);
