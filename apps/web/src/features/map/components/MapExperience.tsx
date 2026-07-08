@@ -65,6 +65,8 @@ export function MapExperience() {
   const [groupOpen, setGroupOpen] = useState(false);
   const [viewport, setViewport] = useState<MapViewport>(INITIAL_VIEWPORT);
   
+  const [searchedLocation, setSearchedLocation] = useState<LocationPlaceDTO | null>(null);
+
   const selectedMarker = markers.find((marker) => marker.id === selectedMarkerId) ?? null;
   const publicMarkers = useMemo(() => getPublicMarkers(markers), [markers]);
   const nearbyPosts = useMemo(
@@ -90,10 +92,11 @@ export function MapExperience() {
       }
     }
   }, [searchParams, publicMarkers, selectedPost, viewport.center.lng]);
-  const mapMarkers =
-    selectedMarker && selectedMarker.posts.length === 0
-      ? [...publicMarkers, selectedMarker]
-      : publicMarkers;
+  const mapMarkers = useMemo(() => {
+    const searchM = markers.filter(m => m.source === "search" && m.posts.length === 0);
+    const selectedM = selectedMarker && selectedMarker.posts.length === 0 && selectedMarker.source !== "search" ? [selectedMarker] : [];
+    return [...publicMarkers, ...searchM, ...selectedM];
+  }, [markers, publicMarkers, selectedMarker]);
   const publicSelectedMarker =
     publicMarkers.find((marker) => marker.id === selectedMarkerId) ?? null;
 
@@ -117,6 +120,7 @@ export function MapExperience() {
   };
 
   const selectPlace = (place: LocationPlaceDTO) => {
+    setSearchedLocation(place);
     setFlyTo({ lat: place.lat, lng: place.lng, zoom: 15 });
     const cleaned = removeEmptyMarkers(markers);
     const existing = cleaned.find(
@@ -139,7 +143,7 @@ export function MapExperience() {
             },
           ],
     );
-    setSelectedMarkerId(existing?.id ?? place.id);
+    setSelectedMarkerId(existing && existing.posts.length > 0 ? existing.id : null);
   };
 
   const addPost = async (draft: PostDraft) => {
@@ -362,6 +366,7 @@ export function MapExperience() {
       )}
       {navCreateOpen && (
         <NavCreatePostModal
+          initialLocation={searchedLocation}
           onClose={() => setNavCreateOpen(false)}
           onSubmit={async (marker, draft) => {
             // Use same logic as addPost but with the provided marker
