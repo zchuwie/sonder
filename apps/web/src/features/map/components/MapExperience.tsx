@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import {
   Compass,
   MapPin,
@@ -37,6 +37,7 @@ import { getFunctionErrorMessage } from "@/lib/supabase/function-error";
 import { reverseGeocode } from "@/features/map/client/reverse-geocode";
 import { useActivityPulse } from "@/features/activity/use-activity-pulse";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
 type FlyToTarget = {
   lat: number;
@@ -51,6 +52,7 @@ const INITIAL_VIEWPORT: MapViewport = {
 };
 
 export function MapExperience() {
+  const searchParams = useSearchParams();
   const { markers, setMarkers, trackMyPost, refreshPosts, onViewportChange: onBoundsChange } = useModeration();
   useActivityPulse(refreshPosts);
   const [selectedMarkerId, setSelectedMarkerId] = useState<string | null>(null);
@@ -62,13 +64,32 @@ export function MapExperience() {
   const [discoveryOpen, setDiscoveryOpen] = useState(false);
   const [groupOpen, setGroupOpen] = useState(false);
   const [viewport, setViewport] = useState<MapViewport>(INITIAL_VIEWPORT);
-  const selectedMarker =
-    markers.find((marker) => marker.id === selectedMarkerId) ?? null;
+  
+  const selectedMarker = markers.find((marker) => marker.id === selectedMarkerId) ?? null;
   const publicMarkers = useMemo(() => getPublicMarkers(markers), [markers]);
   const nearbyPosts = useMemo(
     () => getNearbyVisiblePosts(markers, viewport.center, viewport.bounds),
     [markers, viewport],
   );
+
+  useEffect(() => {
+    const postId = searchParams?.get("post");
+    if (!postId || publicMarkers.length === 0) return;
+    if (selectedPost?.id === postId) return;
+
+    const marker = publicMarkers.find(m => m.posts.some(p => p.id === postId));
+    if (marker) {
+      const post = marker.posts.find(p => p.id === postId);
+      if (post) {
+        const side = marker.lng > viewport.center.lng ? 'left' : 'right';
+        setPanelSide(side);
+        setFlyTo({ lat: marker.lat, lng: marker.lng, zoom: 15, panelSide: side });
+        setSelectedPost(post);
+        // Remove param from URL without reload so it doesn't trigger again
+        window.history.replaceState(null, '', '/map');
+      }
+    }
+  }, [searchParams, publicMarkers, selectedPost, viewport.center.lng]);
   const mapMarkers =
     selectedMarker && selectedMarker.posts.length === 0
       ? [...publicMarkers, selectedMarker]
@@ -156,14 +177,15 @@ export function MapExperience() {
     const marker = publicMarkers.find((item) =>
       item.posts.some((markerPost) => markerPost.id === post.id),
     );
-    setSelectedMarkerId(marker?.id ?? null);
+    const side = marker && marker.lng > viewport.center.lng ? 'left' : 'right';
+    setPanelSide(side);
     setFlyTo({
       lat: marker?.lat ?? post.lat,
       lng: marker?.lng ?? post.lng,
       zoom: 15,
-      frameRightPanel: true,
+      panelSide: side,
     });
-    window.setTimeout(() => setSelectedPost(post), 250);
+    setSelectedPost(post);
   };
 
   return (
