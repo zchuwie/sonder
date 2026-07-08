@@ -324,10 +324,15 @@ export function MapExperience() {
           <div className="flex justify-end">
             <Button
               size="icon"
-              className="size-12 rounded-full shadow-xl"
+              className="relative size-12 rounded-full shadow-xl"
               onClick={() => setDiscoveryOpen(true)}
             >
               <Compass />
+              {nearbyPosts.length > 0 && (
+                <span className="absolute -right-1 -top-1 flex h-5 min-w-[20px] items-center justify-center rounded-full border-2 border-background bg-primary px-1 text-[10px] font-bold text-primary-foreground">
+                  {nearbyPosts.length}
+                </span>
+              )}
             </Button>
           </div>
         )}
