@@ -28,9 +28,11 @@ import type { MarkerData, PostDraft, Music } from "@/features/posts/lib/post-typ
 export function NavCreatePostModal({
   onClose,
   onSubmit,
+  initialLocation,
 }: {
   onClose: () => void;
   onSubmit: (marker: MarkerData, draft: PostDraft) => Promise<void>;
+  initialLocation?: { lat: number; lng: number; placeName?: string } | null;
 }) {
   const { resolvedTheme } = useTheme();
   const mapContainer = useRef<HTMLDivElement>(null);
@@ -39,7 +41,7 @@ export function NavCreatePostModal({
 
   const [location, setLocation] = useState<{
     lat: number; lng: number; placeName?: string;
-  } | null>(null);
+  } | null>(initialLocation ?? null);
   const [title, setTitle] = useState("");
   const [text, setText] = useState("");
   const [imageUrl, setImageUrl] = useState<string | undefined>();
@@ -52,20 +54,25 @@ export function NavCreatePostModal({
   const [showFullMap, setShowFullMap] = useState(false);
   const handleToken = useCallback((token: string) => setTurnstileToken(token), []);
 
+  const locationRef = useRef(location);
+  useEffect(() => { locationRef.current = location; }, [location]);
+
   // Init map after dialog renders (RAF ensures container is visible)
   useEffect(() => {
     const frame = requestAnimationFrame(() => {
       if (!mapContainer.current || map.current) return;
+      const startLat = locationRef.current?.lat ?? initialLocation?.lat ?? 14.5995;
+      const startLng = locationRef.current?.lng ?? initialLocation?.lng ?? 120.9842;
       const m = new maplibregl.Map({
         container: mapContainer.current,
         style: getOpenFreeMapStyle(resolvedTheme),
-        center: [120.9842, 14.5995],
-        zoom: 12,
+        center: [startLng, startLat],
+        zoom: initialLocation ? 15 : 12,
         attributionControl: false,
       });
       const handlePin = async (lngLat: maplibregl.LngLat) => {
         const { lng, lat } = lngLat;
-        placePin(lat, lng);
+        placePinMap(lat, lng, m);
         const placeName = await reverseGeocode(lat, lng);
         setLocation({ lat, lng, placeName });
       };
@@ -73,27 +80,31 @@ export function NavCreatePostModal({
       m.on("dblclick", (e) => { e.preventDefault(); void handlePin(e.lngLat); });
       m.on("contextmenu", (e) => { e.preventDefault(); void handlePin(e.lngLat); });
       map.current = m;
+      
+      placePinMap(startLat, startLng, m);
     });
     return () => {
       cancelAnimationFrame(frame);
       map.current?.remove();
       map.current = null;
+      pin.current?.remove();
+      pin.current = null;
     };
-  }, []);
+  }, [resolvedTheme]); // Only re-init when theme changes
 
-  function placePin(lat: number, lng: number) {
-    if (!map.current) return;
+  function placePinMap(lat: number, lng: number, m: maplibregl.Map) {
     if (pin.current) pin.current.setLngLat([lng, lat]);
     else {
       pin.current = new maplibregl.Marker({ color: "#245236" })
         .setLngLat([lng, lat])
-        .addTo(map.current);
+        .addTo(m);
     }
-    map.current.flyTo({ center: [lng, lat], zoom: Math.max(map.current.getZoom(), 14) });
+    m.flyTo({ center: [lng, lat], zoom: Math.max(m.getZoom(), 14) });
   }
 
   function handlePlaceSelect(place: LocationPlaceDTO) {
-    placePin(place.lat, place.lng);
+    if (!map.current) return;
+    placePinMap(place.lat, place.lng, map.current);
     setLocation({ lat: place.lat, lng: place.lng, placeName: place.name });
   }
 
@@ -139,7 +150,7 @@ export function NavCreatePostModal({
         <div className="grid min-h-0 overflow-hidden md:grid-cols-[1fr_1.2fr]">
           {/* Left — Location picker */}
           <div className="flex flex-col gap-3 border-r border-border p-5">
-            <MapSearchBar onPlaceSelect={handlePlaceSelect} center={location ?? undefined} />
+            <MapSearchBar onPlaceSelect={handlePlaceSelect} center={location ?? undefined} initialQuery={location?.placeName} disableRecent={true} />
             <div className="relative w-full flex-1">
               <div ref={mapContainer} style={{ height: "100%", minHeight: 280 }} className="w-full rounded-xl border border-border" />
               {/* Expand map button */}
@@ -220,7 +231,7 @@ export function NavCreatePostModal({
         initialLat={location?.lat ?? 14.5995}
         initialLng={location?.lng ?? 120.9842}
         onDone={(loc) => {
-          placePin(loc.lat, loc.lng);
+          if (map.current) placePinMap(loc.lat, loc.lng, map.current);
           setLocation(loc);
           setShowFullMap(false);
         }}

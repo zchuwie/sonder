@@ -4,7 +4,6 @@ import { useMemo, useState } from "react";
 import { MapPin, Search } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PostClusterList } from "./PostClusterList";
 import type { AnonymousPost } from "@/features/posts/lib/post-types";
 
@@ -20,17 +19,31 @@ export function PostDiscoveryModal({
   onSelectPost: (post: AnonymousPost) => void;
 }) {
   const [query, setQuery] = useState("");
-  const [filter, setFilter] = useState("all");
+  const [filters, setFilters] = useState({ text: true, photo: true, song: true });
   const [visibleCount, setVisibleCount] = useState(20);
+
+  const toggleFilter = (key: keyof typeof filters) => {
+    setFilters((prev) => {
+      const next = { ...prev, [key]: !prev[key] };
+      // Prevent unchecking all
+      if (!next.text && !next.photo && !next.song) return prev;
+      return next;
+    });
+    setVisibleCount(20);
+  };
 
   const filtered = useMemo(
     () =>
       posts.filter((post) => {
-        if (filter === "photo" && !post.imageUrl) return false;
-        if (filter === "song" && !post.music) return false;
+        let typeMatch = false;
+        if (filters.text && !post.imageUrl && !post.music) typeMatch = true;
+        if (filters.photo && post.imageUrl) typeMatch = true;
+        if (filters.song && post.music) typeMatch = true;
+        if (!typeMatch) return false;
+
         return `${post.title} ${post.text} ${post.placeName}`.toLowerCase().includes(query.toLowerCase());
       }),
-    [filter, posts, query],
+    [filters, posts, query],
   );
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
@@ -54,15 +67,33 @@ export function PostDiscoveryModal({
             <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input value={query} onChange={(event) => { setQuery(event.target.value); setVisibleCount(20); }} placeholder="Search thoughts or places..." className="h-11 rounded-xl pl-9" />
           </div>
-          <Tabs value={filter} onValueChange={(val) => { setFilter(val); setVisibleCount(20); }}>
-            <TabsList className="w-full rounded-xl">
-              <TabsTrigger value="all">All</TabsTrigger>
-              <TabsTrigger value="photo">Photos</TabsTrigger>
-              <TabsTrigger value="song">Songs</TabsTrigger>
-            </TabsList>
-          </Tabs>
+          <div className="flex flex-wrap items-center gap-2">
+            {(["text", "photo", "song"] as const).map((key) => {
+              const labels = { text: "Text", photo: "Photos", song: "Songs" };
+              const checked = filters[key];
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => toggleFilter(key)}
+                  className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
+                    checked
+                      ? "border-primary bg-primary text-primary-foreground shadow-sm"
+                      : "border-border bg-background text-muted-foreground hover:bg-muted"
+                  }`}
+                >
+                  {checked && (
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  )}
+                  {labels[key]}
+                </button>
+              );
+            })}
+          </div>
         </div>
-        <div className="max-h-[calc(100dvh-13.5rem)] overflow-y-auto p-3 sm:max-h-[60vh] sm:p-6" onScroll={handleScroll}>
+        <div className="max-h-[calc(100dvh-13.5rem)] overflow-y-auto p-3 pb-8 sm:max-h-[60vh] sm:p-6 sm:pb-8" onScroll={handleScroll}>
           {filtered.length ? (
             <PostClusterList posts={filtered} limit={visibleCount} onSelect={(post) => onSelectPost(post)} />
           ) : (

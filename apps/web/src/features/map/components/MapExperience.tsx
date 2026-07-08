@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import {
   Compass,
   MapPin,
@@ -37,6 +37,7 @@ import { getFunctionErrorMessage } from "@/lib/supabase/function-error";
 import { reverseGeocode } from "@/features/map/client/reverse-geocode";
 import { useActivityPulse } from "@/features/activity/use-activity-pulse";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
 type FlyToTarget = {
   lat: number;
@@ -51,6 +52,7 @@ const INITIAL_VIEWPORT: MapViewport = {
 };
 
 export function MapExperience() {
+  const searchParams = useSearchParams();
   const { markers, setMarkers, trackMyPost, refreshPosts, onViewportChange: onBoundsChange } = useModeration();
   useActivityPulse(refreshPosts);
   const [selectedMarkerId, setSelectedMarkerId] = useState<string | null>(null);
@@ -62,17 +64,39 @@ export function MapExperience() {
   const [discoveryOpen, setDiscoveryOpen] = useState(false);
   const [groupOpen, setGroupOpen] = useState(false);
   const [viewport, setViewport] = useState<MapViewport>(INITIAL_VIEWPORT);
-  const selectedMarker =
-    markers.find((marker) => marker.id === selectedMarkerId) ?? null;
+  
+  const [searchedLocation, setSearchedLocation] = useState<LocationPlaceDTO | null>(null);
+
+  const selectedMarker = markers.find((marker) => marker.id === selectedMarkerId) ?? null;
   const publicMarkers = useMemo(() => getPublicMarkers(markers), [markers]);
   const nearbyPosts = useMemo(
     () => getNearbyVisiblePosts(markers, viewport.center, viewport.bounds),
     [markers, viewport],
   );
-  const mapMarkers =
-    selectedMarker && selectedMarker.posts.length === 0
-      ? [...publicMarkers, selectedMarker]
-      : publicMarkers;
+
+  useEffect(() => {
+    const postId = searchParams?.get("post");
+    if (!postId || publicMarkers.length === 0) return;
+    if (selectedPost?.id === postId) return;
+
+    const marker = publicMarkers.find(m => m.posts.some(p => p.id === postId));
+    if (marker) {
+      const post = marker.posts.find(p => p.id === postId);
+      if (post) {
+        const side = marker.lng > viewport.center.lng ? 'left' : 'right';
+        setPanelSide(side);
+        setFlyTo({ lat: marker.lat, lng: marker.lng, zoom: 15, panelSide: side });
+        setSelectedPost(post);
+        // Remove param from URL without reload so it doesn't trigger again
+        window.history.replaceState(null, '', '/map');
+      }
+    }
+  }, [searchParams, publicMarkers, selectedPost, viewport.center.lng]);
+  const mapMarkers = useMemo(() => {
+    const searchM = markers.filter(m => m.source === "search" && m.posts.length === 0);
+    const selectedM = selectedMarker && selectedMarker.posts.length === 0 && selectedMarker.source !== "search" ? [selectedMarker] : [];
+    return [...publicMarkers, ...searchM, ...selectedM];
+  }, [markers, publicMarkers, selectedMarker]);
   const publicSelectedMarker =
     publicMarkers.find((marker) => marker.id === selectedMarkerId) ?? null;
 
@@ -96,6 +120,7 @@ export function MapExperience() {
   };
 
   const selectPlace = (place: LocationPlaceDTO) => {
+    setSearchedLocation(place);
     setFlyTo({ lat: place.lat, lng: place.lng, zoom: 15 });
     const cleaned = removeEmptyMarkers(markers);
     const existing = cleaned.find(
@@ -118,7 +143,7 @@ export function MapExperience() {
             },
           ],
     );
-    setSelectedMarkerId(existing?.id ?? place.id);
+    setSelectedMarkerId(existing && existing.posts.length > 0 ? existing.id : null);
   };
 
   const addPost = async (draft: PostDraft) => {
@@ -156,14 +181,15 @@ export function MapExperience() {
     const marker = publicMarkers.find((item) =>
       item.posts.some((markerPost) => markerPost.id === post.id),
     );
-    setSelectedMarkerId(marker?.id ?? null);
+    const side = marker && marker.lng > viewport.center.lng ? 'left' : 'right';
+    setPanelSide(side);
     setFlyTo({
       lat: marker?.lat ?? post.lat,
       lng: marker?.lng ?? post.lng,
       zoom: 15,
-      frameRightPanel: true,
+      panelSide: side,
     });
-    window.setTimeout(() => setSelectedPost(post), 250);
+    setSelectedPost(post);
   };
 
   return (
@@ -298,10 +324,15 @@ export function MapExperience() {
           <div className="flex justify-end">
             <Button
               size="icon"
-              className="size-12 rounded-full shadow-xl"
+              className="relative size-12 rounded-full shadow-xl"
               onClick={() => setDiscoveryOpen(true)}
             >
               <Compass />
+              {nearbyPosts.length > 0 && (
+                <span className="absolute -right-1 -top-1 flex h-5 min-w-[20px] items-center justify-center rounded-full border-2 border-background bg-primary px-1 text-[10px] font-bold text-primary-foreground">
+                  {nearbyPosts.length}
+                </span>
+              )}
             </Button>
           </div>
         )}
@@ -340,6 +371,7 @@ export function MapExperience() {
       )}
       {navCreateOpen && (
         <NavCreatePostModal
+          initialLocation={searchedLocation}
           onClose={() => setNavCreateOpen(false)}
           onSubmit={async (marker, draft) => {
             // Use same logic as addPost but with the provided marker

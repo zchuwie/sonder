@@ -1,6 +1,6 @@
 "use client";
 
-import { forwardRef } from "react";
+import { forwardRef, useLayoutEffect, useRef, useState } from "react";
 import type { AnonymousPost } from "@/features/posts/lib/post-types";
 import { ShareCardQR } from "./ShareCardQR";
 
@@ -112,6 +112,18 @@ const CLOSE_PATH = "M64 0v19.5C64 37.45 52.8 48.53 36 52l-2.8-8.4C45.8 39.4 50 3
 
 const QW = 160, QH = 130;
 
+// Native size of the captured map snapshot (square canvas).
+const MAP_SOURCE_SIZE = 768;
+
+// Fixed CSS position (in card px) where the overlay pin SVG sits — the
+// snapshot must be scaled/shifted so pinOffset lands exactly here.
+const PIN_TARGET_X = 540; // horizontal centre of the 1080px-wide card
+const PIN_TARGET_Y = 170; // vertical centre of the 340px map strip
+
+// Tiny multiplier applied on top of the mathematically-required scale, to
+// absorb sub-pixel rounding only — NOT a substitute for correct math.
+const ROUNDING_BUFFER = 1.02;
+
 type Props = {
   post: AnonymousPost;
   mapSnapshot?: string;
@@ -124,6 +136,18 @@ type Props = {
  * Dynamic-height share card (width fixed at 1080).
  * Layout: map area (420px) → glass panel (grows with content) → footer (QR + image).
  * The card grows taller when content is long — no clipping, no cramping.
+ *
+ * Map background handling:
+ * - Always uses longhand `backgroundImage`/`backgroundColor` (never the
+ *   `background` shorthand), so React never races shorthand vs. longhand
+ *   and accidentally reintroduces tiling/repeat.
+ * - The scale is solved so that, simultaneously: (a) the pin pixel in the
+ *   source snapshot lands exactly under the fixed overlay pin position,
+ *   and (b) the scaled image fully covers the card in every direction.
+ *   Because both constraints are satisfied by the scale itself, no
+ *   after-the-fact offset clamping is needed — clamping was the bug last
+ *   time, since it silently dragged the crop away from the real pin
+ *   location whenever the card got tall.
  */
 export const ShareCard = forwardRef<HTMLDivElement, Props>(
   function ShareCard({ post, mapSnapshot, pinOffset, themeKey = "paper", fullPlaceName }, ref) {
@@ -135,30 +159,76 @@ export const ShareCard = forwardRef<HTMLDivElement, Props>(
     const body = hasBody ? post.text.trim() : "";
     const locationLabel = fullPlaceName || post.placeName || "Unknown location";
 
+    // Track the card's own rendered height so the map background can
+    // always be sized to fully cover it, however tall content makes it grow.
+    const innerRef = useRef<HTMLDivElement>(null);
+    const [cardHeight, setCardHeight] = useState(1080);
+
+    useLayoutEffect(() => {
+      const el = innerRef.current;
+      if (!el) return;
+
+      const measure = () => setCardHeight(el.offsetHeight);
+      measure();
+
+      const ro = new ResizeObserver(measure);
+      ro.observe(el);
+      return () => ro.disconnect();
+      // Re-measure whenever content that affects height changes.
+    }, [post.text, post.title, post.imageUrl, post.music, hasBody, hasImage, hasSong]);
+
+    // --- Solve for the scale that satisfies pin-alignment + full coverage ---
+    const containerW = 1080;
+    const containerH = Math.max(cardHeight, 1);
+
+    const pinX = pinOffset?.x ?? MAP_SOURCE_SIZE / 2;
+    const pinY = pinOffset?.y ?? MAP_SOURCE_SIZE / 2;
+
+    // Avoid divide-by-zero for pins sitting exactly on a source edge.
+    const EPS = 1;
+    const safe = (n: number) => Math.max(n, EPS);
+
+    // Minimum scale needed so the image reaches each edge of the card
+    // while the pin still lands exactly at (PIN_TARGET_X, PIN_TARGET_Y).
+    const scaleForLeft = PIN_TARGET_X / safe(pinX);
+    const scaleForRight = (containerW - PIN_TARGET_X) / safe(MAP_SOURCE_SIZE - pinX);
+    const scaleForTop = PIN_TARGET_Y / safe(pinY);
+    const scaleForBottom = (containerH - PIN_TARGET_Y) / safe(MAP_SOURCE_SIZE - pinY);
+
+    // Also never scale below what's needed to simply cover the container,
+    // as a base floor (covers the degenerate case of missing pinOffset).
+    const scaleForCoverage = Math.max(containerW, containerH) / MAP_SOURCE_SIZE;
+
+    const mapScale =
+      Math.max(scaleForLeft, scaleForRight, scaleForTop, scaleForBottom, scaleForCoverage) *
+      ROUNDING_BUFFER;
+
+    const mapBgSize = MAP_SOURCE_SIZE * mapScale;
+    const offsetX = PIN_TARGET_X - pinX * mapScale;
+    const offsetY = PIN_TARGET_Y - pinY * mapScale;
+
     return (
       <div
-        ref={ref}
+        ref={(node) => {
+          innerRef.current = node;
+          if (typeof ref === "function") ref(node);
+          else if (ref) (ref as React.MutableRefObject<HTMLDivElement | null>).current = node;
+        }}
         style={{
           width: 1080,
           position: "relative",
           borderRadius: 40,
           overflow: "hidden",
           fontFamily: "var(--font-manrope), system-ui, sans-serif",
-          // Map background: scale canvas to card width (1080), shift so pin pixel
-          // lands at centre of the 340px map strip (y=170) and card centre (x=540).
-          background: mapSnapshot
-            ? `url(${mapSnapshot}) #0a1a0c`
-            : "#0a1a0c",
-          backgroundSize: mapSnapshot ? "1080px 1080px" : undefined,
-          backgroundPosition: mapSnapshot
-            ? `${540 - (pinOffset?.x ?? 384) * (1080 / 768)}px ${170 - (pinOffset?.y ?? 384) * (1080 / 768)}px`
-            : undefined,
+          backgroundColor: "#0a1a0c",
+          backgroundImage: mapSnapshot ? `url(${mapSnapshot})` : undefined,
+          backgroundSize: mapSnapshot ? `${mapBgSize}px ${mapBgSize}px` : undefined,
+          backgroundPosition: mapSnapshot ? `${offsetX}px ${offsetY}px` : undefined,
           backgroundRepeat: "no-repeat",
           display: "flex",
           flexDirection: "column",
         }}
       >
-
         <div style={{ position: "absolute", inset: 0, background: theme.scrim }} />
 
         {/* Grain texture */}

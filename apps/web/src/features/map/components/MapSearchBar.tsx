@@ -101,11 +101,20 @@ function HighlightText({ text, query }: { text: string; query: string }) {
 type Props = {
   onPlaceSelect: (place: LocationPlaceDTO) => void;
   center?: SearchCenter;
+  initialQuery?: string;
+  disableRecent?: boolean;
 };
 
-export function MapSearchBar({ onPlaceSelect, center }: Props) {
+export function MapSearchBar({ onPlaceSelect, center, initialQuery, disableRecent }: Props) {
   const reduceMotion = useReducedMotion();
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(initialQuery ?? "");
+  
+  useEffect(() => {
+    if (initialQuery !== undefined && document.activeElement !== inputRef.current) {
+      setQuery(initialQuery);
+    }
+  }, [initialQuery]);
+
   const [recent, setRecent] = useState<PlaceSearchResult[]>([]);
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
@@ -119,7 +128,10 @@ export function MapSearchBar({ onPlaceSelect, center }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const justSelected = useRef(false);
 
-  useEffect(() => setRecent(loadRecent()), []);
+  useEffect(() => {
+    if (!disableRecent) setRecent(loadRecent());
+  }, [disableRecent]);
+
   useEffect(() => {
     if (justSelected.current) { justSelected.current = false; return; }
     if (query.trim().length >= 2) setOpen(true);
@@ -138,7 +150,7 @@ export function MapSearchBar({ onPlaceSelect, center }: Props) {
     };
   }, []);
 
-  const showRecent = !query.trim() && recent.length > 0;
+  const showRecent = !disableRecent && !query.trim() && recent.length > 0;
   const displayList = showRecent ? recent : results;
   const visible = displayList.slice(0, page * PAGE_SIZE);
   const hasMore = visible.length < displayList.length;

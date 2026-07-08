@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import type { Music } from "@/features/posts/lib/post-types";
 import { useDeezerSearch } from "@/features/music/client/use-deezer-search";
 import { AudioPreviewButton } from "@/features/music/components/AudioPreviewButton";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export type SongSearchResult = Music & { id: string };
 
@@ -25,19 +26,19 @@ export function SongSearchPicker({
   const [query, setQuery] = useState("");
   const { results: deezerResults, loading, error, rateLimited } = useDeezerSearch(query);
   const results: SongSearchResult[] = deezerResults.map((song) => ({
-        id: song.providerId,
-        provider: "deezer",
-        providerId: song.providerId,
-        title: song.title,
-        artist: song.artist,
-        album: song.album,
-        platform: "deezer",
-        url: song.deezerUrl,
-        deezerUrl: song.deezerUrl,
-        previewUrl: song.previewUrl,
-        coverUrl: song.coverUrl,
-        duration: song.duration ? String(song.duration) : undefined,
-      }));
+    id: song.providerId,
+    provider: "deezer",
+    providerId: song.providerId,
+    title: song.title,
+    artist: song.artist,
+    album: song.album,
+    platform: "deezer",
+    url: song.deezerUrl,
+    deezerUrl: song.deezerUrl,
+    previewUrl: song.previewUrl,
+    coverUrl: song.coverUrl,
+    duration: song.duration ? String(song.duration) : undefined,
+  }));
 
   if (value) {
     return (
@@ -100,10 +101,21 @@ export function SongSearchPicker({
           {query.trim() ? "Search results" : "Suggested songs"}
         </p>
         <div className="max-h-[280px] space-y-1 overflow-y-auto p-2 pt-1">
-          {loading ? (
-            <div className="grid place-items-center gap-2 py-8 text-xs text-muted-foreground">
-              <LoaderCircle className="size-5 animate-spin text-primary" />
-              {query.trim() ? "Searching songs..." : "Loading suggestions..."}
+          {loading && !results.length ? (
+            <div className="space-y-1">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="flex h-14 w-full items-center gap-2 rounded-xl px-2 sm:gap-3"
+                >
+                  <Skeleton className="size-10 shrink-0 rounded-lg" />
+                  <div className="min-w-0 flex-1 space-y-1.5">
+                    <Skeleton className="h-3.5 w-3/4" />
+                    <Skeleton className="h-2.5 w-1/2" />
+                  </div>
+                  <Skeleton className="size-8 shrink-0 rounded-full" />
+                </div>
+              ))}
             </div>
           ) : error && !results.length ? (
             <div className="grid place-items-center gap-2 py-8 text-center text-xs text-muted-foreground">
@@ -161,6 +173,23 @@ export function SongSearchPicker({
             <div className="grid place-items-center gap-2 py-7 text-xs text-muted-foreground">
               <Music2 className="size-5" />
               No songs found. Try a different keyword.
+            </div>
+          )}
+          {loading && results.length > 0 && (
+            <div className="space-y-1 py-1">
+              {Array.from({ length: 2 }).map((_, i) => (
+                <div
+                  key={`skeleton-${i}`}
+                  className="flex h-14 w-full items-center gap-2 rounded-xl px-2 sm:gap-3"
+                >
+                  <Skeleton className="size-10 shrink-0 rounded-lg" />
+                  <div className="min-w-0 flex-1 space-y-1.5">
+                    <Skeleton className="h-3.5 w-3/4" />
+                    <Skeleton className="h-2.5 w-1/2" />
+                  </div>
+                  <Skeleton className="size-8 shrink-0 rounded-full" />
+                </div>
+              ))}
             </div>
           )}
         </div>

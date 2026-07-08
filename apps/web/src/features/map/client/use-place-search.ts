@@ -41,9 +41,8 @@ export function usePlaceSearch({
     }
 
     setRateLimited(false);
-    const local = searchLocalPlaces(trimmed, center);
-    setResults(local);
     setLoading(true);
+    setResults([]);
     const controller = new AbortController();
     const timer = setTimeout(() => {
       void searchPlaces(trimmed, center, controller.signal)
