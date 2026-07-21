@@ -14,6 +14,8 @@
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types",
     "build:admin": "pnpm --filter admin build",
+    "test:web": "pnpm --filter web test:e2e",
+    "test:admin": "pnpm --filter admin test:e2e",
     "supabase": "supabase",
     "supa:init": "supabase init",
     "supa:login": "supabase login",
