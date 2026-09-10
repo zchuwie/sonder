@@ -13,7 +13,7 @@ export async function searchPhoton(
   center?: SearchCenter,
   signal?: AbortSignal,
 ): Promise<PlaceSearchResult[]> {
-  const params = new URLSearchParams({ q: query, limit: "8", lang: "en" });
+  const params = new URLSearchParams({ q: query, limit: "50", lang: "en" });
   if (center) {
     params.set("lat", String(center.lat));
     params.set("lon", String(center.lng));

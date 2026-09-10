@@ -142,7 +142,20 @@ export function MapExperience() {
             },
           ],
     );
-    setSelectedMarkerId(existing && existing.posts.length > 0 ? existing.id : null);
+    setSelectedMarkerId(existing ? existing.id : place.id);
+  };
+
+  const handleClearSearch = () => {
+    setSearchedLocation(null);
+    setMarkers((current) =>
+      current.filter((m) => m.source !== "search" || m.posts.length > 0),
+    );
+    setSelectedMarkerId((currentId) => {
+      const current = markers.find((m) => m.id === currentId);
+      return current?.source === "search" && current.posts.length === 0
+        ? null
+        : currentId;
+    });
   };
 
   const addPost = async (draft: PostDraft) => {
@@ -204,8 +217,12 @@ export function MapExperience() {
         selectedMarkerId={selectedPost || groupOpen ? null : selectedMarkerId}
         onMarkerAdd={addMarker}
         onMarkerSelect={(id) => {
-          if (!id) { setSelectedMarkerId(null); return; }
-          const marker = publicMarkers.find((m) => m.id === id);
+          if (!id) {
+            setSelectedMarkerId(null);
+            setMarkers((current) => removeEmptyMarkers(current));
+            return;
+          }
+          const marker = markers.find((m) => m.id === id);
           const isMobile = typeof window !== "undefined" && window.innerWidth < 640;
 
           if (isMobile) {
@@ -238,7 +255,12 @@ export function MapExperience() {
       <div className="pointer-events-none absolute inset-x-0 top-0 z-40 hidden p-4 md:block">
         <nav className="pointer-events-auto mx-auto flex max-w-7xl items-center gap-3 rounded-full border border-black/10 bg-background/95 px-4 py-2.5 shadow-2xl shadow-black/10 backdrop-blur-xl">
           <div className="min-w-0 flex-1">
-            <MapSearchBar onPlaceSelect={selectPlace} center={viewport.center} />
+            <MapSearchBar
+              onPlaceSelect={selectPlace}
+              center={viewport.center}
+              initialQuery={searchedLocation?.name}
+              onClear={handleClearSearch}
+            />
           </div>
           <ThemeSettingsMenu />
 
@@ -257,6 +279,8 @@ export function MapExperience() {
           <MapSearchBar
             onPlaceSelect={selectPlace}
             center={viewport.center}
+            initialQuery={searchedLocation?.name}
+            onClear={handleClearSearch}
           />
         </div>
       </div>
@@ -291,6 +315,9 @@ export function MapExperience() {
           setSelectedMarkerId(null);
           if (selectedMarker?.posts.length === 0) {
             setMarkers((current) => removeEmptyMarkers(current));
+            if (selectedMarker.source === "search") {
+              setSearchedLocation(null);
+            }
           }
         }}
         onCreatePost={() => setCreateOpen(true)}
