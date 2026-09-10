@@ -6,6 +6,7 @@ import { Expand, MapPin, ShieldCheck } from "lucide-react";
 import { useTheme } from "next-themes";
 import { getOpenFreeMapStyle } from "@/features/map/lib/openfreemap";
 import { FullScreenMapPicker } from "./FullScreenMapPicker";
+import { createPinMarkerElement } from "@/features/map/lib/map-markers";
 import type { MarkerData } from "@/features/posts/lib/post-types";
 
 export function MiniMapPreview({
@@ -31,6 +32,9 @@ export function MiniMapPreview({
       style: getOpenFreeMapStyle(resolvedTheme),
       center: [currentLocation.lng, currentLocation.lat],
       zoom: 14.5,
+      pitch: 50,
+      fadeDuration: 0,
+      renderWorldCopies: false,
       interactive: false,
       attributionControl: false,
     });
@@ -47,7 +51,7 @@ export function MiniMapPreview({
         el.appendChild(img);
       }
 
-      pin.current = new Marker(el ? { element: el } : { color: "#137818", scale: 1.2 })
+      pin.current = new Marker(el ? { element: el } : { element: createPinMarkerElement() })
         .setLngLat([currentLocation.lng, currentLocation.lat])
         .addTo(map.current);
     });
@@ -79,12 +83,12 @@ export function MiniMapPreview({
           aria-label="OpenFreeMap location preview"
         />
 
-        {/* Fullscreen expand button — mobile only */}
+        {/* Fullscreen expand button */}
         <button
           type="button"
           aria-label="Open full-screen map"
           onClick={() => setShowFullScreen(true)}
-          className="absolute bottom-3 right-3 z-20 flex items-center gap-1.5 rounded-lg border border-border/60 bg-background px-3 py-2 text-sm font-medium text-foreground shadow-lg transition hover:scale-105 hover:shadow-xl md:hidden"
+          className="absolute bottom-3 right-3 z-20 flex items-center gap-1.5 rounded-lg border border-border/60 bg-background px-3 py-2 text-sm font-medium text-foreground shadow-lg transition hover:scale-105 hover:shadow-xl"
         >
           <Expand className="size-4" />
           Expand

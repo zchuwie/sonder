@@ -102,7 +102,7 @@ export default function CreatePostModal({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid min-h-0 grid-rows-[200px_minmax(0,1fr)] overflow-hidden md:grid-cols-[1fr_1.1fr] md:grid-rows-1">
+        <div className="grid min-h-0 grid-rows-[120px_minmax(0,1fr)] sm:grid-rows-[160px_minmax(0,1fr)] overflow-hidden md:grid-cols-[1fr_1.1fr] md:grid-rows-1">
           <div className="min-h-0 border-b md:border-b-0 md:border-r">
             <MiniMapPreview
               marker={displayLocation as MarkerData}

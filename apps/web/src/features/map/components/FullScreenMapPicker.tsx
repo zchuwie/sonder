@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Map, Marker, NavigationControl } from "maplibre-gl";
 import { ArrowLeft, Check, X } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { getOpenFreeMapStyle } from "@/features/map/lib/openfreemap";
 import { reverseGeocode } from "@/features/map/client/reverse-geocode";
+import { createPinMarkerElement } from "@/features/map/lib/map-markers";
 
 type PickedLocation = { lat: number; lng: number; placeName?: string };
 
@@ -27,6 +29,7 @@ export function FullScreenMapPicker({
   const mapRef = useRef<Map | null>(null);
   const markerRef = useRef<Marker | null>(null);
   const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
   const [pinned, setPinned] = useState<PickedLocation | null>({
     lat: initialLat,
     lng: initialLng,
@@ -34,11 +37,14 @@ export function FullScreenMapPicker({
   });
 
   useEffect(() => {
-    if (!container.current || mapRef.current) return;
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted || !container.current || mapRef.current) return;
 
     const el = container.current;
 
-    // ponytail: RAF to ensure container is laid out and has dimensions
     const frame = requestAnimationFrame(() => {
       if (!el || mapRef.current) return;
 
@@ -47,16 +53,18 @@ export function FullScreenMapPicker({
         style: getOpenFreeMapStyle(resolvedTheme),
         center: [initialLng, initialLat],
         zoom: 15,
+        pitch: 50,
+        fadeDuration: 0,
+        renderWorldCopies: false,
         attributionControl: false,
       });
       mapRef.current = instance;
-      instance.addControl(new NavigationControl(), "bottom-right");
+      instance.addControl(new NavigationControl({ showCompass: true, visualizePitch: true }), "bottom-right");
 
       instance.on("load", () => {
-        // Ensure map fills container after load
         instance.resize();
 
-        markerRef.current = new Marker({ color: "#137818", scale: 1.3, draggable: true })
+        markerRef.current = new Marker({ element: createPinMarkerElement(), draggable: true })
           .setLngLat([initialLng, initialLat])
           .addTo(instance);
 
@@ -73,7 +81,7 @@ export function FullScreenMapPicker({
         if (markerRef.current) {
           markerRef.current.setLngLat([lng, lat]);
         } else {
-          markerRef.current = new Marker({ color: "#137818", scale: 1.3, draggable: true })
+          markerRef.current = new Marker({ element: createPinMarkerElement(), draggable: true })
             .setLngLat([lng, lat])
             .addTo(instance);
           markerRef.current.on("dragend", async () => {
@@ -94,7 +102,7 @@ export function FullScreenMapPicker({
       mapRef.current?.remove();
       mapRef.current = null;
     };
-  }, [initialLat, initialLng, resolvedTheme]);
+  }, [mounted, initialLat, initialLng, resolvedTheme]);
 
   const handleClear = () => {
     if (markerRef.current && mapRef.current) {
@@ -104,16 +112,18 @@ export function FullScreenMapPicker({
     }
   };
 
-  return (
+  if (!mounted) return null;
+
+  return createPortal(
     <div
-      className="fixed inset-0 z-9999 flex items-center justify-center"
+      className="fixed inset-0 z-[100] flex items-center justify-center pointer-events-auto"
       onClick={(e) => { if (e.target === e.currentTarget) { e.stopPropagation(); onClose(); } }}
       onPointerDown={(e) => e.stopPropagation()}
       onPointerUp={(e) => e.stopPropagation()}
       onMouseDown={(e) => e.stopPropagation()}
     >
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-md" onClick={onClose} />
 
       {/* Modal panel */}
       <div
@@ -131,7 +141,7 @@ export function FullScreenMapPicker({
             <ArrowLeft className="size-4" />
             Back
           </Button>
-          <span className="text-base font-medium">Pick a location</span>
+          <span className="text-base font-semibold">Pick a location</span>
           <div className="w-20" />
         </div>
 
@@ -154,7 +164,7 @@ export function FullScreenMapPicker({
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" className="gap-1.5 rounded-xl" onClick={handleClear}>
               <X className="size-3.5" />
-              Clear
+              Reset
             </Button>
             <Button
               size="sm"
@@ -168,6 +178,7 @@ export function FullScreenMapPicker({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
