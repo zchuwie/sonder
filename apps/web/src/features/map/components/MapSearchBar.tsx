@@ -103,15 +103,17 @@ type Props = {
   center?: SearchCenter;
   initialQuery?: string;
   disableRecent?: boolean;
+  onClear?: () => void;
 };
 
-export function MapSearchBar({ onPlaceSelect, center, initialQuery, disableRecent }: Props) {
+export function MapSearchBar({ onPlaceSelect, center, initialQuery, disableRecent, onClear }: Props) {
   const reduceMotion = useReducedMotion();
   const [query, setQuery] = useState(initialQuery ?? "");
   
   useEffect(() => {
     if (initialQuery !== undefined && document.activeElement !== inputRef.current) {
       setQuery(initialQuery);
+      setOpen(false);
     }
   }, [initialQuery]);
 
@@ -134,6 +136,7 @@ export function MapSearchBar({ onPlaceSelect, center, initialQuery, disableRecen
 
   useEffect(() => {
     if (justSelected.current) { justSelected.current = false; return; }
+    if (document.activeElement !== inputRef.current) return;
     if (query.trim().length >= 2) setOpen(true);
     setPage(1);
     setActiveIndex(-1);
@@ -204,23 +207,24 @@ export function MapSearchBar({ onPlaceSelect, center, initialQuery, disableRecen
             if (justSelected.current) return;
             if (displayList.length || query.trim().length >= 2) setOpen(true);
           }}
-          placeholder="Search barangays, landmarks, or cities..."
+          placeholder="Search places, landmarks, or thoughts..."
           autoComplete="off"
           spellCheck={false}
-          className="h-10 w-full rounded-xl border border-input bg-background/95 py-2.5 pl-9 pr-9 text-sm shadow-lg outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 sm:h-auto sm:rounded-2xl sm:py-3"
+          className="h-11 w-full rounded-full border border-black/10 bg-background/95 py-2.5 pl-9 pr-9 text-sm shadow-md shadow-black/5 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 backdrop-blur-md dark:border-white/10"
         />
         {query && (
           <button
             type="button"
             aria-label="Clear search"
-            className="absolute inset-y-0 right-2 flex items-center px-1 text-muted-foreground"
+            className="absolute inset-y-0 right-2.5 flex items-center px-1 text-muted-foreground hover:text-foreground"
             onClick={() => {
               setQuery("");
               setOpen(recent.length > 0);
+              onClear?.();
               inputRef.current?.focus();
             }}
           >
-            <FiX size={14} />
+            <FiX size={15} />
           </button>
         )}
       </div>

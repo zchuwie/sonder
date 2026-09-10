@@ -3,17 +3,16 @@
 import { useMemo, useState, useEffect } from "react";
 import {
   Compass,
-  MapPin,
   Plus,
-  X,
 } from "lucide-react";
-import MapCanvas, { type MapViewport } from "./MapCanvas";
+import MapCanvas, { type MapActions, type MapViewport } from "./MapCanvas";
+import { MapFloatingControls } from "./MapFloatingControls";
+import { MapPlaceBottomSheet } from "./MapPlaceBottomSheet";
 import CreatePostModal from "@/features/posts/components/CreatePostModal";
 import { NavCreatePostModal } from "@/features/posts/components/NavCreatePostModal";
 import PostDetailModal from "@/features/posts/components/PostDetailModal";
 import { PostDiscoveryModal } from "@/features/posts/components/PostDiscoveryModal";
 import { GroupedPostsModal } from "@/features/posts/components/GroupedPostsModal";
-import { PostClusterList } from "@/features/posts/components/PostClusterList";
 import { Button } from "@/components/ui/button";
 import { MapSearchBar } from "@/features/map/components/MapSearchBar";
 import { ThemeSettingsMenu } from "@/components/shared/ThemeSettingsMenu";
@@ -64,6 +63,7 @@ export function MapExperience() {
   const [discoveryOpen, setDiscoveryOpen] = useState(false);
   const [groupOpen, setGroupOpen] = useState(false);
   const [viewport, setViewport] = useState<MapViewport>(INITIAL_VIEWPORT);
+  const [mapActions, setMapActions] = useState<MapActions | null>(null);
   
   const [searchedLocation, setSearchedLocation] = useState<LocationPlaceDTO | null>(null);
 
@@ -181,6 +181,12 @@ export function MapExperience() {
     const marker = publicMarkers.find((item) =>
       item.posts.some((markerPost) => markerPost.id === post.id),
     );
+    const isMobile = typeof window !== "undefined" && window.innerWidth < 640;
+    if (isMobile && marker) {
+      setFlyTo({ lat: marker.lat, lng: marker.lng, zoom: 15.5 });
+      setSelectedMarkerId(marker.id);
+      return;
+    }
     const side = marker && marker.lng > viewport.center.lng ? 'left' : 'right';
     setPanelSide(side);
     setFlyTo({
@@ -201,17 +207,25 @@ export function MapExperience() {
         onMarkerSelect={(id) => {
           if (!id) { setSelectedMarkerId(null); return; }
           const marker = publicMarkers.find((m) => m.id === id);
-          // Pin right of viewport center → modal goes left (and vice versa)
+          const isMobile = typeof window !== "undefined" && window.innerWidth < 640;
+
+          if (isMobile) {
+            if (marker) {
+              setFlyTo({ lat: marker.lat, lng: marker.lng, zoom: 15.5 });
+            }
+            setSelectedMarkerId(id);
+            return;
+          }
+
+          // Desktop logic:
           const side: 'left' | 'right' =
             marker && marker.lng > viewport.center.lng ? 'left' : 'right';
           setPanelSide(side);
           if (marker) setFlyTo({ lat: marker.lat, lng: marker.lng, zoom: 15.5, panelSide: side });
-          // Single post → open PostDetailModal directly after fly starts
           if (marker && marker.posts.length === 1) {
             setTimeout(() => setSelectedPost(marker.posts[0]!), 350);
             return;
           }
-          // Multi-post → MapPostPreview near pin (desktop) or bottom sheet (mobile)
           setSelectedMarkerId(id);
         }}
         onCreatePost={() => setCreateOpen(true)}
@@ -219,14 +233,15 @@ export function MapExperience() {
         onSelectPost={(post) => { setSelectedMarkerId(null); setSelectedPost(post); }}
         onViewportChange={(vp) => { setViewport(vp); onBoundsChange(vp.bounds); }}
         flyTo={flyTo}
+        onMapReady={setMapActions}
       />
       {/* Desktop navbar — unified top bar (md+) */}
       <div className="pointer-events-none absolute inset-x-0 top-0 z-40 hidden p-4 md:block">
         <nav className="pointer-events-auto mx-auto flex max-w-7xl items-center gap-3 rounded-full border border-black/10 bg-background/95 px-4 py-2.5 shadow-2xl shadow-black/10 backdrop-blur-xl">
-          <a href="/" className="flex size-10 shrink-0 items-center justify-center rounded-xl">
+          <Link href="/" className="flex size-10 shrink-0 items-center justify-center rounded-xl">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/brand/sonder-logo.png" alt="Sonder" className="size-7 rounded-full object-cover" />
-          </a>
+          </Link>
           <div className="min-w-0 flex-1">
             <MapSearchBar onPlaceSelect={selectPlace} center={viewport.center} />
           </div>
@@ -241,21 +256,37 @@ export function MapExperience() {
         </nav>
       </div>
 
-      {/* Mobile floating controls (below md) */}
+      {/* Mobile floating top bar & categories (below md) */}
       <div className="pointer-events-none absolute inset-x-0 top-0 z-40 p-2.5 md:hidden">
-        <div className="pointer-events-auto flex min-w-0 items-center gap-2 pr-13 sm:max-w-xl sm:pr-0">
-          <Link href="/" className="flex size-10 shrink-0 items-center justify-center rounded-xl">
-            <img src="/brand/sonder-logo.png" alt="Sonder" className="size-7 rounded-full object-cover" />
-          </Link>
-          <MapSearchBar onPlaceSelect={selectPlace} center={viewport.center} />
-        </div>
-        <div className="pointer-events-none absolute right-2.5 top-2.5 z-40 flex flex-col items-end gap-2 sm:right-5 sm:top-5 sm:gap-3">
-          <div className="pointer-events-auto">
-            <ThemeSettingsMenu />
+        <div className="pointer-events-auto flex flex-col gap-1.5">
+          <div className="flex items-center gap-2">
+            <Link
+              href="/"
+              className="flex size-11 shrink-0 items-center justify-center rounded-full border border-black/10 bg-background/95 shadow-md shadow-black/5 backdrop-blur-md dark:border-white/10 transition-transform active:scale-95"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/brand/sonder-logo.png" alt="Sonder" className="size-7 rounded-full object-cover" />
+            </Link>
+            <div className="min-w-0 flex-1">
+              <MapSearchBar
+                onPlaceSelect={selectPlace}
+                center={viewport.center}
+              />
+            </div>
           </div>
-
         </div>
       </div>
+
+      {/* Right-Side Floating Control Stack (3D, Compass, Zoom, Theme, Nearby) */}
+      <div className="absolute right-3 top-20 sm:top-24 z-30 pointer-events-none">
+        <MapFloatingControls
+          mapActions={mapActions}
+          nearbyCount={nearbyPosts.length}
+          onNearbyClick={() => setDiscoveryOpen(true)}
+        />
+      </div>
+
+      {/* Desktop explore nearby button */}
       <div className="absolute bottom-16 right-5 z-30 hidden space-y-2 sm:block">
         <Button
           variant="secondary"
@@ -268,75 +299,18 @@ export function MapExperience() {
           </span>
         </Button>
       </div>
-      <div className="absolute inset-x-2.5 bottom-0 z-30 pb-[max(.625rem,env(safe-area-inset-bottom))] sm:hidden">
-        {selectedMarker && !selectedPost ? (
-          <div className="flex max-h-[45dvh] flex-col rounded-2xl border border-black/10 bg-background/95 p-3 shadow-2xl backdrop-blur-xl">
-            <div className="flex shrink-0 items-start gap-3">
-              <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-                <MapPin className="size-5" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold">
-                  {selectedMarker.placeName ?? "Selected place"}
-                </p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {publicSelectedMarker && publicSelectedMarker.posts.length > 0
-                    ? `${publicSelectedMarker.posts.length} thoughts pinned here`
-                    : "No thoughts here yet."}
-                </p>
-              </div>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                onClick={() => setSelectedMarkerId(null)}
-              >
-                <X />
-              </Button>
-            </div>
-            {publicSelectedMarker && publicSelectedMarker.posts.length > 0 && (
-              <>
-                <div className="mt-3 min-h-0 flex-1 overflow-y-auto pb-2 pr-1">
-                  <PostClusterList posts={publicSelectedMarker.posts} limit={20} onSelect={(post) => { setSelectedPost(post); setSelectedMarkerId(null); }} />
-                  {publicSelectedMarker.posts.length > 20 && (
-                    <Button 
-                      variant="ghost" 
-                      className="mt-2 w-full text-xs text-muted-foreground" 
-                      onClick={() => setGroupOpen(true)}
-                    >
-                      View all {publicSelectedMarker.posts.length} posts
-                    </Button>
-                  )}
-                </div>
-                <div className="mt-2">
-                  <Button variant="outline" className="w-full rounded-xl" onClick={() => setCreateOpen(true)}>
-                    <Plus /> Add thought
-                  </Button>
-                </div>
-              </>
-            )}
-            {(!publicSelectedMarker || publicSelectedMarker.posts.length === 0) && (
-              <Button className="mt-3 w-full shrink-0 rounded-xl" onClick={() => setCreateOpen(true)}>
-                <Plus /> Create a post
-              </Button>
-            )}
-          </div>
-        ) : (
-          <div className="flex justify-end">
-            <Button
-              size="icon"
-              className="relative size-12 rounded-full shadow-xl"
-              onClick={() => setDiscoveryOpen(true)}
-            >
-              <Compass />
-              {nearbyPosts.length > 0 && (
-                <span className="absolute -right-1 -top-1 flex h-5 min-w-[20px] items-center justify-center rounded-full border-2 border-background bg-primary px-1 text-[10px] font-bold text-primary-foreground">
-                  {nearbyPosts.length}
-                </span>
-              )}
-            </Button>
-          </div>
-        )}
-      </div>
+
+      {/* Mobile Place Bottom Sheet (Functional Draggable Drawer) */}
+      <MapPlaceBottomSheet
+        marker={selectedMarker}
+        onClose={() => {
+          setSelectedMarkerId(null);
+          if (selectedMarker?.posts.length === 0) {
+            setMarkers((current) => removeEmptyMarkers(current));
+          }
+        }}
+        onCreatePost={() => setCreateOpen(true)}
+      />
       <PostDiscoveryModal
         open={discoveryOpen}
         posts={nearbyPosts}
