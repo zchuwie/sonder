@@ -46,7 +46,15 @@ export function ModerationProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (hydrated) localStorage.setItem(STORAGE_KEY, JSON.stringify(markers));
+    if (!hydrated) return;
+    const timer = setTimeout(() => {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(markers));
+      } catch {
+        // LocalStorage quota or restricted storage
+      }
+    }, 600);
+    return () => clearTimeout(timer);
   }, [hydrated, markers]);
 
   useEffect(() => {

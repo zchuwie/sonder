@@ -1,12 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { AnimatePresence } from "framer-motion";
 import { MapPin } from "lucide-react";
 import {
   Map,
   Marker as MLMarker,
-  NavigationControl,
   GeoJSONSource,
 } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
@@ -19,6 +18,14 @@ import { MapPostPreview } from "./MapPostPreview";
 import type { MarkerData } from "@/features/posts/lib/post-types";
 import { getOpenFreeMapStyle } from "@/features/map/lib/openfreemap";
 import { AppLoading } from "@/components/shared/AppLoading";
+
+export type MapActions = {
+  zoomIn: () => void;
+  zoomOut: () => void;
+  toggle3D: () => boolean;
+  resetNorth: () => void;
+  getPitch: () => number;
+};
 
 type FlyToTarget = {
   lat: number;
@@ -42,6 +49,7 @@ type Props = {
   onSelectPost?: (post: MarkerData["posts"][number]) => void;
   onViewportChange?: (viewport: MapViewport) => void;
   flyTo?: FlyToTarget;
+  onMapReady?: (actions: MapActions) => void;
 };
 
 type HoverPreview = {
@@ -61,7 +69,7 @@ function contentSummary(posts: MarkerData["posts"]) {
   return types.size ? [...types].join(" + ") : "Text";
 }
 
-export default function MapCanvas({
+function MapCanvas({
   markers,
   selectedMarkerId,
   onMarkerAdd,
@@ -71,12 +79,15 @@ export default function MapCanvas({
   onSelectPost,
   onViewportChange,
   flyTo,
+  onMapReady,
 }: Props) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<Map | null>(null);
   const onMarkerSelectRef = useRef(onMarkerSelect);
   const onMarkerAddRef = useRef(onMarkerAdd);
   const onViewportChangeRef = useRef(onViewportChange);
+  const onMapReadyRef = useRef(onMapReady);
+  onMapReadyRef.current = onMapReady;
   const markersRef = useRef<MarkerData[]>(markers);
   const searchMarkersRef = useRef<globalThis.Map<string, MLMarker>>(
     new globalThis.Map(),
@@ -131,11 +142,32 @@ export default function MapCanvas({
       style: styleUrl,
       center: [lng, lat],
       zoom: zoom,
+      pitch: 50,
+      fadeDuration: 0,
+      renderWorldCopies: false,
+      maxTileCacheSize: 100,
+      trackResize: true,
+      attributionControl: false,
     });
 
     map.current.getCanvas().style.cursor = "pointer";
 
-    map.current.addControl(new NavigationControl(), "bottom-left");
+    if (onMapReadyRef.current) {
+      onMapReadyRef.current({
+        zoomIn: () => map.current?.zoomIn({ duration: 250 }),
+        zoomOut: () => map.current?.zoomOut({ duration: 250 }),
+        toggle3D: () => {
+          if (!map.current) return false;
+          const currentPitch = map.current.getPitch();
+          const targetPitch = currentPitch > 15 ? 0 : 50;
+          map.current.easeTo({ pitch: targetPitch, duration: 400 });
+          return targetPitch > 0;
+        },
+        resetNorth: () => map.current?.easeTo({ bearing: 0, duration: 300 }),
+        getPitch: () => map.current?.getPitch() ?? 0,
+      });
+    }
+
     map.current.on("styleimagemissing", (event) => {
       if (event.id === "sonder-map-pin" && map.current)
         void addPinMarkerImage(map.current);
@@ -256,7 +288,7 @@ export default function MapCanvas({
             const coords = geometry.coordinates as [number, number];
             map.current!.easeTo({ center: coords, zoom });
           })
-          .catch((err) => {
+          .catch(() => {
             // Ignore missing cluster errors (happens if data syncs mid-click)
             const coords = geometry.coordinates as [number, number];
             map.current!.easeTo({ center: coords, zoom: map.current!.getZoom() + 2 });
@@ -304,13 +336,26 @@ export default function MapCanvas({
           detail,
         });
       });
+      let hoverRaf: number | null = null;
+      const queueHoverUpdate = (x: number, y: number) => {
+        if (hoverRaf !== null) cancelAnimationFrame(hoverRaf);
+        hoverRaf = requestAnimationFrame(() => {
+          setHoverPreview(
+            (preview) =>
+              preview && (preview.x === x && preview.y === y ? preview : { ...preview, x, y }),
+          );
+          hoverRaf = null;
+        });
+      };
+
       map.current.on("mousemove", "clusters", (event) => {
-        setHoverPreview(
-          (preview) =>
-            preview && { ...preview, x: event.point.x, y: event.point.y },
-        );
+        queueHoverUpdate(event.point.x, event.point.y);
       });
       map.current.on("mouseleave", "clusters", () => {
+        if (hoverRaf !== null) {
+          cancelAnimationFrame(hoverRaf);
+          hoverRaf = null;
+        }
         setCursor("pointer");
         setHoverPreview(null);
       });
@@ -330,12 +375,13 @@ export default function MapCanvas({
           });
       });
       map.current.on("mousemove", "unclustered-point", (event) => {
-        setHoverPreview(
-          (preview) =>
-            preview && { ...preview, x: event.point.x, y: event.point.y },
-        );
+        queueHoverUpdate(event.point.x, event.point.y);
       });
       map.current.on("mouseleave", "unclustered-point", () => {
+        if (hoverRaf !== null) {
+          cancelAnimationFrame(hoverRaf);
+          hoverRaf = null;
+        }
         setCursor("pointer");
         setHoverPreview(null);
       });
@@ -490,13 +536,19 @@ export default function MapCanvas({
     const selected = markers.find((marker) => marker.id === selectedMarkerId);
     if (!selected) return;
 
+    let moveRaf: number | null = null;
     const update = () => {
-      const point = map.current?.project([selected.lng, selected.lat]);
-      if (point) setPreviewPosition({ x: point.x, y: point.y });
+      if (moveRaf !== null) cancelAnimationFrame(moveRaf);
+      moveRaf = requestAnimationFrame(() => {
+        const point = map.current?.project([selected.lng, selected.lat]);
+        if (point) setPreviewPosition({ x: point.x, y: point.y });
+        moveRaf = null;
+      });
     };
     update();
     map.current.on("move", update);
     return () => {
+      if (moveRaf !== null) cancelAnimationFrame(moveRaf);
       map.current?.off("move", update);
     };
   }, [markers, selectedMarkerId]);
@@ -591,6 +643,7 @@ export default function MapCanvas({
           0%, 100% { opacity: 1; }
           50%       { opacity: 0.6; }
         }
+        .maplibregl-ctrl-attrib { display: none !important; }
       `}</style>
 
       <div ref={mapContainer} className="w-full h-full" />
@@ -695,3 +748,5 @@ export default function MapCanvas({
     </div>
   );
 }
+
+export default memo(MapCanvas);
