@@ -2,7 +2,6 @@
 
 import { useMemo, useState, useEffect } from "react";
 import {
-  Compass,
   Plus,
 } from "lucide-react";
 import MapCanvas, { type MapActions, type MapViewport } from "./MapCanvas";
@@ -15,7 +14,6 @@ import { PostDiscoveryModal } from "@/features/posts/components/PostDiscoveryMod
 import { GroupedPostsModal } from "@/features/posts/components/GroupedPostsModal";
 import { Button } from "@/components/ui/button";
 import { MapSearchBar } from "@/features/map/components/MapSearchBar";
-import { ThemeSettingsMenu } from "@/components/shared/ThemeSettingsMenu";
 import {
   createPost,
   getLocationGroupKey,
@@ -262,7 +260,6 @@ export function MapExperience() {
               onClear={handleClearSearch}
             />
           </div>
-          <ThemeSettingsMenu />
 
           <Button
             className="rounded-full px-5"
@@ -286,26 +283,12 @@ export function MapExperience() {
       </div>
 
       {/* Right-Side Floating Control Stack (3D, Compass, Zoom, Theme, Nearby) */}
-      <div className="absolute right-3 top-20 sm:top-24 z-30 pointer-events-none">
+      <div className="pointer-events-none absolute right-3 top-20 z-30 sm:top-auto sm:bottom-6 sm:right-6">
         <MapFloatingControls
           mapActions={mapActions}
           nearbyCount={nearbyPosts.length}
           onNearbyClick={() => setDiscoveryOpen(true)}
         />
-      </div>
-
-      {/* Desktop explore nearby button */}
-      <div className="absolute bottom-16 right-5 z-30 hidden space-y-2 sm:block">
-        <Button
-          variant="secondary"
-          className="h-11 rounded-2xl border border-black/10 bg-background/95 px-4 shadow-lg backdrop-blur-xl transition-[transform,box-shadow,background-color] duration-200 ease-out hover:-translate-y-0.5 hover:shadow-xl"
-          onClick={() => setDiscoveryOpen(true)}
-        >
-          <Compass /> Explore nearby{" "}
-          <span className="rounded-full bg-primary px-2 py-0.5 text-[11px] text-primary-foreground">
-            {nearbyPosts.length}
-          </span>
-        </Button>
       </div>
 
       {/* Mobile Place Bottom Sheet (Functional Draggable Drawer) */}
