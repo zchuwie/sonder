@@ -7,13 +7,15 @@ import {
   X,
   Plus,
   Copy,
+  Check,
+  Download,
+  Send,
+  Sparkles,
   ExternalLink,
   MapPin,
-  Sparkles,
   Clock3,
   ChevronUp,
   ChevronDown,
-  Share2,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { AnonymousPost, MarkerData } from "@/features/posts/lib/post-types";
@@ -23,6 +25,7 @@ import { MusicPreviewCard } from "@/features/posts/components/MusicPreviewCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { fetchSignedPostImageUrl } from "@/lib/storage/image-url";
 import { buildShareUrl } from "@/features/posts/components/PostDetailModal";
+import { ShareCardModal } from "@/features/posts/components/ShareCardModal";
 
 export function MapPlaceBottomSheet({
   marker,
@@ -36,11 +39,14 @@ export function MapPlaceBottomSheet({
   const [isExpanded, setIsExpanded] = useState(false);
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
   const [signedImageUrl, setSignedImageUrl] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+  const [showCard, setShowCard] = useState(false);
 
   // Reset selected post when marker changes
   useEffect(() => {
     setSelectedPostId(null);
     setIsExpanded(false);
+    setShowCard(false);
   }, [marker?.id]);
 
   const posts = marker?.posts ?? [];
@@ -78,16 +84,61 @@ export function MapPlaceBottomSheet({
       .catch(() => toast.error("Failed to copy link"));
   };
 
-  const handleCopyPostLink = (post: AnonymousPost) => {
+  const handleCopyPostLink = async (post: AnonymousPost) => {
     try {
       const url = buildShareUrl(post);
-      navigator.clipboard
-        .writeText(url)
-        .then(() => toast.success("Thought link copied"))
-        .catch(() => toast.error("Failed to copy link"));
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      toast.success("Thought link copied");
+      setTimeout(() => setCopied(false), 1800);
     } catch {
       handleCopyPlaceLink();
     }
+  };
+
+  const handleSendLink = async (post: AnonymousPost) => {
+    let url = "";
+    try {
+      url = buildShareUrl(post);
+    } catch {
+      url = typeof window !== "undefined" ? `${window.location.origin}/map?marker=${encodeURIComponent(marker.id)}` : "";
+    }
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share({
+          title: post.title,
+          text: post.text,
+          url,
+        });
+        return;
+      } catch (e) {
+        if ((e as Error).name === "AbortError") return;
+      }
+    }
+    await handleCopyPostLink(post);
+  };
+
+  const handleSaveImage = async (post: AnonymousPost) => {
+    if (signedImageUrl) {
+      try {
+        const res = await fetch(signedImageUrl);
+        const blob = await res.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = blobUrl;
+        a.download = `${(post.title || "thought").replace(/[^a-zA-Z0-9]/g, "_")}.jpg`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(blobUrl);
+        toast.success("Image saved to device");
+        return;
+      } catch (err) {
+        console.error("Failed to save image", err);
+      }
+    }
+    // If no standalone image or direct download failed, open ShareCardModal to download card
+    setShowCard(true);
   };
 
   const handleOpenGoogleMaps = () => {
@@ -96,8 +147,9 @@ export function MapPlaceBottomSheet({
   };
 
   return (
-    <AnimatePresence>
-      <motion.div
+    <>
+      <AnimatePresence>
+        <motion.div
         key={marker.id}
         initial={{ y: "100%" }}
         animate={{ y: 0 }}
@@ -218,15 +270,32 @@ export function MapPlaceBottomSheet({
               </div>
             </div>
 
-            {/* Scrollable Post Content */}
+            {/* Scrollable Post Content: Exact hierarchy requested (date, title, image, body, music) */}
             <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
-              {/* Cover Image if available */}
+              {/* 1. Date */}
+              <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1.5">
+                  <Clock3 className="size-3.5" />
+                  {relativeTime(activePost.createdAt)}
+                </span>
+                <span className="truncate max-w-[200px] flex items-center gap-1 text-primary/90 font-medium">
+                  <MapPin className="size-3.5 shrink-0 text-primary" />
+                  <span className="truncate">{placeName}</span>
+                </span>
+              </div>
+
+              {/* 2. Title */}
+              <h2 className="font-serif text-xl font-bold leading-snug tracking-tight text-foreground">
+                {activePost.title}
+              </h2>
+
+              {/* 3. Image */}
               {signedImageUrl && (
-                <div className="relative aspect-video w-full overflow-hidden rounded-2xl border border-black/10 bg-muted dark:border-white/10">
+                <div className="relative aspect-video w-full overflow-hidden rounded-2xl border border-black/10 bg-muted dark:border-white/10 shadow-xs">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={signedImageUrl}
-                    alt=""
+                    alt={activePost.title}
                     className="size-full object-cover"
                   />
                 </div>
@@ -235,59 +304,81 @@ export function MapPlaceBottomSheet({
                 <Skeleton className="aspect-video w-full rounded-2xl" />
               )}
 
-              {/* Timestamp & Location badge */}
-              <div className="flex items-center justify-between gap-2 text-[11px] text-muted-foreground">
-                <span className="flex items-center gap-1">
-                  <Clock3 className="size-3" />
-                  {relativeTime(activePost.createdAt)}
-                </span>
-                <span className="truncate max-w-[200px] flex items-center gap-1 text-primary">
-                  <MapPin className="size-3 shrink-0" />
-                  <span className="truncate">{placeName}</span>
-                </span>
-              </div>
+              {/* 4. Body */}
+              <p className="text-sm leading-relaxed text-foreground/85 whitespace-pre-wrap">
+                {activePost.moderationStatus === "flagged"
+                  ? "This post was flagged for review."
+                  : activePost.text}
+              </p>
 
-              {/* Title & Body */}
-              <div>
-                <h2 className="font-serif text-lg font-bold leading-snug tracking-tight text-foreground">
-                  {activePost.title}
-                </h2>
-                <p className="mt-2 text-sm leading-relaxed text-foreground/85 whitespace-pre-wrap">
-                  {activePost.moderationStatus === "flagged"
-                    ? "This post was flagged for review."
-                    : activePost.text}
-                </p>
-              </div>
-
-              {/* Music Preview Card */}
+              {/* 5. Music */}
               {activePost.music && (
                 <div className="pt-1">
                   <MusicPreviewCard music={activePost.music} />
                 </div>
               )}
 
-              {/* Action Buttons Row */}
-              <div className="flex items-center gap-2 pt-2 border-t border-black/5 dark:border-white/5">
+              {activePost.moderationStatus === "pending" && (
+                <p className="text-center text-xs text-muted-foreground pt-1">Waiting for approval</p>
+              )}
+            </div>
+
+            {/* Minimal Action Bar */}
+            <div className="flex shrink-0 items-center justify-between border-t border-black/5 bg-background/95 px-4 py-2.5 backdrop-blur-sm dark:border-white/5">
+              {/* Minimal Share Thought Button */}
+              <button
+                type="button"
+                onClick={onCreatePost}
+                className="flex items-center gap-1.5 rounded-full border border-black/10 bg-muted/50 px-3 py-1.5 text-xs font-medium text-foreground/80 transition hover:bg-muted hover:text-foreground active:scale-95 dark:border-white/10"
+              >
+                <Plus className="size-3.5 text-primary" />
+                <span>Add thought</span>
+              </button>
+
+              {/* Minimal Action Buttons: Save image, Copy link, Send link, Maps */}
+              <div className="flex items-center gap-1.5">
+                {/* Save image */}
                 <button
                   type="button"
-                  onClick={onCreatePost}
-                  className="flex flex-1 items-center justify-center gap-1.5 rounded-full bg-primary py-2 text-xs font-semibold text-primary-foreground shadow-sm transition active:scale-98"
+                  aria-label="Save image"
+                  title="Save image"
+                  onClick={() => handleSaveImage(activePost)}
+                  className="grid size-8 place-items-center rounded-full border border-black/10 bg-background text-muted-foreground shadow-xs transition hover:border-primary/30 hover:bg-primary/5 hover:text-primary active:scale-95 dark:border-white/10"
                 >
-                  <Plus className="size-3.5" /> Add thought here
+                  <Download className="size-3.5" />
                 </button>
+
+                {/* Copy link */}
                 <button
                   type="button"
+                  aria-label={copied ? "Link copied" : "Copy link"}
+                  title={copied ? "Link copied" : "Copy link"}
                   onClick={() => handleCopyPostLink(activePost)}
-                  className="flex size-9 items-center justify-center rounded-full border border-black/10 bg-background text-foreground shadow-xs transition hover:bg-muted active:scale-95 dark:border-white/10"
-                  aria-label="Copy thought link"
+                  className={`grid size-8 place-items-center rounded-full border border-black/10 bg-background text-muted-foreground shadow-xs transition hover:border-primary/30 hover:bg-primary/5 hover:text-primary active:scale-95 dark:border-white/10 ${
+                    copied ? "border-primary/40 text-primary bg-primary/10" : ""
+                  }`}
                 >
-                  <Share2 className="size-3.5" />
+                  {copied ? <Check className="size-3.5 text-primary" /> : <Copy className="size-3.5" />}
                 </button>
+
+                {/* Send link */}
                 <button
                   type="button"
+                  aria-label="Send link"
+                  title="Send link"
+                  onClick={() => handleSendLink(activePost)}
+                  className="grid size-8 place-items-center rounded-full border border-black/10 bg-background text-muted-foreground shadow-xs transition hover:border-primary/30 hover:bg-primary/5 hover:text-primary active:scale-95 dark:border-white/10"
+                >
+                  <Send className="size-3.5" />
+                </button>
+
+                {/* Google Maps External Link */}
+                <button
+                  type="button"
+                  aria-label="Open in Google Maps"
+                  title="Open in Google Maps"
                   onClick={handleOpenGoogleMaps}
-                  className="flex size-9 items-center justify-center rounded-full border border-black/10 bg-background text-foreground shadow-xs transition hover:bg-muted active:scale-95 dark:border-white/10"
-                  aria-label="Google Maps"
+                  className="grid size-8 place-items-center rounded-full border border-black/10 bg-background text-muted-foreground shadow-xs transition hover:border-primary/30 hover:bg-primary/5 hover:text-primary active:scale-95 dark:border-white/10"
                 >
                   <ExternalLink className="size-3.5" />
                 </button>
@@ -380,5 +471,9 @@ export function MapPlaceBottomSheet({
         )}
       </motion.div>
     </AnimatePresence>
-  );
+    {showCard && activePost && (
+      <ShareCardModal post={activePost} onClose={() => setShowCard(false)} />
+    )}
+  </>
+);
 }
