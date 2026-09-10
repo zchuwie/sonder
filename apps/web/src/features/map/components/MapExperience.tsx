@@ -35,7 +35,6 @@ import { createSupabasePost } from "@/features/posts/client/use-create-post";
 import { getFunctionErrorMessage } from "@/lib/supabase/function-error";
 import { reverseGeocode } from "@/features/map/client/reverse-geocode";
 import { useActivityPulse } from "@/features/activity/use-activity-pulse";
-import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
 type FlyToTarget = {
@@ -238,10 +237,6 @@ export function MapExperience() {
       {/* Desktop navbar — unified top bar (md+) */}
       <div className="pointer-events-none absolute inset-x-0 top-0 z-40 hidden p-4 md:block">
         <nav className="pointer-events-auto mx-auto flex max-w-7xl items-center gap-3 rounded-full border border-black/10 bg-background/95 px-4 py-2.5 shadow-2xl shadow-black/10 backdrop-blur-xl">
-          <Link href="/" className="flex size-10 shrink-0 items-center justify-center rounded-xl">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/brand/sonder-logo.png" alt="Sonder" className="size-7 rounded-full object-cover" />
-          </Link>
           <div className="min-w-0 flex-1">
             <MapSearchBar onPlaceSelect={selectPlace} center={viewport.center} />
           </div>
@@ -256,24 +251,13 @@ export function MapExperience() {
         </nav>
       </div>
 
-      {/* Mobile floating top bar & categories (below md) */}
+      {/* Mobile floating search bar (below md) */}
       <div className="pointer-events-none absolute inset-x-0 top-0 z-40 p-2.5 md:hidden">
-        <div className="pointer-events-auto flex flex-col gap-1.5">
-          <div className="flex items-center gap-2">
-            <Link
-              href="/"
-              className="flex size-11 shrink-0 items-center justify-center rounded-full border border-black/10 bg-background/95 shadow-md shadow-black/5 backdrop-blur-md dark:border-white/10 transition-transform active:scale-95"
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/brand/sonder-logo.png" alt="Sonder" className="size-7 rounded-full object-cover" />
-            </Link>
-            <div className="min-w-0 flex-1">
-              <MapSearchBar
-                onPlaceSelect={selectPlace}
-                center={viewport.center}
-              />
-            </div>
-          </div>
+        <div className="pointer-events-auto">
+          <MapSearchBar
+            onPlaceSelect={selectPlace}
+            center={viewport.center}
+          />
         </div>
       </div>
 
