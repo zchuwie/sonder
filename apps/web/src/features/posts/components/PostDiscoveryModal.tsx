@@ -35,10 +35,14 @@ export function PostDiscoveryModal({
   const filtered = useMemo(
     () =>
       posts.filter((post) => {
+        const hasPhoto = Boolean(post.imageUrl || post.imagePath);
+        const hasSong = Boolean(post.music);
+        const isText = !hasPhoto && !hasSong;
+
         let typeMatch = false;
-        if (filters.text && !post.imageUrl && !post.music) typeMatch = true;
-        if (filters.photo && post.imageUrl) typeMatch = true;
-        if (filters.song && post.music) typeMatch = true;
+        if (filters.text && isText) typeMatch = true;
+        if (filters.photo && hasPhoto) typeMatch = true;
+        if (filters.song && hasSong) typeMatch = true;
         if (!typeMatch) return false;
 
         return `${post.title} ${post.text} ${post.placeName}`.toLowerCase().includes(query.toLowerCase());

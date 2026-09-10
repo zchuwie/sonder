@@ -35,7 +35,7 @@ export function PostClusterList({ posts, onSelect, limit = 3 }: { posts: Anonymo
             {url && post.moderationStatus !== "flagged" ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={url} alt="" className="size-10 shrink-0 rounded-lg object-cover" />
-            ) : post.imagePath && post.moderationStatus !== "flagged" ? (
+            ) : post.imagePath && !signedUrls.has(post.id) && post.moderationStatus !== "flagged" ? (
               <Skeleton className="size-10 shrink-0 rounded-lg" />
             ) : post.music && post.moderationStatus !== "flagged" ? (
               <div className="grid size-10 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
