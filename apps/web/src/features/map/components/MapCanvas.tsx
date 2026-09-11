@@ -18,6 +18,7 @@ import { MapPostPreview } from "./MapPostPreview";
 import type { MarkerData } from "@/features/posts/lib/post-types";
 import { getOpenFreeMapStyle } from "@/features/map/lib/openfreemap";
 import { AppLoading } from "@/components/shared/AppLoading";
+import { getLatestPost } from "@/features/posts/lib/post-utils";
 
 export type MapActions = {
   zoomIn: () => void;
@@ -67,6 +68,23 @@ function contentSummary(posts: MarkerData["posts"]) {
     if (!post.imageUrl && !post.imagePath && !post.music) types.add("Text");
   }
   return types.size ? [...types].join(" + ") : "Text";
+}
+
+function getMarkerHoverPreview(marker: MarkerData): { title: string; detail: string } {
+  const latestPost = getLatestPost(marker.posts);
+  if (latestPost) {
+    const title = latestPost.title.trim() || "Untitled thought";
+    const detail =
+      marker.posts.length > 1
+        ? `+${marker.posts.length - 1} more • ${contentSummary(marker.posts)}`
+        : contentSummary(marker.posts);
+    return { title, detail };
+  }
+
+  return {
+    title: marker.placeName || "New pin",
+    detail: "No thoughts yet",
+  };
 }
 
 function MapCanvas({
@@ -364,15 +382,15 @@ function MapCanvas({
         const feature = event.features?.[0];
         const id = feature?.properties?.id as string | undefined;
         const marker = markersRef.current.find((item) => item.id === id);
-        if (marker)
+        if (marker) {
+          const preview = getMarkerHoverPreview(marker);
           setHoverPreview({
             x: event.point.x,
             y: event.point.y,
-            title: `${marker.posts.length} ${
-              marker.posts.length === 1 ? "thought" : "thoughts"
-            }`,
-            detail: contentSummary(marker.posts),
+            title: preview.title,
+            detail: preview.detail,
           });
+        }
       });
       map.current.on("mousemove", "unclustered-point", (event) => {
         queueHoverUpdate(event.point.x, event.point.y);
@@ -485,15 +503,15 @@ function MapCanvas({
       });
       mlMarker.getElement().addEventListener("mouseenter", () => {
         const point = map.current?.project([pin.lng, pin.lat]);
-        if (point)
+        if (point) {
+          const preview = getMarkerHoverPreview(pin);
           setHoverPreview({
             x: point.x,
             y: point.y,
-            title: `${pin.posts.length} ${
-              pin.posts.length === 1 ? "thought" : "thoughts"
-            }`,
-            detail: contentSummary(pin.posts),
+            title: preview.title,
+            detail: preview.detail,
           });
+        }
       });
       mlMarker
         .getElement()
@@ -665,15 +683,15 @@ function MapCanvas({
       </AnimatePresence>
       {hoverPreview && (
         <div
-          className="pointer-events-none absolute z-40 min-w-32 rounded-lg border border-white/70 bg-background/95 px-3 py-2 text-xs shadow-xl backdrop-blur"
+          className="pointer-events-none absolute z-40 min-w-32 max-w-64 rounded-lg border border-white/70 bg-background/95 px-3 py-2 text-xs shadow-xl backdrop-blur dark:border-white/15"
           style={{
             left: hoverPreview.x,
             top: hoverPreview.y,
             transform: "translate(-50%, calc(-100% - 36px))",
           }}
         >
-          <p className="font-semibold text-foreground">{hoverPreview.title}</p>
-          <p className="mt-0.5 text-muted-foreground">{hoverPreview.detail}</p>
+          <p className="font-semibold text-foreground line-clamp-2 leading-snug">{hoverPreview.title}</p>
+          <p className="mt-0.5 text-muted-foreground truncate">{hoverPreview.detail}</p>
         </div>
       )}
 

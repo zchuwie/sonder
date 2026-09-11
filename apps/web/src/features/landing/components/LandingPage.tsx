@@ -69,8 +69,13 @@ export function LandingPage() {
     <main className="overflow-hidden bg-[#f5f1e8] text-[#101713] transition-colors dark:bg-[#080b09] dark:text-[#f5f1e8]">
       <LandingNavbar />
 
-      <section className="relative min-h-screen overflow-hidden bg-[#eef0e5] px-5 pb-14 pt-28 text-[#101713] transition-colors dark:bg-[#050706] dark:text-[#f5f1e8] sm:px-8 sm:pb-20 sm:pt-36 lg:pt-40">
-        <div className="pointer-events-none absolute -right-36 top-20 size-[500px] rounded-full bg-[#a8ba63]/10 blur-3xl" />
+      <section className="relative min-h-screen overflow-hidden bg-[#eef0e5] bg-[radial-gradient(ellipse_100%_80%_at_50%_-15%,rgba(168,186,99,0.18),rgba(238,240,229,0.6))] px-5 pb-14 pt-28 text-[#101713] transition-colors dark:bg-[#050706] dark:text-[#f5f1e8] sm:px-8 sm:pb-20 sm:pt-36 lg:pt-40">
+        {/* Minimal Animated Ambient Gradient Background */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+          <div className="animate-ambient-a absolute -right-32 -top-24 size-[600px] rounded-full bg-gradient-to-br from-[#a8ba63]/25 via-[#92a856]/15 to-transparent blur-3xl sm:size-[720px]" />
+          <div className="animate-ambient-b absolute -bottom-36 -left-32 size-[550px] rounded-full bg-gradient-to-tr from-[#2f4439]/15 via-[#a8ba63]/20 to-transparent blur-3xl sm:size-[680px]" />
+          <div className="animate-ambient-a absolute left-1/2 top-1/3 size-[420px] -translate-x-1/2 rounded-full bg-gradient-to-b from-[#a8ba63]/15 to-transparent blur-2xl" />
+        </div>
         <div className="mx-auto grid max-w-7xl items-center gap-10 sm:gap-16 lg:grid-cols-[1.05fr_.95fr]">
           <motion.div
             initial={reduceMotion ? false : { opacity: 0, y: 24 }}

@@ -175,6 +175,66 @@ body {
   }
 }
 
+/* ── Custom Green Scrollbar ───────────────────────────────────── */
+html,
+body,
+* {
+  scrollbar-color: #2f4439 #f5f1e8;
+  scrollbar-width: thin;
+}
+
+::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f5f1e8;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2f4439;
+  border-radius: 9999px;
+  border: 2px solid #f5f1e8;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #1b2d24;
+}
+
+/* ── Ambient Background Drift ─────────────────────────────────── */
+@keyframes ambientDriftA {
+  0%, 100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  33% {
+    transform: translate(60px, -40px) scale(1.08);
+  }
+  66% {
+    transform: translate(-30px, 30px) scale(0.95);
+  }
+}
+
+@keyframes ambientDriftB {
+  0%, 100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  33% {
+    transform: translate(-50px, 50px) scale(1.12);
+  }
+  66% {
+    transform: translate(40px, -30px) scale(0.92);
+  }
+}
+
+.animate-ambient-a {
+  animation: ambientDriftA 22s ease-in-out infinite;
+}
+
+.animate-ambient-b {
+  animation: ambientDriftB 26s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

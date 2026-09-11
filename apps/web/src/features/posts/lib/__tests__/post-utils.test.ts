@@ -1,5 +1,5 @@
-import { isPublicPost, getPostType, relativeTime } from '../post-utils';
-import type { PostDraft } from '../post-types';
+import { isPublicPost, getPostType, relativeTime, getLatestPost } from '../post-utils';
+import type { AnonymousPost, PostDraft } from '../post-types';
 
 describe('post-utils', () => {
   describe('isPublicPost', () => {
@@ -63,6 +63,38 @@ describe('post-utils', () => {
 
     it('formats days ago', () => {
       expect(relativeTime(new Date('2026-07-06T12:00:00Z').toISOString())).toBe('2d ago');
+    });
+  });
+
+  describe('getLatestPost', () => {
+    const createMockPost = (id: string, title: string, createdAt: string): AnonymousPost => ({
+      id,
+      title,
+      type: 'text',
+      text: 'hello',
+      lat: 0,
+      lng: 0,
+      createdAt,
+      moderationStatus: 'approved',
+    });
+
+    it('returns undefined when array is empty or undefined', () => {
+      expect(getLatestPost([])).toBeUndefined();
+    });
+
+    it('returns the only post when single post is provided', () => {
+      const post = createMockPost('1', 'Only thought', '2026-01-01T00:00:00Z');
+      expect(getLatestPost([post])).toBe(post);
+    });
+
+    it('returns the latest post among multiple posts', () => {
+      const older = createMockPost('1', 'Older thought', '2026-01-01T00:00:00Z');
+      const latest = createMockPost('2', 'Latest thought', '2026-01-02T12:00:00Z');
+      const middle = createMockPost('3', 'Middle thought', '2026-01-01T15:00:00Z');
+
+      expect(getLatestPost([older, latest, middle])).toBe(latest);
+      expect(getLatestPost([latest, older, middle])).toBe(latest);
+      expect(getLatestPost([older, middle, latest])).toBe(latest);
     });
   });
 });

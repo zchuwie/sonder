@@ -76,6 +76,23 @@ export function getVisiblePosts(markers: MarkerData[]): AnonymousPost[] {
     .filter(isPublicPost);
 }
 
+export function getLatestPost(posts: AnonymousPost[]): AnonymousPost | undefined {
+  if (!posts || posts.length === 0) return undefined;
+  let latest = posts[0]!;
+  let latestTime = Date.parse(latest.createdAt) || 0;
+
+  for (let i = 1; i < posts.length; i++) {
+    const post = posts[i]!;
+    const postTime = Date.parse(post.createdAt) || 0;
+    if (postTime > latestTime) {
+      latest = post;
+      latestTime = postTime;
+    }
+  }
+
+  return latest;
+}
+
 type Coordinates = { lat: number; lng: number };
 type MapBounds = {
   north: number;
