@@ -11,7 +11,6 @@ import {
   Settings,
 } from "lucide-react";
 import { AdminLogoutButton } from "@/features/auth/AdminLogoutButton";
-import { ThemeToggle } from "@/components/theme-toggle";
 
 const links = [
   ["/", "Dashboard", LayoutDashboard],
@@ -30,7 +29,6 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       {/* Mobile top bar */}
       <header className="flex items-center justify-between border-b border-border bg-surface px-4 py-3 md:hidden">
         <p className="font-serif text-xl text-foreground">Sonder<span className="text-primary">.</span></p>
-        <ThemeToggle />
       </header>
 
       {/* Desktop sidebar */}
@@ -56,7 +54,6 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           })}
         </nav>
         <div className="mt-auto space-y-3 border-t border-border pt-4">
-          <ThemeToggle />
           <p className="text-xs leading-5 text-muted-foreground">Review carefully. Every action becomes part of audit history.</p>
           <AdminLogoutButton />
         </div>

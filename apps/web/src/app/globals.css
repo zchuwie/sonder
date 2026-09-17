@@ -2,11 +2,6 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-@custom-variant dark (&:is(.dark *));
-
-/* Enable class-based dark mode for Tailwind v4 */
-@variant dark (&:where(.dark, .dark *));
-
 /* ── Liberty (light) palette ──────────────────────────────────── */
 :root {
   --primary: #106e20;
@@ -45,45 +40,6 @@
   --sidebar-accent-foreground: #171717;
   --sidebar-border: #e5e5e5;
   --sidebar-ring: #a1a1a1;
-}
-
-/* ── Fiord (dark) palette ─────────────────────────────────────── */
-.dark {
-  --background: #0a0a0a;
-  --foreground: #fafafa;
-  --primary: #61bd67;
-  --primary-hover: #7acf7e;
-  --primary-foreground: #051106;
-  --surface: #1d3024;
-  --border: #ffffff1a;
-  --muted: #262626;
-  --card: #171717;
-  --card-foreground: #fafafa;
-  --input-bg: #17271d;
-  --input-border: #355440;
-  --ring: #5aa75e;
-  --popover: #171717;
-  --popover-foreground: #fafafa;
-  --secondary: #262626;
-  --secondary-foreground: #fafafa;
-  --muted-foreground: #a1a1a1;
-  --accent: #262626;
-  --accent-foreground: #fafafa;
-  --destructive: #ff6467;
-  --input: #ffffff26;
-  --chart-1: #d4d4d4;
-  --chart-2: #737373;
-  --chart-3: #525252;
-  --chart-4: #404040;
-  --chart-5: #262626;
-  --sidebar: #171717;
-  --sidebar-foreground: #fafafa;
-  --sidebar-primary: #479c4d;
-  --sidebar-primary-foreground: #fafafa;
-  --sidebar-accent: #262626;
-  --sidebar-accent-foreground: #fafafa;
-  --sidebar-border: #ffffff1a;
-  --sidebar-ring: #737373;
 }
 
 body {

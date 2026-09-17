@@ -90,7 +90,7 @@ export default function RootLayout({
         <link rel="preconnect" href={process.env.NEXT_PUBLIC_SUPABASE_URL ?? ""} />
         <link rel="dns-prefetch" href="https://photon.komoot.io" />
       </head>
-      <body className={manrope.variable}>
+      <body className={manrope.variable} suppressHydrationWarning>
         <Script
           defer
           src="https://cloud.umami.is/script.js"
