@@ -5,14 +5,11 @@ import { AnimatePresence } from "framer-motion";
 import { MapPin } from "lucide-react";
 import {
   Map,
-  Marker as MLMarker,
   GeoJSONSource,
 } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { useTheme } from "next-themes";
 import {
   addPinMarkerImage,
-  createPinMarkerElement,
 } from "@/features/map/lib/map-markers";
 import { MapPostPreview } from "./MapPostPreview";
 import type { MarkerData } from "@/features/posts/lib/post-types";
@@ -23,9 +20,11 @@ import { getLatestPost } from "@/features/posts/lib/post-utils";
 export type MapActions = {
   zoomIn: () => void;
   zoomOut: () => void;
+  zoomToOverview: () => void;
   toggle3D: () => boolean;
   resetNorth: () => void;
   getPitch: () => number;
+  project?: (coords: { lat: number; lng: number }) => { x: number; y: number } | null;
 };
 
 type FlyToTarget = {
@@ -38,6 +37,7 @@ type FlyToTarget = {
 export type MapViewport = {
   center: { lat: number; lng: number };
   bounds: { north: number; south: number; east: number; west: number };
+  zoom?: number;
 };
 
 type Props = {
@@ -57,7 +57,7 @@ type HoverPreview = {
   x: number;
   y: number;
   title: string;
-  detail: string;
+  placement?: "top" | "bottom";
 } | null;
 
 function contentSummary(posts: MarkerData["posts"]) {
@@ -70,20 +70,14 @@ function contentSummary(posts: MarkerData["posts"]) {
   return types.size ? [...types].join(" + ") : "Text";
 }
 
-function getMarkerHoverPreview(marker: MarkerData): { title: string; detail: string } {
+function getMarkerHoverPreview(marker: MarkerData): { title: string } {
   const latestPost = getLatestPost(marker.posts);
   if (latestPost) {
-    const title = latestPost.title.trim() || "Untitled thought";
-    const detail =
-      marker.posts.length > 1
-        ? `+${marker.posts.length - 1} more • ${contentSummary(marker.posts)}`
-        : contentSummary(marker.posts);
-    return { title, detail };
+    return { title: latestPost.title.trim() || "Untitled thought" };
   }
 
   return {
     title: marker.placeName || "New pin",
-    detail: "No thoughts yet",
   };
 }
 
@@ -107,12 +101,6 @@ function MapCanvas({
   const onMapReadyRef = useRef(onMapReady);
   onMapReadyRef.current = onMapReady;
   const markersRef = useRef<MarkerData[]>(markers);
-  const searchMarkersRef = useRef<globalThis.Map<string, MLMarker>>(
-    new globalThis.Map(),
-  );
-  const { resolvedTheme } = useTheme();
-  const resolvedThemeRef = useRef(resolvedTheme);
-  resolvedThemeRef.current = resolvedTheme;
 
   const lng = 120.9842;
   const lat = 14.5995;
@@ -128,16 +116,26 @@ function MapCanvas({
     y: number;
   } | null>(null);
   const [hoverPreview, setHoverPreview] = useState<HoverPreview>(null);
+  const hoveredKeyRef = useRef<string | null>(null);
+  const selectedMarkerIdRef = useRef<string | null>(selectedMarkerId);
+  selectedMarkerIdRef.current = selectedMarkerId;
 
   onMarkerSelectRef.current = onMarkerSelect;
   onMarkerAddRef.current = onMarkerAdd;
   onViewportChangeRef.current = onViewportChange;
   markersRef.current = markers;
 
+  useEffect(() => {
+    if (selectedMarkerId) {
+      hoveredKeyRef.current = null;
+      setHoverPreview(null);
+    }
+  }, [selectedMarkerId]);
+
   const buildGeoJSON = (items: MarkerData[]): GeoJSON.FeatureCollection => ({
     type: "FeatureCollection",
     features: items
-      .filter((m) => m.source !== "search" && (m.posts.length > 0 || m.source === "manual"))
+      .filter((m) => m.posts.length > 0 || m.source === "manual" || m.source === "search")
       .map((m) => ({
         type: "Feature",
         id: m.id,
@@ -153,7 +151,7 @@ function MapCanvas({
   useEffect(() => {
     if (map.current || !mapContainer.current) return;
 
-    const styleUrl = getOpenFreeMapStyle(resolvedThemeRef.current);
+    const styleUrl = getOpenFreeMapStyle();
 
     map.current = new Map({
       container: mapContainer.current,
@@ -168,12 +166,25 @@ function MapCanvas({
       attributionControl: false,
     });
 
-    map.current.getCanvas().style.cursor = "pointer";
+    const canvas = map.current.getCanvas();
 
     if (onMapReadyRef.current) {
       onMapReadyRef.current({
         zoomIn: () => map.current?.zoomIn({ duration: 250 }),
         zoomOut: () => map.current?.zoomOut({ duration: 250 }),
+        zoomToOverview: () => {
+          if (!map.current) return;
+          // Stop any in-flight flyTo/easeTo so it doesn't re-center to old coordinates
+          map.current.stop();
+          const currentZoom = map.current.getZoom();
+          const targetZoom = currentZoom > 13.5 ? 12.5 : Math.max(currentZoom - 3, 2);
+          // Only change zoom — don't touch center or padding to avoid
+          // MapLibre recomputing the padded viewport (which causes drift)
+          map.current.easeTo({
+            zoom: targetZoom,
+            duration: 600,
+          });
+        },
         toggle3D: () => {
           if (!map.current) return false;
           const currentPitch = map.current.getPitch();
@@ -183,6 +194,11 @@ function MapCanvas({
         },
         resetNorth: () => map.current?.easeTo({ bearing: 0, duration: 300 }),
         getPitch: () => map.current?.getPitch() ?? 0,
+        project: (coords) => {
+          if (!map.current) return null;
+          const pt = map.current.project([coords.lng, coords.lat]);
+          return { x: pt.x, y: pt.y };
+        },
       });
     }
 
@@ -195,6 +211,7 @@ function MapCanvas({
       if (!map.current) return;
       const center = map.current.getCenter();
       const bounds = map.current.getBounds();
+      const currentZoom = map.current.getZoom();
       onViewportChangeRef.current?.({
         center: { lat: center.lat, lng: center.lng },
         bounds: {
@@ -203,9 +220,11 @@ function MapCanvas({
           east: bounds.getEast(),
           west: bounds.getWest(),
         },
+        zoom: currentZoom,
       });
     };
     map.current.on("moveend", reportViewport);
+    map.current.on("zoomend", reportViewport);
 
     // GeoJSON
     map.current.on("load", async () => {
@@ -291,10 +310,21 @@ function MapCanvas({
         paint: { "text-color": "#ffffff" },
       });
 
+      const clearHover = () => {
+        if (hoveredKeyRef.current !== null) {
+          hoveredKeyRef.current = null;
+          setHoverPreview(null);
+        }
+        if (map.current) {
+          map.current.getCanvas().style.cursor = "";
+        }
+      };
+
       // Click cluster → zoom in
-      map.current.on("click", "clusters", (e) => {
+      const onClusterClick = (e: maplibregl.MapMouseEvent) => {
+        clearHover();
         const features = map.current!.queryRenderedFeatures(e.point, {
-          layers: ["clusters"],
+          layers: ["clusters", "cluster-count"],
         });
         if (!features.length || !features[0]) return;
         const clusterId = (features[0].properties?.cluster_id ?? 0) as number;
@@ -307,103 +337,156 @@ function MapCanvas({
             map.current!.easeTo({ center: coords, zoom });
           })
           .catch(() => {
-            // Ignore missing cluster errors (happens if data syncs mid-click)
             const coords = geometry.coordinates as [number, number];
             map.current!.easeTo({ center: coords, zoom: map.current!.getZoom() + 2 });
           });
-      });
+      };
+      map.current.on("click", "clusters", onClusterClick);
+      map.current.on("click", "cluster-count", onClusterClick);
 
       // Click individual pin → open sidebar
-      map.current.on("click", "unclustered-point", (e) => {
-        const id = e.features?.[0]?.properties?.id as string | undefined;
+      const onPointClick = (e: maplibregl.MapMouseEvent) => {
+        const features = map.current!.queryRenderedFeatures(e.point, {
+          layers: ["unclustered-point", "unclustered-count"],
+        });
+        const id = features[0]?.properties?.id as string | undefined;
         if (id) {
-          setHoverPreview(null);
+          clearHover();
           onMarkerSelectRef.current(id);
         }
+      };
+      map.current.on("click", "unclustered-point", onPointClick);
+      map.current.on("click", "unclustered-count", onPointClick);
+
+      // Click empty map space → dismiss selected pin and search
+      map.current.on("click", (e) => {
+        if (!map.current) return;
+        const features = map.current.queryRenderedFeatures(e.point, {
+          layers: [
+            "unclustered-point",
+            "unclustered-count",
+            "clusters",
+            "cluster-count",
+          ].filter((layerId) => map.current?.getLayer(layerId)),
+        });
+        if (features.length > 0) return;
+
+        clearHover();
+        onMarkerSelectRef.current(null);
       });
 
-      // Cursor feedback
-      const setCursor = (cur: string) => {
-        if (map.current) map.current.getCanvas().style.cursor = cur;
-      };
-      map.current.on("mouseenter", "clusters", async (event) => {
-        setCursor("pointer");
-        const feature = event.features?.[0];
-        const count = Number(feature?.properties?.point_count ?? 0);
-        const clusterId = feature?.properties?.cluster_id as number | undefined;
-        let detail = "Mixed posts";
-        if (clusterId !== undefined) {
-          const leaves = await (map.current?.getSource("pins") as GeoJSONSource)
-            .getClusterLeaves(clusterId, 25, 0)
-            .catch(() => []);
-          detail =
-            [
-              ...new Set(
-                leaves.flatMap((leaf) =>
-                  String(leaf.properties?.content ?? "")
-                    .split(" + ")
-                    .filter(Boolean),
-                ),
-              ),
-            ].join(" + ") || detail;
-        }
-        setHoverPreview({
-          x: event.point.x,
-          y: event.point.y,
-          title: `${count} thoughts nearby`,
-          detail,
-        });
-      });
-      let hoverRaf: number | null = null;
-      const queueHoverUpdate = (x: number, y: number) => {
-        if (hoverRaf !== null) cancelAnimationFrame(hoverRaf);
-        hoverRaf = requestAnimationFrame(() => {
-          setHoverPreview(
-            (preview) =>
-              preview && (preview.x === x && preview.y === y ? preview : { ...preview, x, y }),
-          );
-          hoverRaf = null;
-        });
-      };
+      // Unified hover & cursor tracking across all pins and clusters
+      map.current.on("mousemove", async (event) => {
+        if (!map.current) return;
 
-      map.current.on("mousemove", "clusters", (event) => {
-        queueHoverUpdate(event.point.x, event.point.y);
-      });
-      map.current.on("mouseleave", "clusters", () => {
-        if (hoverRaf !== null) {
-          cancelAnimationFrame(hoverRaf);
-          hoverRaf = null;
+        const interactiveLayers = [
+          "unclustered-point",
+          "unclustered-count",
+          "clusters",
+          "cluster-count",
+        ].filter((layerId) => map.current?.getLayer(layerId));
+
+        if (!interactiveLayers.length) {
+          clearHover();
+          return;
         }
-        setCursor("pointer");
-        setHoverPreview(null);
-      });
-      map.current.on("mouseenter", "unclustered-point", (event) => {
-        setCursor("pointer");
-        const feature = event.features?.[0];
-        const id = feature?.properties?.id as string | undefined;
+
+        const features = map.current.queryRenderedFeatures(event.point, {
+          layers: interactiveLayers,
+        });
+
+        if (!features.length || !features[0]) {
+          clearHover();
+          return;
+        }
+
+        const feature = features[0];
+        map.current.getCanvas().style.cursor = "pointer";
+
+        const isCluster =
+          Boolean(feature.properties?.point_count) ||
+          feature.layer.id === "clusters" ||
+          feature.layer.id === "cluster-count";
+
+        if (isCluster) {
+          const clusterId = Number(feature.properties?.cluster_id ?? 0);
+          const key = `cluster-${clusterId}`;
+
+          if (hoveredKeyRef.current === key) return;
+          hoveredKeyRef.current = key;
+
+          const count = Number(feature.properties?.point_count ?? 0);
+          const geometry = feature.geometry as GeoJSON.Point | undefined;
+          const coords = (geometry?.coordinates as [number, number] | undefined) ?? [
+            event.lngLat.lng,
+            event.lngLat.lat,
+          ];
+          const screenPoint = map.current.project(coords);
+
+          if (hoveredKeyRef.current === key) {
+            setHoverPreview({
+              x: screenPoint.x,
+              y: screenPoint.y,
+              title: `${count} thoughts nearby`,
+              placement: screenPoint.y < 120 ? "bottom" : "top",
+            });
+          }
+          return;
+        }
+
+        // Unclustered pin
+        const id = feature.properties?.id as string | undefined;
+        if (!id) {
+          clearHover();
+          return;
+        }
+
+        if (selectedMarkerIdRef.current === id) {
+          clearHover();
+          return;
+        }
+
+        const key = `pin-${id}`;
+        if (hoveredKeyRef.current === key) return;
+        hoveredKeyRef.current = key;
+
         const marker = markersRef.current.find((item) => item.id === id);
-        if (marker) {
-          const preview = getMarkerHoverPreview(marker);
-          setHoverPreview({
-            x: event.point.x,
-            y: event.point.y,
-            title: preview.title,
-            detail: preview.detail,
-          });
+        if (!marker) {
+          clearHover();
+          return;
         }
+
+        const geometry = feature.geometry as GeoJSON.Point | undefined;
+        const coords = (geometry?.coordinates as [number, number] | undefined) ?? [
+          marker.lng,
+          marker.lat,
+        ];
+        const screenPoint = map.current.project(coords);
+        const preview = getMarkerHoverPreview(marker);
+
+        setHoverPreview({
+          x: screenPoint.x,
+          y: screenPoint.y,
+          title: preview.title,
+          placement: screenPoint.y < 120 ? "bottom" : "top",
+        });
       });
-      map.current.on("mousemove", "unclustered-point", (event) => {
-        queueHoverUpdate(event.point.x, event.point.y);
-      });
-      map.current.on("mouseleave", "unclustered-point", () => {
-        if (hoverRaf !== null) {
-          cancelAnimationFrame(hoverRaf);
-          hoverRaf = null;
-        }
-        setCursor("pointer");
-        setHoverPreview(null);
-      });
+
+      map.current.on("movestart", clearHover);
+      map.current.on("zoomstart", clearHover);
     });
+
+    const onCanvasLeave = () => {
+      if (hoveredKeyRef.current !== null) {
+        hoveredKeyRef.current = null;
+        setHoverPreview(null);
+      }
+      if (map.current) {
+        map.current.getCanvas().style.cursor = "";
+      }
+    };
+    canvas.addEventListener("mouseleave", onCanvasLeave);
+    window.addEventListener("blur", onCanvasLeave);
 
     // Right-click → add pin (mobile only, tablet+ uses navbar)
     map.current.on("contextmenu", (e) => {
@@ -419,46 +502,50 @@ function MapCanvas({
     });
 
     return () => {
+      window.removeEventListener("blur", onCanvasLeave);
+      canvas.removeEventListener("mouseleave", onCanvasLeave);
       map.current?.off("moveend", reportViewport);
+      map.current?.off("zoomend", reportViewport);
       map.current?.remove();
       map.current = null;
     };
   }, []);
 
-  // Swap map style when theme changes
+  // Keep parent mapActions up to date whenever map is loaded or onMapReady changes
   useEffect(() => {
-    if (!map.current) return;
-    const styleUrl = getOpenFreeMapStyle(resolvedTheme);
-
-    map.current.setStyle(styleUrl, {
-      transformStyle: (previousStyle, nextStyle) => {
-        const customSourceIds = ["pins"];
-        const customLayerIds = [
-          "clusters",
-          "cluster-count",
-          "unclustered-point",
-          "unclustered-count",
-        ];
-
-        const preservedSources: typeof nextStyle.sources = {};
-        for (const id of customSourceIds) {
-          if (previousStyle?.sources?.[id]) {
-            preservedSources[id] = previousStyle.sources[id]!;
-          }
-        }
-
-        const preservedLayers =
-          previousStyle?.layers?.filter((l) => customLayerIds.includes(l.id)) ??
-          [];
-
-        return {
-          ...nextStyle,
-          sources: { ...nextStyle.sources, ...preservedSources },
-          layers: [...nextStyle.layers, ...preservedLayers],
-        };
+    if (!map.current || !mapLoaded || !onMapReady) return;
+    onMapReady({
+      zoomIn: () => map.current?.zoomIn({ duration: 250 }),
+      zoomOut: () => map.current?.zoomOut({ duration: 250 }),
+      zoomToOverview: () => {
+        if (!map.current) return;
+        // Stop any in-flight flyTo/easeTo so it doesn't re-center to old coordinates
+        map.current.stop();
+        const currentZoom = map.current.getZoom();
+        const targetZoom = currentZoom > 13.5 ? 12.5 : Math.max(currentZoom - 3, 2);
+        // Only change zoom — don't touch center or padding to avoid
+        // MapLibre recomputing the padded viewport (which causes drift)
+        map.current.easeTo({
+          zoom: targetZoom,
+          duration: 600,
+        });
+      },
+      toggle3D: () => {
+        if (!map.current) return false;
+        const currentPitch = map.current.getPitch();
+        const targetPitch = currentPitch > 15 ? 0 : 50;
+        map.current.easeTo({ pitch: targetPitch, duration: 400 });
+        return targetPitch > 0;
+      },
+      resetNorth: () => map.current?.easeTo({ bearing: 0, duration: 300 }),
+      getPitch: () => map.current?.getPitch() ?? 0,
+      project: (coords) => {
+        if (!map.current) return null;
+        const pt = map.current.project([coords.lng, coords.lat]);
+        return { x: pt.x, y: pt.y };
       },
     });
-  }, [resolvedTheme]);
+  }, [mapLoaded, onMapReady]);
 
   // Sync manual markers → GeoJSON circle layer
   useEffect(() => {
@@ -468,66 +555,14 @@ function MapCanvas({
     source.setData(buildGeoJSON(markers));
   }, [markers]);
 
-  // Sync search markers → MapLibre HTML Marker (default teardrop)
-  useEffect(() => {
-    if (!map.current) return;
-
-    const searchPins = markers.filter(
-      (m) => m.source === "search",
-    );
-    const currentIds = new Set(searchMarkersRef.current.keys());
-    const newIds = new Set(searchPins.map((m) => m.id));
-
-    // Remove stale
-    for (const id of currentIds) {
-      if (!newIds.has(id)) {
-        searchMarkersRef.current.get(id)?.remove();
-        searchMarkersRef.current.delete(id);
-      }
-    }
-
-    // Add new
-    for (const pin of searchPins) {
-      if (searchMarkersRef.current.has(pin.id)) continue;
-      const mlMarker = new MLMarker({
-        element: createPinMarkerElement(pin.posts.length),
-        anchor: "bottom",
-      })
-        .setLngLat([pin.lng, pin.lat])
-        .addTo(map.current);
-      mlMarker.getElement().style.cursor = "pointer";
-      mlMarker.getElement().addEventListener("click", (e) => {
-        e.stopPropagation();
-        setHoverPreview(null);
-        onMarkerSelectRef.current(pin.id);
-      });
-      mlMarker.getElement().addEventListener("mouseenter", () => {
-        const point = map.current?.project([pin.lng, pin.lat]);
-        if (point) {
-          const preview = getMarkerHoverPreview(pin);
-          setHoverPreview({
-            x: point.x,
-            y: point.y,
-            title: preview.title,
-            detail: preview.detail,
-          });
-        }
-      });
-      mlMarker
-        .getElement()
-        .addEventListener("mouseleave", () => setHoverPreview(null));
-      searchMarkersRef.current.set(pin.id, mlMarker);
-    }
-  }, [markers]);
-
   // Fly to a location when the flyTo prop changes
   useEffect(() => {
     if (!flyTo || !map.current) return;
     const compact = window.innerWidth < 640;
-    const PANEL = 460; // ~26rem panel + gap
+    const PANEL = 540; // wider desktop panel + comfortable gap
     const options: Parameters<typeof map.current.flyTo>[0] = {
       center: [flyTo.lng, flyTo.lat],
-      zoom: flyTo.zoom ?? 15,
+      zoom: flyTo.zoom ?? 17.2,
       speed: 1.4,
       curve: 1.5,
       padding: flyTo.frameRightPanel
@@ -647,12 +682,6 @@ function MapCanvas({
   return (
     <div className="relative w-full h-full">
       <style>{`
-        @keyframes sonder-pin-hover {
-          0%, 100% { transform: translateY(0) scale(1); }
-          50% { transform: translateY(-5px) scale(1.08); }
-        }
-        .sonder-pin-marker { transition: transform 150ms ease; transform-origin: 50% 100%; }
-        .sonder-pin-marker:hover { animation: sonder-pin-hover 700ms ease-in-out infinite; }
         @keyframes sonder-ring-progress {
           0% { transform: scale(0.72); opacity: 0.35; }
           100% { transform: scale(1); opacity: 1; }
@@ -683,15 +712,19 @@ function MapCanvas({
       </AnimatePresence>
       {hoverPreview && (
         <div
-          className="pointer-events-none absolute z-40 min-w-32 max-w-64 rounded-lg border border-white/70 bg-background/95 px-3 py-2 text-xs shadow-xl backdrop-blur dark:border-white/15"
+          className="pointer-events-none absolute z-40 w-fit max-w-[280px] rounded-full border border-black/10 bg-background/95 px-3.5 py-1.5 shadow-lg backdrop-blur-xl dark:border-white/15 sm:max-w-[340px]"
           style={{
             left: hoverPreview.x,
             top: hoverPreview.y,
-            transform: "translate(-50%, calc(-100% - 36px))",
+            transform:
+              hoverPreview.placement === "bottom"
+                ? "translate(-50%, 14px)"
+                : "translate(-50%, calc(-100% - 38px))",
           }}
         >
-          <p className="font-semibold text-foreground line-clamp-2 leading-snug">{hoverPreview.title}</p>
-          <p className="mt-0.5 text-muted-foreground truncate">{hoverPreview.detail}</p>
+          <p className="text-sm font-normal leading-normal text-foreground whitespace-nowrap truncate max-w-[250px] sm:max-w-[310px]">
+            {hoverPreview.title}
+          </p>
         </div>
       )}
 

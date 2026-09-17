@@ -45,6 +45,7 @@ type FlyToTarget = {
 const INITIAL_VIEWPORT: MapViewport = {
   center: { lat: 14.5995, lng: 120.9842 },
   bounds: { north: 14.85, south: 14.35, east: 121.25, west: 120.7 },
+  zoom: 12,
 };
 
 export function MapExperience() {
@@ -82,13 +83,13 @@ export function MapExperience() {
       if (post) {
         const side = marker.lng > viewport.center.lng ? 'left' : 'right';
         setPanelSide(side);
-        setFlyTo({ lat: marker.lat, lng: marker.lng, zoom: 15, panelSide: side });
+        setFlyTo({ lat: marker.lat, lng: marker.lng, zoom: 17.2, panelSide: side });
         setSelectedPost(post);
         // Remove param from URL without reload so it doesn't trigger again
         window.history.replaceState(null, '', '/map');
       }
     }
-  }, [searchParams, publicMarkers, selectedPost, viewport.center.lng]);
+  }, [searchParams, publicMarkers, selectedPost?.id, viewport.center.lng]);
   const mapMarkers = useMemo(() => {
     const searchM = markers.filter(m => m.source === "search" && m.posts.length === 0);
     const selectedM = selectedMarker && selectedMarker.posts.length === 0 && selectedMarker.source !== "search" ? [selectedMarker] : [];
@@ -145,15 +146,11 @@ export function MapExperience() {
 
   const handleClearSearch = () => {
     setSearchedLocation(null);
+    setSelectedPost(null);
+    setSelectedMarkerId(null);
     setMarkers((current) =>
       current.filter((m) => m.source !== "search" || m.posts.length > 0),
     );
-    setSelectedMarkerId((currentId) => {
-      const current = markers.find((m) => m.id === currentId);
-      return current?.source === "search" && current.posts.length === 0
-        ? null
-        : currentId;
-    });
   };
 
   const addPost = async (draft: PostDraft) => {
@@ -193,7 +190,7 @@ export function MapExperience() {
     );
     const isMobile = typeof window !== "undefined" && window.innerWidth < 640;
     if (isMobile && marker) {
-      setFlyTo({ lat: marker.lat, lng: marker.lng, zoom: 15.5 });
+      setFlyTo({ lat: marker.lat, lng: marker.lng, zoom: 16.2 });
       setSelectedMarkerId(marker.id);
       return;
     }
@@ -202,7 +199,7 @@ export function MapExperience() {
     setFlyTo({
       lat: marker?.lat ?? post.lat,
       lng: marker?.lng ?? post.lng,
-      zoom: 15,
+      zoom: 17.2,
       panelSide: side,
     });
     setSelectedPost(post);
@@ -217,7 +214,11 @@ export function MapExperience() {
         onMarkerSelect={(id) => {
           if (!id) {
             setSelectedMarkerId(null);
-            setMarkers((current) => removeEmptyMarkers(current));
+            setSelectedPost(null);
+            setSearchedLocation(null);
+            setMarkers((current) =>
+              current.filter((m) => m.source !== "search" || m.posts.length > 0),
+            );
             return;
           }
           const marker = markers.find((m) => m.id === id);
@@ -225,7 +226,7 @@ export function MapExperience() {
 
           if (isMobile) {
             if (marker) {
-              setFlyTo({ lat: marker.lat, lng: marker.lng, zoom: 15.5 });
+              setFlyTo({ lat: marker.lat, lng: marker.lng, zoom: 16.5 });
             }
             setSelectedMarkerId(id);
             return;
@@ -235,7 +236,7 @@ export function MapExperience() {
           const side: 'left' | 'right' =
             marker && marker.lng > viewport.center.lng ? 'left' : 'right';
           setPanelSide(side);
-          if (marker) setFlyTo({ lat: marker.lat, lng: marker.lng, zoom: 15.5, panelSide: side });
+          if (marker) setFlyTo({ lat: marker.lat, lng: marker.lng, zoom: 17.2, panelSide: side });
           if (marker && marker.posts.length === 1) {
             setTimeout(() => setSelectedPost(marker.posts[0]!), 350);
             return;
@@ -244,7 +245,10 @@ export function MapExperience() {
         }}
         onCreatePost={() => setCreateOpen(true)}
         onViewGroup={() => setGroupOpen(true)}
-        onSelectPost={(post) => { setSelectedMarkerId(null); setSelectedPost(post); }}
+        onSelectPost={(post) => {
+          setSelectedMarkerId(null);
+          setSelectedPost(post);
+        }}
         onViewportChange={(vp) => { setViewport(vp); onBoundsChange(vp.bounds); }}
         flyTo={flyTo}
         onMapReady={setMapActions}
@@ -288,12 +292,43 @@ export function MapExperience() {
           mapActions={mapActions}
           nearbyCount={nearbyPosts.length}
           onNearbyClick={() => setDiscoveryOpen(true)}
+          showZoomOut={Boolean(selectedPost || selectedMarkerId || (viewport.zoom ?? 12) > 13.5)}
+          onResetZoom={() => {
+            // Stop animations and zoom out FIRST, before React re-renders clear old flyTo
+            if (mapActions?.zoomToOverview) {
+              mapActions.zoomToOverview();
+            } else {
+              mapActions?.zoomOut();
+            }
+            setSelectedPost(null);
+            setSelectedMarkerId(null);
+            setSearchedLocation(null);
+            setFlyTo(null);
+            setMarkers((current) =>
+              current.filter((m) => m.source !== "search" || m.posts.length > 0),
+            );
+          }}
         />
       </div>
 
       {/* Mobile Place Bottom Sheet (Functional Draggable Drawer) */}
       <MapPlaceBottomSheet
         marker={selectedMarker}
+        onResetZoom={() => {
+          // Stop animations and zoom out FIRST
+          if (mapActions?.zoomToOverview) {
+            mapActions.zoomToOverview();
+          } else {
+            mapActions?.zoomOut();
+          }
+          setSelectedPost(null);
+          setSelectedMarkerId(null);
+          setSearchedLocation(null);
+          setFlyTo(null);
+          setMarkers((current) =>
+            current.filter((m) => m.source !== "search" || m.posts.length > 0),
+          );
+        }}
         onClose={() => {
           setSelectedMarkerId(null);
           if (selectedMarker?.posts.length === 0) {
