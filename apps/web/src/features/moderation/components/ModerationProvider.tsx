@@ -36,8 +36,14 @@ export function ModerationProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored)
-        setMarkers(groupMarkersByLocation(JSON.parse(stored) as MarkerData[]));
+      if (stored) {
+        const parsed = JSON.parse(stored) as MarkerData[];
+        setMarkers(
+          groupMarkersByLocation(
+            parsed.filter((m) => m.posts.length > 0 || m.source === "manual"),
+          ),
+        );
+      }
       const ids = localStorage.getItem(MY_POSTS_KEY);
       if (ids) setMyPostIds(new Set(JSON.parse(ids) as string[]));
     } finally {
@@ -49,7 +55,10 @@ export function ModerationProvider({ children }: { children: ReactNode }) {
     if (!hydrated) return;
     const timer = setTimeout(() => {
       try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(markers));
+        const toPersist = markers.filter(
+          (m) => m.posts.length > 0 || m.source === "manual",
+        );
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(toPersist));
       } catch {
         // LocalStorage quota or restricted storage
       }
@@ -103,7 +112,6 @@ export function ModerationProvider({ children }: { children: ReactNode }) {
             .filter(
               (marker) =>
                 marker.posts.length > 0 ||
-                marker.source === "search" ||
                 marker.source === "manual",
             ),
         ]),
