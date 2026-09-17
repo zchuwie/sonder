@@ -150,9 +150,9 @@ export function MapSearchBar({
   }, []);
 
   useEffect(() => {
-    if (initialQuery !== undefined && document.activeElement !== inputRef.current && document.activeElement !== mobileInputRef.current) {
-      setQuery(initialQuery);
-      setOpen(false);
+    if (document.activeElement !== inputRef.current && document.activeElement !== mobileInputRef.current) {
+      setQuery(initialQuery ?? "");
+      if (!initialQuery) setOpen(false);
     }
   }, [initialQuery]);
 

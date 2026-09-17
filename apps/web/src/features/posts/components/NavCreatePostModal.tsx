@@ -5,7 +5,6 @@ import { toast } from "sonner";
 import { MapPin, ShieldCheck, Expand } from "lucide-react";
 import maplibregl from "maplibre-gl";
 import { getOpenFreeMapStyle } from "@/features/map/lib/openfreemap";
-import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -35,7 +34,6 @@ export function NavCreatePostModal({
   onSubmit: (marker: MarkerData, draft: PostDraft) => Promise<void>;
   initialLocation?: { lat: number; lng: number; placeName?: string } | null;
 }) {
-  const { resolvedTheme } = useTheme();
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
   const pin = useRef<maplibregl.Marker | null>(null);
@@ -56,7 +54,7 @@ export function NavCreatePostModal({
   const handleToken = useCallback((token: string) => setTurnstileToken(token), []);
 
   const locationRef = useRef(location);
-  useEffect(() => { locationRef.current = location; }, [location]);
+  locationRef.current = location;
 
   // Init map after dialog renders (RAF ensures container is visible)
   useEffect(() => {
@@ -66,7 +64,7 @@ export function NavCreatePostModal({
       const startLng = locationRef.current?.lng ?? initialLocation?.lng ?? 120.9842;
       const m = new maplibregl.Map({
         container: mapContainer.current,
-        style: getOpenFreeMapStyle(resolvedTheme),
+        style: getOpenFreeMapStyle(),
         center: [startLng, startLat],
         zoom: initialLocation ? 15 : 13,
         pitch: 50,
@@ -94,7 +92,7 @@ export function NavCreatePostModal({
       pin.current?.remove();
       pin.current = null;
     };
-  }, [resolvedTheme]);
+  }, []);
 
   function placePinMap(lat: number, lng: number, m: maplibregl.Map) {
     if (pin.current) pin.current.setLngLat([lng, lat]);

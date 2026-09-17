@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { Map, Marker, NavigationControl } from "maplibre-gl";
 import { ArrowRight, MapPin, RefreshCw, RotateCcw } from "lucide-react";
-import { useTheme } from "next-themes";
 import { MapSearchBar } from "@/features/map/components/MapSearchBar";
 import { getOpenFreeMapStyle } from "@/features/map/lib/openfreemap";
 import type { LocationPlaceDTO } from "@/features/map/lib/location-types";
@@ -32,9 +31,6 @@ export function LandingMapPin() {
   const [mapLoaded, setMapLoaded] = useState(false);
   const [mapFailed, setMapFailed] = useState(false);
   const [retryKey, setRetryKey] = useState(0);
-  const { resolvedTheme } = useTheme();
-  const initialTheme = useRef(resolvedTheme);
-  const appliedTheme = useRef(resolvedTheme);
 
   useEffect(() => {
     if (!container.current || map.current) return;
@@ -53,7 +49,7 @@ export function LandingMapPin() {
 
     map.current = new Map({
       container: mapContainer,
-      style: getOpenFreeMapStyle(initialTheme.current),
+      style: getOpenFreeMapStyle(),
       center: [storedPin.lng, storedPin.lat],
       zoom: 13,
       attributionControl: false,
@@ -73,7 +69,6 @@ export function LandingMapPin() {
     map.current.once("load", () => {
       loaded = true;
       window.clearTimeout(loadTimeout);
-      appliedTheme.current = initialTheme.current;
       setMapFailed(false);
       setMapLoaded(true);
       map.current?.resize();
@@ -107,19 +102,6 @@ export function LandingMapPin() {
       map.current = null;
     };
   }, [retryKey]);
-
-  useEffect(() => {
-    if (!map.current || !mapLoaded || appliedTheme.current === resolvedTheme) {
-      return;
-    }
-    appliedTheme.current = resolvedTheme;
-    setMapLoaded(false);
-    map.current.setStyle(getOpenFreeMapStyle(resolvedTheme));
-    map.current.once("style.load", () => {
-      setMapLoaded(true);
-      map.current?.resize();
-    });
-  }, [mapLoaded, resolvedTheme]);
 
   const selectPlace = (place: LocationPlaceDTO) => {
     const next = { lat: place.lat, lng: place.lng, name: place.name };

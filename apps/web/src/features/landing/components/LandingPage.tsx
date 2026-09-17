@@ -9,7 +9,6 @@ import {
 } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 import { ScrollReveal } from "@/components/animations/ScrollReveal";
-import { LandingThemeToggle } from "@/features/landing/components/LandingThemeToggle";
 import { HeroMapCarousel } from "@/features/landing/components/HeroMapCarousel";
 
 const steps = [
@@ -41,21 +40,17 @@ function Wordmark({ className = "" }: { className?: string }) {
 function LandingNavbar() {
   return (
     <header className="fixed inset-x-0 top-0 z-50 px-4 pt-4 sm:px-6">
-      <nav className="mx-auto flex max-w-7xl items-center justify-between rounded-full border border-black/10 bg-[#f5f1e8]/80 px-5 py-3 text-[#101713] shadow-2xl shadow-black/10 backdrop-blur-xl dark:border-white/10 dark:bg-[#050706]/75 dark:text-[#f5f1e8]">
+      <nav className="mx-auto flex max-w-7xl items-center justify-between rounded-full border border-black/10 bg-[#f5f1e8]/80 px-5 py-3 text-[#101713] shadow-2xl shadow-black/10 backdrop-blur-xl">
         <Link href="/" aria-label="Sonder home">
           <Wordmark />
         </Link>
-        <div className="hidden items-center gap-2 md:flex">
-          <LandingThemeToggle />
+        <div className="flex items-center gap-2">
           <Link
             href="/map"
-            className="flex items-center gap-2 rounded-full bg-[#2f4439] px-5 py-2.5 text-sm font-bold text-white transition hover:bg-[#3b5446] dark:bg-[#a8ba63] dark:text-[#101713] dark:hover:bg-[#bdcc7b]"
+            className="flex items-center gap-2 rounded-full bg-[#2f4439] px-5 py-2.5 text-sm font-bold text-white transition hover:bg-[#3b5446]"
           >
             Open map <ArrowRight className="size-4" />
           </Link>
-        </div>
-        <div className="md:hidden">
-          <LandingThemeToggle />
         </div>
       </nav>
     </header>

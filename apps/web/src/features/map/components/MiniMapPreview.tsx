@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Map, Marker } from "maplibre-gl";
 import { Expand, MapPin, ShieldCheck } from "lucide-react";
-import { useTheme } from "next-themes";
 import { getOpenFreeMapStyle } from "@/features/map/lib/openfreemap";
 import { FullScreenMapPicker } from "./FullScreenMapPicker";
 import { createPinMarkerElement } from "@/features/map/lib/map-markers";
@@ -21,7 +20,6 @@ export function MiniMapPreview({
   const container = useRef<HTMLDivElement>(null);
   const map = useRef<Map | null>(null);
   const pin = useRef<Marker | null>(null);
-  const { resolvedTheme } = useTheme();
   const [showFullScreen, setShowFullScreen] = useState(false);
   const [currentLocation, setCurrentLocation] = useState<{ lat: number; lng: number; placeName?: string }>({ lat: marker.lat, lng: marker.lng, placeName: marker.placeName });
 
@@ -29,7 +27,7 @@ export function MiniMapPreview({
     if (!container.current || map.current) return;
     map.current = new Map({
       container: container.current,
-      style: getOpenFreeMapStyle(resolvedTheme),
+      style: getOpenFreeMapStyle(),
       center: [currentLocation.lng, currentLocation.lat],
       zoom: 14.5,
       pitch: 50,
@@ -61,7 +59,7 @@ export function MiniMapPreview({
       map.current?.remove();
       map.current = null;
     };
-  }, [currentLocation.lat, currentLocation.lng, resolvedTheme, previewImage]);
+  }, [currentLocation.lat, currentLocation.lng, previewImage]);
 
   const handleFullScreenDone = (loc: { lat: number; lng: number; placeName?: string }) => {
     setCurrentLocation(loc);

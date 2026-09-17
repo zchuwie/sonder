@@ -55,26 +55,26 @@ export default function PostDetailModal({
 
   const flagged = post.moderationStatus === "flagged";
   const smPos = panelSide === 'left'
-    ? 'sm:left-20 sm:right-auto sm:top-1/2 sm:-translate-y-1/2 sm:bottom-auto'
-    : 'sm:right-20 sm:left-auto sm:top-1/2 sm:-translate-y-1/2 sm:bottom-auto';
+    ? 'sm:left-12 md:left-20 lg:left-28 xl:left-36 2xl:left-48 sm:right-auto sm:top-1/2 sm:-translate-y-1/2 sm:bottom-auto'
+    : 'sm:right-12 md:right-20 lg:right-28 xl:right-36 2xl:right-48 sm:left-auto sm:top-1/2 sm:-translate-y-1/2 sm:bottom-auto';
 
   return (
     <>
       <Dialog open modal={false} onOpenChange={(open) => { if (!open && !showCard) onClose(); }}>
         <DialogContent
           overlayClassName="bg-transparent pointer-events-none supports-backdrop-filter:backdrop-blur-none"
-          className={`pointer-events-auto inset-x-2 bottom-2 top-auto flex w-auto max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-2xl border-black/10 bg-background/96 p-0 shadow-2xl backdrop-blur-xl sm:inset-x-auto sm:w-[26rem] sm:rounded-3xl sm:max-h-[78dvh] ${smPos} ${expanded ? "max-h-[90dvh]" : "max-h-[55dvh]"}`}
+          className={`pointer-events-auto inset-x-2 bottom-2 top-auto flex w-auto max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-2xl border-black/10 bg-background/96 p-0 shadow-2xl backdrop-blur-xl sm:inset-x-auto sm:w-[31rem] lg:w-[34rem] sm:rounded-[32px] sm:max-h-[84dvh] ${smPos} ${expanded ? "max-h-[90dvh]" : "max-h-[55dvh]"}`}
         >
           {/* Image / cover */}
           {signedUrl && !flagged ? (
-            <div className="relative h-28 w-full shrink-0 overflow-hidden rounded-t-2xl sm:aspect-video sm:h-auto sm:rounded-t-3xl">
+            <div className="relative h-28 w-full shrink-0 overflow-hidden rounded-t-2xl sm:aspect-video sm:h-auto sm:rounded-t-[32px]">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={signedUrl} alt="" className="size-full object-cover" />
             </div>
           ) : post.imagePath && !signedUrl && !flagged ? (
-            <Skeleton className="h-28 w-full shrink-0 rounded-t-2xl sm:aspect-video sm:h-auto sm:rounded-t-3xl" />
+            <Skeleton className="h-28 w-full shrink-0 rounded-t-2xl sm:aspect-video sm:h-auto sm:rounded-t-[32px]" />
           ) : post.music?.coverUrl && !flagged ? (
-            <div className="relative h-28 w-full shrink-0 overflow-hidden rounded-t-2xl bg-linear-to-br from-primary/20 via-muted to-background sm:aspect-video sm:h-auto sm:rounded-t-3xl">
+            <div className="relative h-28 w-full shrink-0 overflow-hidden rounded-t-2xl bg-linear-to-br from-primary/20 via-muted to-background sm:aspect-video sm:h-auto sm:rounded-t-[32px]">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={post.music.coverUrl} alt="" className="size-full scale-110 object-cover opacity-30 blur-xl" />
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -83,17 +83,17 @@ export default function PostDetailModal({
           ) : null}
 
           {/* Scrollable content */}
-          <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-3.5 sm:p-6">
+          <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-4 sm:p-6 sm:pb-5">
             <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground sm:text-xs">
-              <Clock3 className="size-3" /> {relativeTime(post.createdAt)}
+              <Clock3 className="size-3.5" /> {relativeTime(post.createdAt)}
             </span>
-            <DialogHeader className="mt-1.5 space-y-1 text-left sm:mt-2 sm:space-y-2">
-              <DialogTitle className="font-serif text-lg font-normal leading-snug tracking-[-0.01em] sm:text-2xl">
+            <DialogHeader className="mt-2 space-y-1 text-left sm:mt-2.5 sm:space-y-2">
+              <DialogTitle className="font-serif text-lg font-normal leading-snug tracking-[-0.01em] sm:text-2xl lg:text-[28px]">
                 {post.title}
               </DialogTitle>
               <DialogDescription className="sr-only">Anonymous post details</DialogDescription>
             </DialogHeader>
-            <p className="mt-2 text-sm leading-relaxed text-foreground/80 sm:mt-3 sm:text-[15px] sm:leading-7">
+            <p className="mt-2.5 text-sm leading-relaxed text-foreground/85 sm:mt-3.5 sm:text-base sm:leading-7">
               {flagged ? "This post was flagged for review." : post.text}
             </p>
             {post.music && !flagged && <div className="mt-4"><MusicPreviewCard music={post.music} /></div>}
@@ -105,7 +105,7 @@ export default function PostDetailModal({
 
           {/* Fixed bottom action bar */}
           {post.moderationStatus === "approved" && (
-            <div className="flex shrink-0 items-center justify-between border-t border-border/50 bg-background/95 px-3.5 py-2.5 backdrop-blur-sm sm:px-6 sm:py-3">
+            <div className="flex shrink-0 items-center justify-between border-t border-border/50 bg-background/95 px-4 py-3 backdrop-blur-sm sm:px-7 sm:py-3.5">
               <div className="flex items-center gap-2">
                 <ReportPostButton postId={post.id} iconOnly />
                 {/* Expand/collapse toggle — mobile only */}

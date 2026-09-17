@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Map, Marker, NavigationControl } from "maplibre-gl";
 import { ArrowLeft, Check, X } from "lucide-react";
-import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { getOpenFreeMapStyle } from "@/features/map/lib/openfreemap";
 import { reverseGeocode } from "@/features/map/client/reverse-geocode";
@@ -28,7 +27,6 @@ export function FullScreenMapPicker({
   const container = useRef<HTMLDivElement>(null);
   const mapRef = useRef<Map | null>(null);
   const markerRef = useRef<Marker | null>(null);
-  const { resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [pinned, setPinned] = useState<PickedLocation | null>({
     lat: initialLat,
@@ -50,7 +48,7 @@ export function FullScreenMapPicker({
 
       const instance = new Map({
         container: el,
-        style: getOpenFreeMapStyle(resolvedTheme),
+        style: getOpenFreeMapStyle(),
         center: [initialLng, initialLat],
         zoom: 15,
         pitch: 50,
@@ -102,7 +100,7 @@ export function FullScreenMapPicker({
       mapRef.current?.remove();
       mapRef.current = null;
     };
-  }, [mounted, initialLat, initialLng, resolvedTheme]);
+  }, [mounted, initialLat, initialLng]);
 
   const handleClear = () => {
     if (markerRef.current && mapRef.current) {

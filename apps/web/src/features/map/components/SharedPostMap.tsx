@@ -7,7 +7,6 @@ import {
   Marker,
   NavigationControl,
 } from "maplibre-gl";
-import { useTheme } from "next-themes";
 import { AppLoading } from "@/components/shared/AppLoading";
 import { getOpenFreeMapStyle } from "@/features/map/lib/openfreemap";
 import type { AnonymousPost } from "@/features/posts/lib/post-types";
@@ -17,14 +16,13 @@ export function SharedPostMap({ post }: { post: AnonymousPost }) {
   const map = useRef<Map | null>(null);
   const marker = useRef<Marker | null>(null);
   const [loaded, setLoaded] = useState(false);
-  const { resolvedTheme } = useTheme();
 
   useEffect(() => {
     if (!container.current || map.current) return;
     const mapContainer = container.current;
     const instance = new Map({
       container: mapContainer,
-      style: getOpenFreeMapStyle(resolvedTheme),
+      style: getOpenFreeMapStyle(),
       center: [post.lng, post.lat],
       zoom: 14.5,
       attributionControl: false,
@@ -74,7 +72,7 @@ export function SharedPostMap({ post }: { post: AnonymousPost }) {
       instance.remove();
       map.current = null;
     };
-  }, [post.lat, post.lng, resolvedTheme]);
+  }, [post.lat, post.lng]);
 
   return (
     <div className="absolute inset-0">

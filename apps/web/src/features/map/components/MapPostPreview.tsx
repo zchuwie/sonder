@@ -29,39 +29,39 @@ export function MapPostPreview({
     <motion.div
       exit={{ opacity: 0 }}
       transition={{ duration: reduceMotion ? 0.01 : 0.18 }}
-      className="absolute z-20 hidden w-80 -translate-x-1/2 -translate-y-[calc(100%+18px)] sm:block"
+      className="absolute z-20 hidden w-96 sm:w-[25rem] -translate-x-1/2 -translate-y-[calc(100%+20px)] sm:block"
       style={{ left: position.x, top: position.y }}
     >
       <motion.div
         initial={reduceMotion ? false : { opacity: 0, y: 8, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: reduceMotion ? 0.01 : 0.25, ease: [0.16, 1, 0.3, 1] }}
-        className="relative rounded-[28px] border border-black/10 bg-background/95 p-4 shadow-[0_24px_64px_rgba(18,70,35,.2)] backdrop-blur-xl"
+        className="relative rounded-[32px] border border-black/10 bg-background/95 p-5 shadow-[0_24px_64px_rgba(18,70,35,.2)] backdrop-blur-xl"
       >
-      <Button variant="secondary" size="icon-sm" className="absolute right-2 top-2 rounded-full" onClick={onClose} aria-label="Close preview">
+      <Button variant="secondary" size="icon-sm" className="absolute right-3 top-3 rounded-full" onClick={onClose} aria-label="Close preview">
         <X />
       </Button>
-      <div className="space-y-3">
+      <div className="space-y-3.5">
         <div>
-          <p className="flex items-center gap-1.5 pr-8 text-xs font-semibold text-primary"><MapPin className="size-3.5" /> {marker.placeName ?? "Selected place"}</p>
+          <p className="flex items-center gap-1.5 pr-8 text-sm font-semibold text-primary"><MapPin className="size-4" /> {marker.placeName ?? "Selected place"}</p>
         </div>
 
         {posts.length === 1 ? (
           /* Single post — show directly, click to open detail */
           <button
             type="button"
-            className="w-full rounded-xl bg-muted/50 p-3 text-left transition hover:bg-muted"
+            className="w-full rounded-2xl bg-muted/50 p-4 text-left transition hover:bg-muted"
             onClick={() => onSelectPost?.(posts[0]!)}
           >
-            <p className="text-sm font-semibold">{posts[0]!.title}</p>
-            <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{posts[0]!.text}</p>
-            <p className="mt-1.5 text-[10px] text-muted-foreground">{relativeTime(posts[0]!.createdAt)}</p>
+            <p className="text-base font-semibold text-foreground">{posts[0]!.title}</p>
+            <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{posts[0]!.text}</p>
+            <p className="mt-2 text-xs text-muted-foreground">{relativeTime(posts[0]!.createdAt)}</p>
           </button>
         ) : posts.length > 1 ? (
           /* Multiple posts — scrollable list */
           <>
-            <p className="text-sm font-medium">{posts.length} thoughts pinned here</p>
-            <div className="max-h-[220px] overflow-y-auto pr-1 pb-1 -mr-1">
+            <p className="text-sm font-medium text-foreground">{posts.length} thoughts pinned here</p>
+            <div className="max-h-[260px] overflow-y-auto pr-1 pb-1 -mr-1">
               <PostClusterList posts={posts} limit={posts.length} onSelect={(post) => onSelectPost?.(post)} />
             </div>
           </>

@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import { Search } from "lucide-react";
 import maplibregl from "maplibre-gl";
 import { getOpenFreeMapStyle } from "@repo/map-config";
-import { useTheme } from "next-themes";
 import { reverseGeocode } from "@/features/map/client/reverse-geocode";
 
 type Location = { lat: number; lng: number; placeName?: string };
@@ -13,7 +12,6 @@ export function CreateMapPicker({ onLocationConfirm }: { onLocationConfirm: (loc
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
   const marker = useRef<maplibregl.Marker | null>(null);
-  const { resolvedTheme } = useTheme();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<{ name: string; lat: number; lng: number }[]>([]);
 
@@ -21,7 +19,7 @@ export function CreateMapPicker({ onLocationConfirm }: { onLocationConfirm: (loc
     if (!mapContainer.current || map.current) return;
     const m = new maplibregl.Map({
       container: mapContainer.current,
-      style: getOpenFreeMapStyle(resolvedTheme),
+      style: getOpenFreeMapStyle(),
       center: [120.9842, 14.5995],
       zoom: 12,
       attributionControl: false,

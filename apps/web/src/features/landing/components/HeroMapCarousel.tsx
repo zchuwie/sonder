@@ -4,14 +4,12 @@ import { useEffect, useRef, useState } from "react";
 import { MapPin, Music2 } from "lucide-react";
 import maplibregl from "maplibre-gl";
 import { getOpenFreeMapStyle } from "@repo/map-config";
-import { useTheme } from "next-themes";
 import places from "@/features/landing/data/hero-places.json";
 
 export function HeroMapCarousel() {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
   const markers = useRef<maplibregl.Marker[]>([]);
-  const { resolvedTheme } = useTheme();
   const [index, setIndex] = useState(0);
   const [animating, setAnimating] = useState(false);
   const place = places[index]!;
@@ -22,7 +20,7 @@ export function HeroMapCarousel() {
     const first = places[0]!;
     const m = new maplibregl.Map({
       container: mapContainer.current,
-      style: getOpenFreeMapStyle(resolvedTheme),
+      style: getOpenFreeMapStyle(),
       center: [first.lng, first.lat],
       zoom: 15,
       attributionControl: false,
