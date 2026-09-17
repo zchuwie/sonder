@@ -16,6 +16,7 @@ import {
   Clock3,
   ChevronUp,
   ChevronDown,
+  ZoomOut,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { AnonymousPost, MarkerData } from "@/features/posts/lib/post-types";
@@ -31,10 +32,12 @@ export function MapPlaceBottomSheet({
   marker,
   onClose,
   onCreatePost,
+  onResetZoom,
 }: {
   marker: MarkerData | null;
   onClose: () => void;
   onCreatePost: () => void;
+  onResetZoom?: () => void;
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
@@ -118,26 +121,7 @@ export function MapPlaceBottomSheet({
     await handleCopyPostLink(post);
   };
 
-  const handleSaveImage = async (post: AnonymousPost) => {
-    if (signedImageUrl) {
-      try {
-        const res = await fetch(signedImageUrl);
-        const blob = await res.blob();
-        const blobUrl = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = blobUrl;
-        a.download = `${(post.title || "thought").replace(/[^a-zA-Z0-9]/g, "_")}.jpg`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(blobUrl);
-        toast.success("Image saved to device");
-        return;
-      } catch (err) {
-        console.error("Failed to save image", err);
-      }
-    }
-    // If no standalone image or direct download failed, open ShareCardModal to download card
+  const handleDownloadShareCard = () => {
     setShowCard(true);
   };
 
@@ -168,7 +152,7 @@ export function MapPlaceBottomSheet({
           }
         }}
         className={`fixed inset-x-0 bottom-0 z-40 flex flex-col rounded-t-[28px] border-t border-black/10 bg-background/98 shadow-2xl backdrop-blur-2xl transition-[height] duration-200 dark:border-white/10 sm:hidden ${
-          isExpanded ? "h-[85dvh]" : hasPosts ? "h-[54dvh]" : "h-auto max-h-[50dvh]"
+          isExpanded ? "h-[85dvh]" : "h-auto max-h-[75dvh]"
         }`}
       >
         {/* Drag handle */}
@@ -181,19 +165,35 @@ export function MapPlaceBottomSheet({
 
         {/* ── CASE 1: Empty Pin / Hold to Drop Prompt ───────────────── */}
         {!hasPosts ? (
-          <div className="flex flex-col px-5 pb-8 pt-2">
+          <div className="flex flex-col px-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-2">
             <div className="flex items-center justify-between">
               <span className="flex items-center gap-1.5 text-xs font-semibold text-primary">
                 <MapPin className="size-3.5" /> New thought location
               </span>
-              <button
-                type="button"
-                aria-label="Close"
-                onClick={onClose}
-                className="flex size-7 items-center justify-center rounded-full text-muted-foreground hover:bg-muted"
-              >
-                <X className="size-4" />
-              </button>
+              <div className="flex items-center gap-1.5">
+                {onResetZoom && (
+                  <button
+                    type="button"
+                    aria-label="Zoom out to overview"
+                    title="Zoom out to overview"
+                    onClick={() => {
+                      onResetZoom();
+                      onClose();
+                    }}
+                    className="flex size-7 items-center justify-center rounded-full bg-primary/10 text-primary transition hover:bg-primary/20 active:scale-95"
+                  >
+                    <ZoomOut className="size-3.5" />
+                  </button>
+                )}
+                <button
+                  type="button"
+                  aria-label="Close"
+                  onClick={onClose}
+                  className="flex size-7 items-center justify-center rounded-full text-muted-foreground hover:bg-muted active:scale-95"
+                >
+                  <X className="size-4" />
+                </button>
+              </div>
             </div>
 
             <div className="mt-3">
@@ -250,12 +250,26 @@ export function MapPlaceBottomSheet({
                 </button>
               )}
 
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1.5">
+                {onResetZoom && (
+                  <button
+                    type="button"
+                    aria-label="Zoom out to overview"
+                    title="Zoom out to overview"
+                    onClick={() => {
+                      onResetZoom();
+                      onClose();
+                    }}
+                    className="flex size-7 items-center justify-center rounded-full bg-primary/10 text-primary transition hover:bg-primary/20 active:scale-95"
+                  >
+                    <ZoomOut className="size-3.5" />
+                  </button>
+                )}
                 <button
                   type="button"
                   aria-label={isExpanded ? "Collapse" : "Expand"}
                   onClick={() => setIsExpanded((prev) => !prev)}
-                  className="flex size-7 items-center justify-center rounded-full text-muted-foreground hover:bg-muted"
+                  className="flex size-7 items-center justify-center rounded-full text-muted-foreground hover:bg-muted active:scale-95"
                 >
                   {isExpanded ? <ChevronDown className="size-4" /> : <ChevronUp className="size-4" />}
                 </button>
@@ -263,7 +277,7 @@ export function MapPlaceBottomSheet({
                   type="button"
                   aria-label="Close"
                   onClick={onClose}
-                  className="flex size-7 items-center justify-center rounded-full text-muted-foreground hover:bg-muted"
+                  className="flex size-7 items-center justify-center rounded-full text-muted-foreground hover:bg-muted active:scale-95"
                 >
                   <X className="size-4" />
                 </button>
@@ -324,7 +338,7 @@ export function MapPlaceBottomSheet({
             </div>
 
             {/* Minimal Action Bar */}
-            <div className="flex shrink-0 items-center justify-between border-t border-black/5 bg-background/95 px-4 py-2.5 backdrop-blur-sm dark:border-white/5">
+            <div className="flex shrink-0 items-center justify-between border-t border-black/5 bg-background/95 px-4 py-2.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] backdrop-blur-sm dark:border-white/5">
               {/* Minimal Share Thought Button */}
               <button
                 type="button"
@@ -335,14 +349,14 @@ export function MapPlaceBottomSheet({
                 <span>Add thought</span>
               </button>
 
-              {/* Minimal Action Buttons: Save image, Copy link, Send link, Maps */}
+              {/* Minimal Action Buttons: Download share card, Copy link, Send link, Maps */}
               <div className="flex items-center gap-1.5">
-                {/* Save image */}
+                {/* Download share card */}
                 <button
                   type="button"
-                  aria-label="Save image"
-                  title="Save image"
-                  onClick={() => handleSaveImage(activePost)}
+                  aria-label="Download share card"
+                  title="Download share card"
+                  onClick={() => setShowCard(true)}
                   className="grid size-8 place-items-center rounded-full border border-black/10 bg-background text-muted-foreground shadow-xs transition hover:border-primary/30 hover:bg-primary/5 hover:text-primary active:scale-95 dark:border-white/10"
                 >
                   <Download className="size-3.5" />
@@ -398,12 +412,26 @@ export function MapPlaceBottomSheet({
                 <ChevronLeft className="size-4" />
                 <span>Back to map</span>
               </button>
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1.5">
+                {onResetZoom && (
+                  <button
+                    type="button"
+                    aria-label="Zoom out to overview"
+                    title="Zoom out to overview"
+                    onClick={() => {
+                      onResetZoom();
+                      onClose();
+                    }}
+                    className="flex size-7 items-center justify-center rounded-full bg-primary/10 text-primary transition hover:bg-primary/20 active:scale-95"
+                  >
+                    <ZoomOut className="size-3.5" />
+                  </button>
+                )}
                 <button
                   type="button"
                   aria-label={isExpanded ? "Collapse" : "Expand"}
                   onClick={() => setIsExpanded((prev) => !prev)}
-                  className="flex size-7 items-center justify-center rounded-full text-muted-foreground hover:bg-muted"
+                  className="flex size-7 items-center justify-center rounded-full text-muted-foreground hover:bg-muted active:scale-95"
                 >
                   {isExpanded ? <ChevronDown className="size-4" /> : <ChevronUp className="size-4" />}
                 </button>
@@ -411,7 +439,7 @@ export function MapPlaceBottomSheet({
                   type="button"
                   aria-label="Close"
                   onClick={onClose}
-                  className="flex size-7 items-center justify-center rounded-full text-muted-foreground hover:bg-muted"
+                  className="flex size-7 items-center justify-center rounded-full text-muted-foreground hover:bg-muted active:scale-95"
                 >
                   <X className="size-4" />
                 </button>
@@ -457,7 +485,7 @@ export function MapPlaceBottomSheet({
             </div>
 
             {/* Scrollable Thoughts List */}
-            <div className="flex-1 overflow-y-auto px-4 py-3">
+            <div className="flex-1 overflow-y-auto px-4 py-3 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
               <p className="mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 Select a thought to read
               </p>
