@@ -191,7 +191,40 @@ body,
   animation: ambientDriftB 26s ease-in-out infinite;
 }
 
+@keyframes sonderThoughtLoop {
+  to { transform: translateX(-50%); }
+}
+
+.sonder-thoughts-track {
+  animation: sonderThoughtLoop 65s linear infinite;
+}
+
+.sonder-thoughts:focus-within .sonder-thoughts-track {
+  animation-play-state: paused;
+}
+
+@keyframes sonderThoughtHover {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-7px); }
+}
+
+.sonder-thought-card:hover {
+  animation: sonderThoughtHover 1.5s ease-in-out 0.7s infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .sonder-thoughts {
+    overflow-x: auto;
+  }
+
+  .sonder-thoughts-track {
+    animation: none;
+  }
+
+  .sonder-thoughts-copy {
+    display: none;
+  }
+
   *,
   *::before,
   *::after {
