@@ -1,0 +1,7 @@
+# Sonder landing page direction
+
+Keep the existing landing page composition and typography. Gilda Display carries headings and Manrope carries body text and controls. Use Sonder's existing greens: deep green `#2f4439`, soft green `#e6eadc`, and lime `#a8ba63`, with warm paper `#f5f1e8` and dark ink `#101713`. Do not introduce blue as a landing-page theme. The page keeps this palette in either device theme.
+
+The hero map continues to move between places, using approved posts and their real locations when available. Immediately below it, show six approved, undeleted thoughts from the database in a continuous carousel. Make cards wide and rounded, and let the whole card open its real post without a separate "Read thought" label. Show the song title and artist when the post has music. Keep the carousel moving on pointer hover, with a subtle delayed bounce on the hovered card. Pause for keyboard focus and honor reduced-motion preference; show an honest empty or error message when there are no posts to display.
+
+ENERGY 2 / RHYTHM 2 / MOTION 2. Keep the map as the main visual, preserve readable text and tap targets on phones, and use motion only to help visitors see the breadth of places and thoughts. Keep the explanation brief and visible immediately, with section height earned by its content. The hero carries the primary invitation to open the map; the footer closes the page without repeating it.
