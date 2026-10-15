@@ -66,6 +66,22 @@ cp apps/web/.env.example apps/web/.env.local
 pnpm dev --filter web
 ```
 
+### Pull requests and deployment
+
+Create a branch for each change, then open a pull request into `main`:
+
+```bash
+git switch main
+git pull --ff-only
+git switch -c feature/your-change
+# Commit your changes, then:
+git push -u origin feature/your-change
+```
+
+Open the pull request on GitHub. CI checks lint errors, types, and web unit tests on every pull request to `main` and on merges to `main`. Existing lint warnings are reported but do not fail CI; the current `pnpm lint` scripts still treat warnings as failures. Vercel handles deployment if its Git integration is connected to this repository.
+
+To enforce pull requests, a repository admin must create an active GitHub branch ruleset targeting `main`: require a pull request before merging, require the `verify` status check after its first run, and leave the bypass list empty. Without this GitHub setting, the workflow alone does not prevent direct pushes to `main`.
+
 ### Environment Variables
 
 ```env
