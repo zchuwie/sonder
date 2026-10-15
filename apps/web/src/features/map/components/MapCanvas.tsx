@@ -16,6 +16,7 @@ import type { MarkerData } from "@/features/posts/lib/post-types";
 import { getOpenFreeMapStyle } from "@/features/map/lib/openfreemap";
 import { AppLoading } from "@/components/shared/AppLoading";
 import { getLatestPost } from "@/features/posts/lib/post-utils";
+import { cn } from "@/lib/utils";
 
 export type MapActions = {
   zoomIn: () => void;
@@ -680,7 +681,7 @@ function MapCanvas({
   }, [mapLoaded]);
 
   return (
-    <div className="relative w-full h-full">
+    <div className={cn("relative w-full h-full", !mapLoaded && "z-50")}>
       <style>{`
         @keyframes sonder-ring-progress {
           0% { transform: scale(0.72); opacity: 0.35; }
@@ -694,7 +695,7 @@ function MapCanvas({
       `}</style>
 
       <div ref={mapContainer} className="w-full h-full" />
-      {!mapLoaded && <AppLoading contained label="Loading the map..." />}
+      {!mapLoaded && <AppLoading fullScreen label="Loading the map..." />}
       <AnimatePresence>
         {selectedMarkerId &&
           previewPosition &&

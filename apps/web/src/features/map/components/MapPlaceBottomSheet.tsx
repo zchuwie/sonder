@@ -44,13 +44,25 @@ export function MapPlaceBottomSheet({
   const [signedImageUrl, setSignedImageUrl] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [showCard, setShowCard] = useState(false);
+  const [showImagePreview, setShowImagePreview] = useState(false);
 
   // Reset selected post when marker changes
   useEffect(() => {
     setSelectedPostId(null);
     setIsExpanded(false);
     setShowCard(false);
+    setShowImagePreview(false);
   }, [marker?.id]);
+
+  // Handle ESC key for image preview overlay (ponytail: native listener, zero deps)
+  useEffect(() => {
+    if (!showImagePreview) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setShowImagePreview(false);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [showImagePreview]);
 
   const posts = marker?.posts ?? [];
   const placeName = marker?.placeName || "Selected Location";
@@ -151,8 +163,9 @@ export function MapPlaceBottomSheet({
             setIsExpanded(false);
           }
         }}
+        // ponytail: expanded viewport heights (84dvh / 92dvh) accommodate larger media and comfortable reading
         className={`fixed inset-x-0 bottom-0 z-40 flex flex-col rounded-t-[28px] border-t border-black/10 bg-background/98 shadow-2xl backdrop-blur-2xl transition-[height] duration-200 dark:border-white/10 sm:hidden ${
-          isExpanded ? "h-[85dvh]" : "h-auto max-h-[75dvh]"
+          isExpanded ? "h-[92dvh]" : "h-auto max-h-[84dvh]"
         }`}
       >
         {/* Drag handle */}
@@ -180,18 +193,18 @@ export function MapPlaceBottomSheet({
                       onResetZoom();
                       onClose();
                     }}
-                    className="flex size-7 items-center justify-center rounded-full bg-primary/10 text-primary transition hover:bg-primary/20 active:scale-95"
+                    className="flex size-9 items-center justify-center rounded-full bg-primary/10 text-primary transition hover:bg-primary/20 active:scale-95"
                   >
-                    <ZoomOut className="size-3.5" />
+                    <ZoomOut className="size-4" />
                   </button>
                 )}
                 <button
                   type="button"
                   aria-label="Close"
                   onClick={onClose}
-                  className="flex size-7 items-center justify-center rounded-full text-muted-foreground hover:bg-muted active:scale-95"
+                  className="flex size-9 items-center justify-center rounded-full text-muted-foreground hover:bg-muted active:scale-95"
                 >
-                  <X className="size-4" />
+                  <X className="size-4.5" />
                 </button>
               </div>
             </div>
@@ -229,12 +242,12 @@ export function MapPlaceBottomSheet({
           /* ── CASE 2: Single Post OR Active Post Detail ───────────── */
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
             {/* Top Navigation */}
-            <div className="flex shrink-0 items-center justify-between px-4 py-1.5 border-b border-black/5 dark:border-white/5">
+            <div className="flex shrink-0 items-center justify-between px-4 py-2 border-b border-black/5 dark:border-white/5">
               {posts.length > 1 ? (
                 <button
                   type="button"
                   onClick={() => setSelectedPostId(null)}
-                  className="flex items-center gap-1 text-xs font-semibold text-primary transition hover:text-primary-hover"
+                  className="flex items-center gap-1.5 py-1 text-xs font-semibold text-primary transition hover:text-primary-hover active:scale-95"
                 >
                   <ChevronLeft className="size-4" />
                   <span>All thoughts ({posts.length})</span>
@@ -243,14 +256,14 @@ export function MapPlaceBottomSheet({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="flex items-center gap-1 text-xs font-semibold text-primary transition hover:text-primary-hover"
+                  className="flex items-center gap-1.5 py-1 text-xs font-semibold text-primary transition hover:text-primary-hover active:scale-95"
                 >
                   <ChevronLeft className="size-4" />
                   <span>Back to map</span>
                 </button>
               )}
 
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1">
                 {onResetZoom && (
                   <button
                     type="button"
@@ -260,26 +273,26 @@ export function MapPlaceBottomSheet({
                       onResetZoom();
                       onClose();
                     }}
-                    className="flex size-7 items-center justify-center rounded-full bg-primary/10 text-primary transition hover:bg-primary/20 active:scale-95"
+                    className="flex size-9 items-center justify-center rounded-full bg-primary/10 text-primary transition hover:bg-primary/20 active:scale-95"
                   >
-                    <ZoomOut className="size-3.5" />
+                    <ZoomOut className="size-4" />
                   </button>
                 )}
                 <button
                   type="button"
                   aria-label={isExpanded ? "Collapse" : "Expand"}
                   onClick={() => setIsExpanded((prev) => !prev)}
-                  className="flex size-7 items-center justify-center rounded-full text-muted-foreground hover:bg-muted active:scale-95"
+                  className="flex size-9 items-center justify-center rounded-full text-muted-foreground hover:bg-muted active:scale-95"
                 >
-                  {isExpanded ? <ChevronDown className="size-4" /> : <ChevronUp className="size-4" />}
+                  {isExpanded ? <ChevronDown className="size-4.5" /> : <ChevronUp className="size-4.5" />}
                 </button>
                 <button
                   type="button"
                   aria-label="Close"
                   onClick={onClose}
-                  className="flex size-7 items-center justify-center rounded-full text-muted-foreground hover:bg-muted active:scale-95"
+                  className="flex size-9 items-center justify-center rounded-full text-muted-foreground hover:bg-muted active:scale-95"
                 >
-                  <X className="size-4" />
+                  <X className="size-4.5" />
                 </button>
               </div>
             </div>
@@ -287,47 +300,78 @@ export function MapPlaceBottomSheet({
             {/* Scrollable Post Content: Exact hierarchy requested (date, title, image, body, music) */}
             <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
               {/* 1. Date */}
-              <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
-                <span className="flex items-center gap-1.5">
-                  <Clock3 className="size-3.5" />
+              <div className="flex items-center justify-between gap-2 text-[13px] text-muted-foreground">
+                <span className="flex items-center gap-1.5 font-medium">
+                  <Clock3 className="size-4 text-muted-foreground/80" />
                   {relativeTime(activePost.createdAt)}
                 </span>
-                <span className="truncate max-w-[200px] flex items-center gap-1 text-primary/90 font-medium">
-                  <MapPin className="size-3.5 shrink-0 text-primary" />
+                <span className="truncate max-w-[210px] flex items-center gap-1.5 text-primary font-medium">
+                  <MapPin className="size-4 shrink-0 text-primary" />
                   <span className="truncate">{placeName}</span>
                 </span>
               </div>
 
               {/* 2. Title */}
-              <h2 className="font-serif text-xl font-bold leading-snug tracking-tight text-foreground">
+              <h2 className="font-serif text-2xl sm:text-[26px] font-bold leading-snug tracking-tight text-foreground">
                 {activePost.title}
               </h2>
 
-              {/* 3. Image */}
-              {signedImageUrl && (
-                <div className="relative aspect-video w-full overflow-hidden rounded-2xl border border-black/10 bg-muted dark:border-white/10 shadow-xs">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={signedImageUrl}
-                    alt={activePost.title}
-                    className="size-full object-cover"
-                  />
-                </div>
-              )}
-              {activePost.imagePath && !signedImageUrl && (
-                <Skeleton className="aspect-video w-full rounded-2xl" />
-              )}
+              {/* 3. Topic Content with Instant Photo Integration (ponytail: square, rounded, tilted instant photo with playful jump-and-shake animation) */}
+              <div className="relative">
+                {signedImageUrl && (
+                  <motion.button
+                    type="button"
+                    onClick={() => setShowImagePreview(true)}
+                    aria-label="View full picture"
+                    // Playful jump and shake animation to entice tapping the photo (ponytail: native framer-motion keyframes)
+                    animate={{
+                      y: [0, 0, -10, -12, -2, 0, 0],
+                      rotate: [-2, -2, -7, 6, -5, 3, -2],
+                      scale: [1, 1, 1.05, 1.05, 1.02, 1, 1],
+                    }}
+                    transition={{
+                      duration: 1.1,
+                      ease: "easeInOut",
+                      repeat: Infinity,
+                      repeatDelay: 4.5,
+                      delay: 0.8,
+                    }}
+                    whileHover={{ scale: 1.06, rotate: 0 }}
+                    whileTap={{ scale: 0.94 }}
+                    className={`group cursor-zoom-in text-left focus:outline-hidden ${
+                      activePost.text ? "float-right ml-3.5 mb-2.5" : "inline-block my-1.5"
+                    }`}
+                  >
+                    {/* Pure borderless image: square, rounded corners, tilted with jump-and-shake animation */}
+                    <div className="relative size-32 sm:size-36 aspect-square overflow-hidden rounded-2xl shadow-md">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={signedImageUrl}
+                        alt={activePost.title}
+                        className="size-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      />
+                    </div>
+                  </motion.button>
+                )}
+                {activePost.imagePath && !signedImageUrl && (
+                  <Skeleton className={`size-32 sm:size-36 rounded-2xl ${
+                    activePost.text ? "float-right ml-3.5 mb-2.5" : "inline-block my-1.5"
+                  }`} />
+                )}
 
-              {/* 4. Body */}
-              <p className="text-sm leading-relaxed text-foreground/85 whitespace-pre-wrap">
-                {activePost.moderationStatus === "flagged"
-                  ? "This post was flagged for review."
-                  : activePost.text}
-              </p>
+                {activePost.text && (
+                  <p className="text-[17px] sm:text-lg leading-[1.65] text-foreground/90 whitespace-pre-wrap">
+                    {activePost.moderationStatus === "flagged"
+                      ? "This post was flagged for review."
+                      : activePost.text}
+                  </p>
+                )}
+                <div className="clear-both" />
+              </div>
 
               {/* 5. Music */}
               {activePost.music && (
-                <div className="pt-1">
+                <div className="pt-0.5">
                   <MusicPreviewCard music={activePost.music} />
                 </div>
               )}
@@ -343,7 +387,7 @@ export function MapPlaceBottomSheet({
               <button
                 type="button"
                 onClick={onCreatePost}
-                className="flex items-center gap-1.5 rounded-full border border-black/10 bg-muted/50 px-3 py-1.5 text-xs font-medium text-foreground/80 transition hover:bg-muted hover:text-foreground active:scale-95 dark:border-white/10"
+                className="flex items-center gap-1.5 rounded-full border border-black/10 bg-muted/50 px-3.5 py-2 text-xs font-medium text-foreground/80 transition hover:bg-muted hover:text-foreground active:scale-95 dark:border-white/10"
               >
                 <Plus className="size-3.5 text-primary" />
                 <span>Add thought</span>
@@ -356,10 +400,10 @@ export function MapPlaceBottomSheet({
                   type="button"
                   aria-label="Download share card"
                   title="Download share card"
-                  onClick={() => setShowCard(true)}
-                  className="grid size-8 place-items-center rounded-full border border-black/10 bg-background text-muted-foreground shadow-xs transition hover:border-primary/30 hover:bg-primary/5 hover:text-primary active:scale-95 dark:border-white/10"
+                  onClick={handleDownloadShareCard}
+                  className="grid size-9 place-items-center rounded-full border border-black/10 bg-background text-muted-foreground shadow-xs transition hover:border-primary/30 hover:bg-primary/5 hover:text-primary active:scale-95 dark:border-white/10"
                 >
-                  <Download className="size-3.5" />
+                  <Download className="size-4" />
                 </button>
 
                 {/* Copy link */}
@@ -368,11 +412,11 @@ export function MapPlaceBottomSheet({
                   aria-label={copied ? "Link copied" : "Copy link"}
                   title={copied ? "Link copied" : "Copy link"}
                   onClick={() => handleCopyPostLink(activePost)}
-                  className={`grid size-8 place-items-center rounded-full border border-black/10 bg-background text-muted-foreground shadow-xs transition hover:border-primary/30 hover:bg-primary/5 hover:text-primary active:scale-95 dark:border-white/10 ${
+                  className={`grid size-9 place-items-center rounded-full border border-black/10 bg-background text-muted-foreground shadow-xs transition hover:border-primary/30 hover:bg-primary/5 hover:text-primary active:scale-95 dark:border-white/10 ${
                     copied ? "border-primary/40 text-primary bg-primary/10" : ""
                   }`}
                 >
-                  {copied ? <Check className="size-3.5 text-primary" /> : <Copy className="size-3.5" />}
+                  {copied ? <Check className="size-4 text-primary" /> : <Copy className="size-4" />}
                 </button>
 
                 {/* Send link */}
@@ -381,9 +425,9 @@ export function MapPlaceBottomSheet({
                   aria-label="Send link"
                   title="Send link"
                   onClick={() => handleSendLink(activePost)}
-                  className="grid size-8 place-items-center rounded-full border border-black/10 bg-background text-muted-foreground shadow-xs transition hover:border-primary/30 hover:bg-primary/5 hover:text-primary active:scale-95 dark:border-white/10"
+                  className="grid size-9 place-items-center rounded-full border border-black/10 bg-background text-muted-foreground shadow-xs transition hover:border-primary/30 hover:bg-primary/5 hover:text-primary active:scale-95 dark:border-white/10"
                 >
-                  <Send className="size-3.5" />
+                  <Send className="size-4" />
                 </button>
 
                 {/* Google Maps External Link */}
@@ -392,9 +436,9 @@ export function MapPlaceBottomSheet({
                   aria-label="Open in Google Maps"
                   title="Open in Google Maps"
                   onClick={handleOpenGoogleMaps}
-                  className="grid size-8 place-items-center rounded-full border border-black/10 bg-background text-muted-foreground shadow-xs transition hover:border-primary/30 hover:bg-primary/5 hover:text-primary active:scale-95 dark:border-white/10"
+                  className="grid size-9 place-items-center rounded-full border border-black/10 bg-background text-muted-foreground shadow-xs transition hover:border-primary/30 hover:bg-primary/5 hover:text-primary active:scale-95 dark:border-white/10"
                 >
-                  <ExternalLink className="size-3.5" />
+                  <ExternalLink className="size-4" />
                 </button>
               </div>
             </div>
@@ -403,16 +447,16 @@ export function MapPlaceBottomSheet({
           /* ── CASE 3: Multi-Post Feed List ───────────────────────── */
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
             {/* Header Navigation */}
-            <div className="flex shrink-0 items-center justify-between px-4 py-1.5 border-b border-black/5 dark:border-white/5">
+            <div className="flex shrink-0 items-center justify-between px-4 py-2 border-b border-black/5 dark:border-white/5">
               <button
                 type="button"
                 onClick={onClose}
-                className="flex items-center gap-1 text-xs font-semibold text-primary transition hover:text-primary-hover"
+                className="flex items-center gap-1.5 py-1 text-xs font-semibold text-primary transition hover:text-primary-hover active:scale-95"
               >
                 <ChevronLeft className="size-4" />
                 <span>Back to map</span>
               </button>
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1">
                 {onResetZoom && (
                   <button
                     type="button"
@@ -422,26 +466,26 @@ export function MapPlaceBottomSheet({
                       onResetZoom();
                       onClose();
                     }}
-                    className="flex size-7 items-center justify-center rounded-full bg-primary/10 text-primary transition hover:bg-primary/20 active:scale-95"
+                    className="flex size-9 items-center justify-center rounded-full bg-primary/10 text-primary transition hover:bg-primary/20 active:scale-95"
                   >
-                    <ZoomOut className="size-3.5" />
+                    <ZoomOut className="size-4" />
                   </button>
                 )}
                 <button
                   type="button"
                   aria-label={isExpanded ? "Collapse" : "Expand"}
                   onClick={() => setIsExpanded((prev) => !prev)}
-                  className="flex size-7 items-center justify-center rounded-full text-muted-foreground hover:bg-muted active:scale-95"
+                  className="flex size-9 items-center justify-center rounded-full text-muted-foreground hover:bg-muted active:scale-95"
                 >
-                  {isExpanded ? <ChevronDown className="size-4" /> : <ChevronUp className="size-4" />}
+                  {isExpanded ? <ChevronDown className="size-4.5" /> : <ChevronUp className="size-4.5" />}
                 </button>
                 <button
                   type="button"
                   aria-label="Close"
                   onClick={onClose}
-                  className="flex size-7 items-center justify-center rounded-full text-muted-foreground hover:bg-muted active:scale-95"
+                  className="flex size-9 items-center justify-center rounded-full text-muted-foreground hover:bg-muted active:scale-95"
                 >
-                  <X className="size-4" />
+                  <X className="size-4.5" />
                 </button>
               </div>
             </div>
@@ -463,21 +507,21 @@ export function MapPlaceBottomSheet({
                 <button
                   type="button"
                   onClick={onCreatePost}
-                  className="flex items-center gap-1.5 rounded-full bg-primary px-3.5 py-1.5 text-xs font-semibold text-primary-foreground shadow-sm transition active:scale-95"
+                  className="flex items-center gap-1.5 rounded-full bg-primary px-3.5 py-2 text-xs font-semibold text-primary-foreground shadow-sm transition active:scale-95"
                 >
                   <Plus className="size-3.5" /> Add thought
                 </button>
                 <button
                   type="button"
                   onClick={handleCopyPlaceLink}
-                  className="flex items-center gap-1.5 rounded-full border border-black/10 bg-background px-3 py-1.5 text-xs font-medium text-foreground/90 shadow-xs transition hover:bg-muted active:scale-95 dark:border-white/10"
+                  className="flex items-center gap-1.5 rounded-full border border-black/10 bg-background px-3.5 py-2 text-xs font-medium text-foreground/90 shadow-xs transition hover:bg-muted active:scale-95 dark:border-white/10"
                 >
                   <Copy className="size-3.5" /> Copy link
                 </button>
                 <button
                   type="button"
                   onClick={handleOpenGoogleMaps}
-                  className="flex items-center gap-1.5 rounded-full border border-black/10 bg-background px-3 py-1.5 text-xs font-medium text-foreground/90 shadow-xs transition hover:bg-muted active:scale-95 dark:border-white/10"
+                  className="flex items-center gap-1.5 rounded-full border border-black/10 bg-background px-3.5 py-2 text-xs font-medium text-foreground/90 shadow-xs transition hover:bg-muted active:scale-95 dark:border-white/10"
                 >
                   <ExternalLink className="size-3.5" /> Maps
                 </button>
@@ -501,6 +545,31 @@ export function MapPlaceBottomSheet({
     </AnimatePresence>
     {showCard && activePost && (
       <ShareCardModal post={activePost} onClose={() => setShowCard(false)} />
+    )}
+    {showImagePreview && signedImageUrl && activePost && (
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Full size image preview"
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4 backdrop-blur-md"
+        onClick={() => setShowImagePreview(false)}
+      >
+        <button
+          type="button"
+          aria-label="Close image preview"
+          onClick={() => setShowImagePreview(false)}
+          className="absolute right-4 top-4 z-10 flex size-10 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-sm transition hover:bg-white/30 active:scale-95"
+        >
+          <X className="size-5" />
+        </button>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={signedImageUrl}
+          alt={activePost.title}
+          className="max-h-[85dvh] max-w-full rounded-2xl object-contain shadow-2xl"
+          onClick={(e) => e.stopPropagation()}
+        />
+      </div>
     )}
   </>
 );

@@ -1,19 +1,27 @@
 import { MapPin } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export function AppLoading({
   label = "Finding your place...",
   contained = false,
+  fullScreen = false,
+  className,
 }: {
   label?: string;
   contained?: boolean;
+  fullScreen?: boolean;
+  className?: string;
 }) {
   return (
     <div
-      className={
-        contained
-          ? "absolute inset-0 z-30 flex items-center justify-center bg-[#eef0e5]/90 backdrop-blur-sm dark:bg-[#101713]/90"
-          : "flex min-h-dvh items-center justify-center bg-[#f5f1e8] px-6 text-[#101713] dark:bg-[#050706] dark:text-[#f5f1e8]"
-      }
+      className={cn(
+        fullScreen
+          ? "fixed inset-0 z-[100] flex items-center justify-center bg-[#eef0e5] dark:bg-[#101713]"
+          : contained
+            ? "absolute inset-0 z-30 flex items-center justify-center bg-[#eef0e5] dark:bg-[#101713]"
+            : "flex min-h-dvh items-center justify-center bg-[#f5f1e8] px-6 text-[#101713] dark:bg-[#050706] dark:text-[#f5f1e8]",
+        className,
+      )}
     >
       <div className="flex flex-col items-center text-center">
         <div className="relative flex size-20 items-center justify-center">

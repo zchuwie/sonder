@@ -60,14 +60,14 @@ export function PublicPostView({ post }: { post: AnonymousPost }) {
       >
         {/* Cover */}
           {signedUrl && !flagged ? (
-            <div className="relative h-28 w-full shrink-0 overflow-hidden rounded-t-2xl sm:aspect-video sm:h-auto sm:rounded-t-3xl">
+            <div className="relative h-44 w-full shrink-0 overflow-hidden rounded-t-2xl sm:aspect-video sm:h-auto sm:rounded-t-3xl">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={signedUrl} alt="" className="size-full object-cover" />
             </div>
           ) : post.imagePath && !imgData.url && !imgData.attempted && !flagged ? (
-            <Skeleton className="h-28 w-full shrink-0 rounded-t-2xl sm:aspect-video sm:h-auto sm:rounded-t-3xl" />
+            <Skeleton className="h-44 w-full shrink-0 rounded-t-2xl sm:aspect-video sm:h-auto sm:rounded-t-3xl" />
           ) : post.music?.coverUrl && !flagged ? (
-            <div className="relative h-28 w-full shrink-0 overflow-hidden rounded-t-2xl bg-linear-to-br from-primary/20 via-muted to-background sm:aspect-video sm:h-auto sm:rounded-t-3xl">
+            <div className="relative h-44 w-full shrink-0 overflow-hidden rounded-t-2xl bg-linear-to-br from-primary/20 via-muted to-background sm:aspect-video sm:h-auto sm:rounded-t-3xl">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={post.music.coverUrl} alt="" className="size-full scale-110 object-cover opacity-30 blur-xl" />
               {/* eslint-disable-next-line @next/next/no-img-element */}

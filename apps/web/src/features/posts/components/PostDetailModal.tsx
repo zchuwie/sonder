@@ -63,18 +63,18 @@ export default function PostDetailModal({
       <Dialog open modal={false} onOpenChange={(open) => { if (!open && !showCard) onClose(); }}>
         <DialogContent
           overlayClassName="bg-transparent pointer-events-none supports-backdrop-filter:backdrop-blur-none"
-          className={`pointer-events-auto inset-x-2 bottom-2 top-auto flex w-auto max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-2xl border-black/10 bg-background/96 p-0 shadow-2xl backdrop-blur-xl sm:inset-x-auto sm:w-[31rem] lg:w-[34rem] sm:rounded-[32px] sm:max-h-[84dvh] ${smPos} ${expanded ? "max-h-[90dvh]" : "max-h-[55dvh]"}`}
+          className={`pointer-events-auto inset-x-2 bottom-2 top-auto flex w-auto max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-2xl border-black/10 bg-background/96 p-0 shadow-2xl backdrop-blur-xl sm:inset-x-auto sm:w-[31rem] lg:w-[34rem] sm:rounded-[32px] sm:max-h-[84dvh] ${smPos} ${expanded ? "max-h-[90dvh]" : "max-h-[68dvh]"}`}
         >
-          {/* Image / cover */}
+          {/* Image / cover (ponytail: larger mobile cover height aligns with MapPlaceBottomSheet) */}
           {signedUrl && !flagged ? (
-            <div className="relative h-28 w-full shrink-0 overflow-hidden rounded-t-2xl sm:aspect-video sm:h-auto sm:rounded-t-[32px]">
+            <div className="relative h-44 w-full shrink-0 overflow-hidden rounded-t-2xl sm:aspect-video sm:h-auto sm:rounded-t-[32px]">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={signedUrl} alt="" className="size-full object-cover" />
             </div>
           ) : post.imagePath && !signedUrl && !flagged ? (
-            <Skeleton className="h-28 w-full shrink-0 rounded-t-2xl sm:aspect-video sm:h-auto sm:rounded-t-[32px]" />
+            <Skeleton className="h-44 w-full shrink-0 rounded-t-2xl sm:aspect-video sm:h-auto sm:rounded-t-[32px]" />
           ) : post.music?.coverUrl && !flagged ? (
-            <div className="relative h-28 w-full shrink-0 overflow-hidden rounded-t-2xl bg-linear-to-br from-primary/20 via-muted to-background sm:aspect-video sm:h-auto sm:rounded-t-[32px]">
+            <div className="relative h-44 w-full shrink-0 overflow-hidden rounded-t-2xl bg-linear-to-br from-primary/20 via-muted to-background sm:aspect-video sm:h-auto sm:rounded-t-[32px]">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={post.music.coverUrl} alt="" className="size-full scale-110 object-cover opacity-30 blur-xl" />
               {/* eslint-disable-next-line @next/next/no-img-element */}
