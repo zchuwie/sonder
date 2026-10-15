@@ -31,4 +31,4 @@ jobs:
           pnpm --filter web exec eslint .
           pnpm --filter admin exec eslint .
       - run: pnpm check-types
-      - run: pnpm --filter web test --runInBand
+      - run: pnpm --filter web exec jest --runInBand
